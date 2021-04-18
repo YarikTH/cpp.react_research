@@ -1,3 +1,5 @@
 baseurl: /cpp.react
 
 markdown: kramdown
+
+theme: jekyll-theme-midnight

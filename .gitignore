@@ -40,7 +40,6 @@ build/
 *.vssscc
 .builds
 *.pidb
-*.log
 *.scc
 
 # Visual C++ cache files
@@ -156,7 +155,6 @@ $RECYCLE.BIN/
 My Advisor XE Results*
 My Amplifier XE Results*
 My Inspector XE Results*
-My Amplifier XE Results*
 
 # Debugger logs
 log.txt
@@ -166,3 +164,6 @@ log.txt
 
 # Benchmark results
 Benchmark Results
+
+/.idea/
+/cmake-build-*/

@@ -166,3 +166,5 @@ log.txt
 
 # Benchmark results
 Benchmark Results
+/cmake-build-*/
+/.idea/

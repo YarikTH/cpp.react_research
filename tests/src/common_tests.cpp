@@ -6,7 +6,7 @@
 
 #include "gtest/gtest.h"
 
-#include "react/common/syncpoint.h"
+#include "react/react.hpp"
 
 #include <chrono>
 #include <cstdio>

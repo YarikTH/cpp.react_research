@@ -9,10 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include "react/state.h"
-#include "react/event.h"
-#include "react/observer.h"
-#include "react/algorithm.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Example 1 - Converting events to signals

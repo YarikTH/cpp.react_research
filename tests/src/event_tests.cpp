@@ -6,9 +6,7 @@
 
 #include "gtest/gtest.h"
 
-#include "react/event.h"
-#include "react/state.h"
-#include "react/observer.h"
+#include "react/react.hpp"
 
 #include <algorithm>
 #include <chrono>

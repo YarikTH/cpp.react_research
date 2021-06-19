@@ -11,8 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "react/state.h"
-#include "react/observer.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Example 1 - Hello world

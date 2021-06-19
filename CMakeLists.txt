@@ -14,12 +14,11 @@ include_directories ("${PROJECT_SOURCE_DIR}/include")
 add_subdirectory(deps)
 
 ### CppReact
-add_library(CppReact 
-	src/detail/graph_impl.cpp)
+add_library(CppReact INTERFACE)
 
-target_compile_features(CppReact PUBLIC cxx_std_17)
+target_compile_features(CppReact INTERFACE cxx_std_17)
 
-target_link_libraries(CppReact tbb_static)
+target_link_libraries(CppReact INTERFACE tbb_static)
 
 ### examples/ 
 option(build_examples "Build examples?" ON)

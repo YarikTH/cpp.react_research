@@ -8,9 +8,7 @@
 
 #include "tbb/tick_count.h"
 
-#include "react/state.h"
-#include "react/event.h"
-#include "react/observer.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Example 1 - Asynchronous transactions

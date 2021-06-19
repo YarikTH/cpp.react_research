@@ -120,7 +120,7 @@ public:
 
     ~SyncedIterateNode()
     {
-        apply([this] (const auto& ... syncs)
+        react::impl::apply([this] (const auto& ... syncs)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(syncs).GetNodeId())); }, syncHolder_);
         this->DetachFromMe(GetInternals(evnt_).GetNodeId());
         this->UnregisterMe();
@@ -132,7 +132,7 @@ public:
         if (GetInternals(evnt_).Events().empty())
             return UpdateResult::unchanged;
 
-        S newValue = apply([this] (const auto& ... syncs)
+        S newValue = react::impl::apply([this] (const auto& ... syncs)
             {
                 return func_(GetInternals(evnt_).Events(), this->Value(), GetInternals(syncs).Value() ...);
             }, syncHolder_);
@@ -176,7 +176,7 @@ public:
 
     ~SyncedIterateByRefNode()
     {
-        apply([this] (const auto& ... syncs) { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(syncs).GetNodeId())); }, syncHolder_);
+        react::impl::apply([this] (const auto& ... syncs) { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(syncs).GetNodeId())); }, syncHolder_);
         this->DetachFromMe(GetInternals(evnt_).GetNodeId());
         this->UnregisterMe();
     }
@@ -187,7 +187,7 @@ public:
         if (GetInternals(evnt_).Events().empty())
             return UpdateResult::unchanged;
 
-        apply(
+        react::impl::apply(
             [this] (const auto& ... args)
             {
                 func_(GetInternals(evnt_).Events(), this->Value(), GetInternals(args).Value() ...);
@@ -581,13 +581,13 @@ class FlattenObjectNode : public StateNode<TFlat>
 {
 public:
     FlattenObjectNode(const Group& group, const State<T>& obj) :
-        StateNode::StateNode( in_place, group, GetInternals(obj).Value(), FlattenedInitTag{ } ),
+        StateNode<TFlat>( in_place, group, GetInternals(obj).Value(), FlattenedInitTag{ } ),
         obj_( obj )
     {
         this->RegisterMe();
         this->AttachToMe(GetInternals(obj).GetNodeId());
 
-        for (NodeId nodeId : Value().memberIds_)
+        for (NodeId nodeId : this->Value().memberIds_)
             this->AttachToMe(nodeId);
 
         this->Value().initMode_ = false;
@@ -595,7 +595,7 @@ public:
 
     ~FlattenObjectNode()
     {
-        for (NodeId nodeId :  Value().memberIds_)
+        for (NodeId nodeId :  this->Value().memberIds_)
             this->DetachFromMe(nodeId);
 
         this->DetachFromMe(GetInternals(obj_).GetNodeId());

@@ -18,6 +18,7 @@
 #include "react/api.h"
 #include "react/group.h"
 
+#include "react/detail/state_nodes.h"
 #include "react/detail/event_nodes.h"
 
 #include "react/common/ptrcache.h"
@@ -34,22 +35,22 @@ public:
     // Construct with explicit group
     template <typename F, typename T>
     static Event Create(const Group& group, F&& func, const Event<T>& dep)
-        { return CreateProcessingNode(group, std::forward<F>(func), dep); }
+        { return Event(CreateProcessingNode(group, std::forward<F>(func), dep)); }
 
     // Construct with implicit group
     template <typename F, typename T>
     static Event Create(F&& func, const Event<T>& dep)
-        { return CreateProcessingNode(dep.GetGroup(), std::forward<F>(func), dep); }
+        { return Event(CreateProcessingNode(dep.GetGroup(), std::forward<F>(func), dep)); }
 
     // Construct with explicit group
     template <typename F, typename T, typename ... Us>
     static Event Create(const Group& group, F&& func, const Event<T>& dep, const State<Us>& ... states)
-        { return CreateSyncedProcessingNode(group, std::forward<F>(func), dep, states ...); }
+        { return Event(CreateSyncedProcessingNode(group, std::forward<F>(func), dep, states ...)); }
 
     // Construct with implicit group
     template <typename F, typename T, typename ... Us>
     static Event Create(F&& func, const Event<T>& dep, const State<Us>& ... states)
-        { return CreateSyncedProcessingNode(dep.GetGroup(), std::forward<F>(func), dep, states ...); }
+        { return Event(CreateSyncedProcessingNode(dep.GetGroup(), std::forward<F>(func), dep, states ...)); }
 
     Event() = default;
 
@@ -60,10 +61,10 @@ public:
     Event& operator=(Event&&) = default;
 
     auto GetGroup() const -> const Group&
-        { return GetNodePtr()->GetGroup(); }
+        { return this->GetNodePtr()->GetGroup(); }
 
     auto GetGroup() -> Group&
-        { return GetNodePtr()->GetGroup(); }
+        { return this->GetNodePtr()->GetGroup(); }
 
     friend bool operator==(const Event<E>& a, const Event<E>& b)
         { return a.GetNodePtr() == b.GetNodePtr(); }
@@ -103,7 +104,7 @@ protected:
     }
 
     template <typename RET, typename NODE, typename ... ARGS>
-    friend static RET impl::CreateWrappedNode(ARGS&& ... args);
+    friend RET impl::CreateWrappedNode(ARGS&& ... args);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +116,7 @@ class EventSource : public Event<E>
 public:
     // Construct event source
     static EventSource Create(const Group& group)
-        { return CreateSourceNode(group); }
+        { return EventSource(CreateSourceNode(group)); }
 
     EventSource() = default;
 
@@ -178,7 +179,7 @@ class EventSlot : public Event<E>
 public:
     // Construct emtpy slot
     static EventSlot Create(const Group& group)
-        { return CreateSlotNode(group); }
+        { return EventSlot(CreateSlotNode(group)); }
 
     EventSlot() = default;
 
@@ -219,7 +220,7 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->AddSlotInput(SameGroupOrLink(GetGroup(), input)); });
+        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->AddSlotInput(SameGroupOrLink(this->GetGroup(), input)); });
     }
 
     void RemoveSlotInput(const Event<E>& input)
@@ -232,7 +233,7 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->RemoveSlotInput(SameGroupOrLink(GetGroup(), input)); });
+        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->RemoveSlotInput(SameGroupOrLink(this->GetGroup(), input)); });
     }
 
     void RemoveAllSlotInputs()
@@ -258,7 +259,7 @@ class EventLink : public Event<E>
 public:
     // Construct with group
     static EventLink Create(const Group& group, const Event<E>& input)
-        { return GetOrCreateLinkNode(group, input); }
+        { return EventLink(GetOrCreateLinkNode(group, input)); }
 
     EventLink() = default;
 

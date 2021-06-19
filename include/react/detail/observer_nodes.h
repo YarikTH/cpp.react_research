@@ -57,20 +57,20 @@ public:
         this->RegisterMe(NodeCategory::output);
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(deps).GetNodeId()));
 
-        apply([this] (const auto& ... deps)
+        react::impl::apply([this] (const auto& ... deps)
             { this->func_(GetInternals(deps).Value() ...); }, depHolder_);
     }
 
     ~StateObserverNode()
     {
-        apply([this] (const auto& ... deps)
+        react::impl::apply([this] (const auto& ... deps)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(deps).GetNodeId())); }, depHolder_);
         this->UnregisterMe();
     }
 
     virtual UpdateResult Update(TurnId turnId) noexcept override
     {
-        apply([this] (const auto& ... deps)
+        react::impl::apply([this] (const auto& ... deps)
             { this->func_(GetInternals(deps).Value() ...); }, depHolder_);
         return UpdateResult::unchanged;
     }

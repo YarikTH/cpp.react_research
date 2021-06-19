@@ -32,17 +32,17 @@ public:
     // Construct with explicit group
     template <typename F, typename T1, typename ... Ts>
     static State Create(const Group& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps)
-        { return CreateFuncNode(group, std::forward<F>(func), dep1, deps ...); }
+        { return State(CreateFuncNode(group, std::forward<F>(func), dep1, deps ...)); }
 
     // Construct with implicit group
     template <typename F, typename T1, typename ... Ts>
     static State Create(F&& func, const State<T1>& dep1, const State<Ts>& ... deps)
-        { return CreateFuncNode(dep1.GetGroup(), std::forward<F>(func), dep1, deps ...); }
+        { return State(CreateFuncNode(dep1.GetGroup(), std::forward<F>(func), dep1, deps ...)); }
 
     // Construct with constant value
     template <typename T>
     static State Create(const Group& group, T&& init)
-        { return CreateFuncNode(group, [value = std::move(init)] { return value; }); }
+        { return State(CreateFuncNode(group, [value = std::move(init)] { return value; })); }
 
     State() = default;
 
@@ -99,12 +99,12 @@ class StateVar : public State<S>
 public:
     // Construct with group + default
     static StateVar Create(const Group& group)
-        { return CreateVarNode(group); }
+        { return StateVar(CreateVarNode(group)); }
 
     // Construct with group + value
     template <typename T>
     static StateVar Create(const Group& group, T&& value)
-        { return CreateVarNode(group, std::forward<T>(value)); }
+        { return StateVar(CreateVarNode(group, std::forward<T>(value))); }
 
     StateVar() = default;
 
@@ -190,11 +190,11 @@ class StateSlot : public State<S>
 public:
     // Construct with explicit group
     static StateSlot Create(const Group& group, const State<S>& input)
-        { return CreateSlotNode(group, input); }
+        { return StateSlot(CreateSlotNode(group, input)); }
 
     // Construct with implicit group
     static StateSlot Create(const State<S>& input)
-        { return CreateSlotNode(input.GetGroup(), input); }
+        { return StateSlot(CreateSlotNode(input.GetGroup(), input)); }
 
     StateSlot() = default;
 
@@ -232,7 +232,7 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [this, castedPtr, &newInput] { castedPtr->SetInput(SameGroupOrLink(GetGroup(), newInput)); });
+        graphPtr->PushInput(nodeId, [this, castedPtr, &newInput] { castedPtr->SetInput(SameGroupOrLink(this->GetGroup(), newInput)); });
     }
 };
 
@@ -245,7 +245,7 @@ class StateLink : public State<S>
 public:
     // Construct with group
     static StateLink Create(const Group& group, const State<S>& input)
-        { return GetOrCreateLinkNode(group, input); }
+        { return StateLink(GetOrCreateLinkNode(group, input)); }
 
     StateLink() = default;
 

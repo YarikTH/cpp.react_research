@@ -32,32 +32,32 @@ public:
     // Construct state observer with explicit group
     template <typename F, typename T1, typename ... Ts>
     static Observer Create(const Group& group, F&& func, const State<T1>& subject1, const State<Ts>& ... subjects)
-        { return CreateStateObserverNode(group, std::forward<F>(func), subject1, subjects ...); }
+        { return Observer(CreateStateObserverNode(group, std::forward<F>(func), subject1, subjects ...)); }
 
     // Construct state observer with implicit group
     template <typename F, typename T1, typename ... Ts>
     static Observer Create(F&& func, const State<T1>& subject1, const State<Ts>& ... subjects)
-        { return CreateStateObserverNode(subject1.GetGroup(), std::forward<F>(func), subject1, subjects ...); }
+        { return Observer(CreateStateObserverNode(subject1.GetGroup(), std::forward<F>(func), subject1, subjects ...)); }
 
     // Construct event observer with explicit group
     template <typename F, typename T>
     static Observer Create(const Group& group, F&& func, const Event<T>& subject)
-        { return  CreateEventObserverNode(group, std::forward<F>(func), subject); }
+        { return Observer(CreateEventObserverNode(group, std::forward<F>(func), subject)); }
 
     // Construct event observer with implicit group
     template <typename F, typename T>
     static Observer Create(F&& func, const Event<T>& subject)
-        { return CreateEventObserverNode(subject.GetGroup(), std::forward<F>(func), subject); }
+        { return Observer(CreateEventObserverNode(subject.GetGroup(), std::forward<F>(func), subject)); }
 
     // Constructed synced event observer with explicit group
     template <typename F, typename T, typename ... Us>
     static Observer Create(const Group& group, F&& func, const Event<T>& subject, const State<Us>& ... states)
-        { return CreateSyncedEventObserverNode(group, std::forward<F>(func), subject, states ...); }
+        { return Observer(CreateSyncedEventObserverNode(group, std::forward<F>(func), subject, states ...)); }
 
     // Constructed synced event observer with implicit group
     template <typename F, typename T, typename ... Us>
     static Observer Create(F&& func, const Event<T>& subject, const State<Us>& ... states)
-        { return CreateSyncedEventObserverNode(subject.GetGroup(), std::forward<F>(func), subject, states ...); }
+        { return Observer(CreateSyncedEventObserverNode(subject.GetGroup(), std::forward<F>(func), subject, states ...)); }
 
     Observer(const Observer&) = default;
     Observer& operator=(const Observer&) = default;

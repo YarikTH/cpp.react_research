@@ -165,14 +165,14 @@ public:
 
     ~StateFuncNode()
     {
-        apply([this] (const auto& ... deps)
+        react::impl::apply([this] (const auto& ... deps)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(deps).GetNodePtr()->GetNodeId())); }, depHolder_);
         this->UnregisterMe();
     }
 
     virtual UpdateResult Update(TurnId turnId) noexcept override
     {
-        S newValue = apply([this] (const auto& ... deps)
+        S newValue = react::impl::apply([this] (const auto& ... deps)
             { return this->func_(GetInternals(deps).Value() ...); }, depHolder_);
 
         if (HasChanged(this->Value(), newValue))
@@ -202,7 +202,7 @@ public:
         StateSlotNode::StateNode( group, GetInternals(dep).Value() ),
         input_( dep )
     {
-        inputNodeId_ = GetGraphPtr()->RegisterNode(&slotInput_, NodeCategory::dyninput);
+        inputNodeId_ = this->GetGraphPtr()->RegisterNode(&slotInput_, NodeCategory::dyninput);
         
         this->RegisterMe();
         this->AttachToMe(inputNodeId_);
@@ -215,7 +215,7 @@ public:
         this->DetachFromMe(inputNodeId_);
         this->UnregisterMe();
 
-        GetGraphPtr()->UnregisterNode(inputNodeId_);
+        this->GetGraphPtr()->UnregisterNode(inputNodeId_);
     }
 
     virtual UpdateResult Update(TurnId turnId) noexcept override
@@ -284,7 +284,7 @@ public:
         srcGraphPtr->DetachNode(outputNodeId_, GetInternals(dep_).GetNodeId());
         srcGraphPtr->UnregisterNode(outputNodeId_);
 
-        auto& linkCache = GetGraphPtr()->GetLinkCache();
+        auto& linkCache = this->GetGraphPtr()->GetLinkCache();
         linkCache.Erase(this);
 
         this->UnregisterMe();

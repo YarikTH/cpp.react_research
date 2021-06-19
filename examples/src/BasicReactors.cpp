@@ -8,10 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "react/Domain.h"
-#include "react/Signal.h"
-#include "react/Event.h"
-#include "react/Reactor.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Example 1 - Creating reactive loops
@@ -35,7 +32,7 @@ namespace example1
 
     ReactorT loop
     {
-        [&] (ReactorT::Context ctx)
+        [] (ReactorT::Context ctx)
         {
             PathT points;
 
@@ -101,7 +98,7 @@ namespace example2
 
     ReactorT loop
     {
-        [&] (ReactorT::Context ctx)
+        [] (ReactorT::Context ctx)
         {
             PathT points;
 

@@ -14,19 +14,14 @@ include_directories ("${PROJECT_SOURCE_DIR}/include")
 add_subdirectory(deps)
 
 ### CppReact
-add_library(CppReact 
-	src/engine/PulsecountEngine.cpp
-	src/engine/SubtreeEngine.cpp
-	src/engine/ToposortEngine.cpp
-	src/logging/EventLog.cpp
-	src/logging/EventRecords.cpp)
+add_library(CppReact INTERFACE)
 
-target_compile_features(CppReact PUBLIC cxx_std_11)
+target_compile_features(CppReact INTERFACE cxx_std_11)
 
 set(Boost_USE_STATIC_LIBS OFF)
 find_package(Boost REQUIRED COMPONENTS coroutine)
 
-target_link_libraries(CppReact PUBLIC tbb_static Boost::coroutine)
+target_link_libraries(CppReact INTERFACE tbb_static Boost::coroutine)
 
 ### examples/ 
 option(build_examples "Build examples?" ON)

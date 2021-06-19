@@ -11,9 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "react/Domain.h"
-#include "react/Signal.h"
-#include "react/Observer.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Example 1 - Hello world

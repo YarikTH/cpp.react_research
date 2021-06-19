@@ -15,7 +15,7 @@
 
 #include "BenchmarkBase.h"
 
-#include "react/Signal.h"
+#include "react/react.hpp"
 
 using namespace react;
 

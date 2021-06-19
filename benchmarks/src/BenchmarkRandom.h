@@ -12,10 +12,7 @@
 #include <vector>
 
 #include "BenchmarkBase.h"
-#include "react/common/Types.h"
-
-#include "react/Domain.h"
-#include "react/Signal.h"
+#include "react/react.hpp"
 
 using namespace react;
 

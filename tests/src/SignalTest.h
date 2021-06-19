@@ -11,8 +11,7 @@
 #include <queue>
 #include <vector>
 
-#include "react/Domain.h"
-#include "react/Signal.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 namespace {

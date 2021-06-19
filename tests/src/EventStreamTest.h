@@ -11,8 +11,7 @@
 
 #include "gtest/gtest.h"
 
-#include "react/Domain.h"
-#include "react/Event.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 namespace {

@@ -6,10 +6,7 @@
 
 //#define REACT_ENABLE_LOGGING
 
-#include "react/Domain.h"
-#include "react/Signal.h"
-#include "react/Event.h"
-#include "react/Algorithm.h"
+#include "react/react.hpp"
 
 #include "tbb/tick_count.h"
 
@@ -28,13 +25,13 @@ int main()
 {
     testme();
 
-#ifdef REACT_ENABLE_LOGGING
-    std::ofstream logfile;
-    logfile.open("log.txt");
-
-    D::Log().Write(logfile);
-    logfile.close();
-#endif
+//#ifdef REACT_ENABLE_LOGGING
+//    std::ofstream logfile;
+//    logfile.open("log.txt");
+//
+//    D::Log().Write(logfile);
+//    logfile.close();
+//#endif
 
     return 0;
 }

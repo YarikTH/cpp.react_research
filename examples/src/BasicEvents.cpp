@@ -8,9 +8,7 @@
 #include <string>
 #include <utility>
 
-#include "react/Domain.h"
-#include "react/Event.h"
-#include "react/Observer.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Example 1 - Hello world

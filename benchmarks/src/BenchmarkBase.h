@@ -14,7 +14,7 @@
 #include <fstream>
 #include <random>
 
-#include "react/common/Util.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Get unique random numbers from range.

@@ -17,15 +17,7 @@
 #include "BenchmarkSequence.h"
 #include "BenchmarkLifeSim.h"
 
-#include "react/Domain.h"
-#include "react/Signal.h"
-#include "react/Algorithm.h"
-#include "react/common/Util.h"
-#include "react/logging/EventLog.h"
-
-#include "react/engine/ToposortEngine.h"
-#include "react/engine/PulsecountEngine.h"
-#include "react/engine/SubtreeEngine.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 namespace {

@@ -7,7 +7,7 @@
 #include "MoveTest.h"
 #include "TestUtil.h"
 
-#include "react/engine/ToposortEngine.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 namespace {

@@ -18,10 +18,7 @@
 
 #include "BenchmarkBase.h"
 
-#include "react/Domain.h"
-#include "react/Signal.h"
-#include "react/Event.h"
-#include "react/logging/EventLog.h"
+#include "react/react.hpp"
 
 using namespace react;
 

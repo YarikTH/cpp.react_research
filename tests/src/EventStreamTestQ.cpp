@@ -7,9 +7,7 @@
 #include "EventStreamTest.h"
 #include "TestUtil.h"
 
-#include "react/engine/PulsecountEngine.h"
-#include "react/engine/ToposortEngine.h"
-#include "react/engine/SubtreeEngine.h"
+#include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 namespace {

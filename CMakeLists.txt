@@ -27,12 +27,6 @@ if(build_examples)
 	add_subdirectory(examples)
 endif()
 
-### benchmarks/ 
-option(build_benchmarks "Build benchmarks?" OFF)
-if(build_benchmarks)
-	add_subdirectory(benchmarks)
-endif()
-
 ### tests/ 
 option(build_tests "Build unit tests?" OFF)
 if(build_tests)

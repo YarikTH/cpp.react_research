@@ -23,7 +23,10 @@ add_library(CppReact
 
 target_compile_features(CppReact PUBLIC cxx_std_11)
 
-target_link_libraries(CppReact tbb_static)
+set(Boost_USE_STATIC_LIBS OFF)
+find_package(Boost REQUIRED COMPONENTS coroutine)
+
+target_link_libraries(CppReact PUBLIC tbb_static Boost::coroutine)
 
 ### examples/ 
 option(build_examples "Build examples?" ON)

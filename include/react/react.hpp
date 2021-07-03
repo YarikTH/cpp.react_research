@@ -388,21 +388,6 @@ struct EngineInterface
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Engine traits
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename>
-struct NodeUpdateTimerEnabled : std::false_type
-{};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EPropagationMode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-enum EPropagationMode
-{
-    sequential_propagation
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// IReactiveNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct IReactiveNode
@@ -501,9 +486,6 @@ public:
     // Nodes can't be copied
     NodeBase( const NodeBase& ) = delete;
 };
-
-template <typename D>
-using NodeBasePtrT = std::shared_ptr<NodeBase<D>>;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// ObservableNode
@@ -786,14 +768,6 @@ class InputManager;
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 using TurnIdT = uint;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EInputMode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-enum EInputMode
-{
-    consecutive_input
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// ThreadLocalInputState
@@ -1255,12 +1229,7 @@ private:
 
 } // namespace impl
 
-template <::react::impl::EPropagationMode>
-class ToposortEngine;
-
-template <>
-class ToposortEngine<::react::impl::sequential_propagation>
-    : public ::react::impl::toposort::SeqEngineBase
+class ToposortEngine : public ::react::impl::toposort::SeqEngineBase
 {};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1293,12 +1262,6 @@ namespace impl
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Domain modes
-enum EDomainMode
-{
-    sequential,
-};
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// DomainBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1312,12 +1275,6 @@ public:
 
     using Policy = TPolicy;
     using Engine = ::react::impl::EngineInterface<D, typename Policy::Engine>;
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    /// Domain traits
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    static const bool uses_node_update_timer
-        = ::react::impl::NodeUpdateTimerEnabled<typename Policy::Engine>::value;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     /// Aliases for reactives of this domain
@@ -1340,61 +1297,11 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ModeSelector - Translate domain mode to individual propagation and input modes
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-template <EDomainMode>
-struct ModeSelector;
-
-template <>
-struct ModeSelector<sequential>
-{
-    static const EInputMode input = consecutive_input;
-    static const EPropagationMode propagation = sequential_propagation;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// GetDefaultEngine - Get default engine type for given propagation mode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <EPropagationMode>
-struct GetDefaultEngine;
-
-template <>
-struct GetDefaultEngine<sequential_propagation>
-{
-    using Type = ToposortEngine<sequential_propagation>;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EngineTypeBuilder - Instantiate the given template engine type with mode.
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <EPropagationMode>
-struct DefaultEnginePlaceholder;
-
-// Concrete engine template type
-template <EPropagationMode mode, template <EPropagationMode> class TTEngine>
-struct EngineTypeBuilder
-{
-    using Type = TTEngine<mode>;
-};
-
-// Placeholder engine type - use default engine for given mode
-template <EPropagationMode mode>
-struct EngineTypeBuilder<mode, DefaultEnginePlaceholder>
-{
-    using Type = typename GetDefaultEngine<mode>::Type;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// DomainPolicy
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <EDomainMode mode, template <EPropagationMode> class TTEngine = DefaultEnginePlaceholder>
 struct DomainPolicy
 {
-    static const EInputMode input_mode = ModeSelector<mode>::input;
-    static const EPropagationMode propagation_mode = ModeSelector<mode>::propagation;
-
-    using Engine = typename EngineTypeBuilder<propagation_mode, TTEngine>::Type;
+    using Engine = ToposortEngine;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1449,14 +1356,6 @@ class SignalPack;
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Domain modes
-using ::react::impl::EDomainMode;
-using ::react::impl::sequential;
-
-// Expose enum type so aliases for engines can be declared, but don't
-// expose the actual enum values as they are reserved for internal use.
-using ::react::impl::EPropagationMode;
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
 /// DoTransaction
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1470,8 +1369,8 @@ void DoTransaction( F&& func )
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Domain definition macro
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#define REACTIVE_DOMAIN( name, ... )                                                               \
-    struct name : public ::react::impl::DomainBase<name, ::react::impl::DomainPolicy<__VA_ARGS__>> \
+#define REACTIVE_DOMAIN( name )                                                                    \
+    struct name : public ::react::impl::DomainBase<name, ::react::impl::DomainPolicy>              \
     {};                                                                                            \
     static ::react::impl::DomainInitializer<name> name##_initializer_;
 
@@ -1603,7 +1502,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    void Tick( void* turnPtr ) override
+    void Tick( void* ) override
     {
         bool shouldDetach = false;
 
@@ -1667,7 +1566,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    void Tick( void* turnPtr ) override
+    void Tick( void* ) override
     {
         bool shouldDetach = false;
 
@@ -2344,7 +2243,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    void Tick( void* turnPtr ) override
+    void Tick( void* ) override
     {
         REACT_ASSERT( false, "Ticked VarNode\n" );
     }
@@ -3508,7 +3407,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    void Tick( void* turnPtr ) override
+    void Tick( void* ) override
     {
         REACT_ASSERT( false, "Ticked EventSourceNode\n" );
     }

@@ -24,11 +24,7 @@ template <typename TParams>
 class ObserverTest : public testing::Test
 {
 public:
-    template <EPropagationMode mode>
-    class MyEngine : public TParams::template EngineT<mode>
-    {};
-
-    REACTIVE_DOMAIN( MyDomain, TParams::mode, MyEngine )
+    REACTIVE_DOMAIN( MyDomain )
 };
 
 TYPED_TEST_CASE_P( ObserverTest );

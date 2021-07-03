@@ -15,7 +15,7 @@ namespace
 
 using namespace react;
 
-using P1 = DomainParams<sequential, ToposortEngine>;
+using P1 = DomainParams;
 
 INSTANTIATE_TYPED_TEST_CASE_P( SeqToposort, OperationsTest, P1 );
 

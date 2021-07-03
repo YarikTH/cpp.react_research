@@ -5,17 +5,18 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include "MoveTest.h"
-#include "TestUtil.h"
 
+#include "TestUtil.h"
 #include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-namespace {
+namespace
+{
 
 using namespace react;
 
-using P1 = DomainParams<sequential,ToposortEngine>;
+using P1 = DomainParams<sequential, ToposortEngine>;
 
-INSTANTIATE_TYPED_TEST_CASE_P(SeqToposort, MoveTest, P1);
+INSTANTIATE_TYPED_TEST_CASE_P( SeqToposort, MoveTest, P1 );
 
-} // ~namespace
+} // namespace

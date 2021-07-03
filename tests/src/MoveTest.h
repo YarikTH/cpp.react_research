@@ -7,11 +7,11 @@
 #pragma once
 
 #include "gtest/gtest.h"
-
 #include "react/react.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-namespace {
+namespace
+{
 
 using namespace react;
 
@@ -23,9 +23,10 @@ class MoveTest : public testing::Test
 {
 public:
     template <EPropagationMode mode>
-    class MyEngine : public TParams::template EngineT<mode> {};
+    class MyEngine : public TParams::template EngineT<mode>
+    {};
 
-    REACTIVE_DOMAIN(MyDomain, TParams::mode, MyEngine)
+    REACTIVE_DOMAIN( MyDomain, TParams::mode, MyEngine )
 
     struct Stats
     {
@@ -40,26 +41,26 @@ public:
 
         CopyCounter() = default;
 
-        CopyCounter(int x, Stats* s) :
-            v( x ),
-            stats( s )
+        CopyCounter( int x, Stats* s )
+            : v( x )
+            , stats( s )
         {}
 
-        CopyCounter(const CopyCounter& other) :
-            v( other.v ),
-            stats( other.stats )
+        CopyCounter( const CopyCounter& other )
+            : v( other.v )
+            , stats( other.stats )
         {
             stats->copyCount++;
         }
 
-        CopyCounter(CopyCounter&& other) :
-            v( other.v ),
-            stats( other.stats )
+        CopyCounter( CopyCounter&& other )
+            : v( other.v )
+            , stats( other.stats )
         {
             stats->moveCount++;
         }
 
-        CopyCounter& operator=(const CopyCounter& other)
+        CopyCounter& operator=( const CopyCounter& other )
         {
             v = other.v;
             stats = other.stats;
@@ -67,7 +68,7 @@ public:
             return *this;
         }
 
-        CopyCounter& operator=(CopyCounter&& other)
+        CopyCounter& operator=( CopyCounter&& other )
         {
             v = other.v;
             stats = other.stats;
@@ -75,24 +76,24 @@ public:
             return *this;
         }
 
-        CopyCounter operator+(const CopyCounter& r) const
+        CopyCounter operator+( const CopyCounter& r ) const
         {
             return CopyCounter{ v + r.v, stats };
         }
 
-        bool operator==(const CopyCounter& other) const
+        bool operator==( const CopyCounter& other ) const
         {
             return v == other.v;
         }
     };
 };
 
-TYPED_TEST_CASE_P(MoveTest);
+TYPED_TEST_CASE_P( MoveTest );
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Copy1
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-TYPED_TEST_P(MoveTest, Copy1)
+TYPED_TEST_P( MoveTest, Copy1 )
 {
     using D = typename Copy1::MyDomain;
     using CopyCounter = typename Copy1::CopyCounter;
@@ -100,34 +101,30 @@ TYPED_TEST_P(MoveTest, Copy1)
 
     Stats stats1;
 
-    auto a = MakeVar<D>(CopyCounter{1,&stats1});
-    auto b = MakeVar<D>(CopyCounter{10,&stats1});
-    auto c = MakeVar<D>(CopyCounter{100,&stats1});
-    auto d = MakeVar<D>(CopyCounter{1000,&stats1});
+    auto a = MakeVar<D>( CopyCounter{ 1, &stats1 } );
+    auto b = MakeVar<D>( CopyCounter{ 10, &stats1 } );
+    auto c = MakeVar<D>( CopyCounter{ 100, &stats1 } );
+    auto d = MakeVar<D>( CopyCounter{ 1000, &stats1 } );
 
     // 4x move to value_
     // 4x copy to newValue_ (can't be unitialized for references)
-    ASSERT_EQ(stats1.copyCount, 4);
-    ASSERT_EQ(stats1.moveCount, 4);
+    ASSERT_EQ( stats1.copyCount, 4 );
+    ASSERT_EQ( stats1.moveCount, 4 );
 
     auto x = a + b + c + d;
 
-    ASSERT_EQ(stats1.copyCount, 4);
-    ASSERT_EQ(stats1.moveCount, 7);
-    ASSERT_EQ(x().v, 1111);
+    ASSERT_EQ( stats1.copyCount, 4 );
+    ASSERT_EQ( stats1.moveCount, 7 );
+    ASSERT_EQ( x().v, 1111 );
 
-    a <<= CopyCounter{2,&stats1};
+    a <<= CopyCounter{ 2, &stats1 };
 
-    ASSERT_EQ(stats1.copyCount, 4);
-    ASSERT_EQ(stats1.moveCount, 10);
-    ASSERT_EQ(x().v, 1112);
+    ASSERT_EQ( stats1.copyCount, 4 );
+    ASSERT_EQ( stats1.moveCount, 10 );
+    ASSERT_EQ( x().v, 1112 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-REGISTER_TYPED_TEST_CASE_P
-(
-    MoveTest,
-    Copy1
-);
+REGISTER_TYPED_TEST_CASE_P( MoveTest, Copy1 );
 
-} // ~namespace
+} // namespace

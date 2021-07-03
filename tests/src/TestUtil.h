@@ -7,13 +7,9 @@
 #pragma once
 
 #ifndef REACT_TESTS_TESTUTIL_H_INCLUDED
-#define REACT_TESTS_TESTUTIL_H_INCLUDED
+#    define REACT_TESTS_TESTUTIL_H_INCLUDED
 
-template
-<
-    EDomainMode m,
-    template <EPropagationMode> class TTEngine
->
+template <EDomainMode m, template <EPropagationMode> class TTEngine>
 struct DomainParams
 {
     static const EDomainMode mode = m;

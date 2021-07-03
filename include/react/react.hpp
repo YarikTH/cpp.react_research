@@ -612,8 +612,7 @@ struct NodeUpdateTimerEnabled : std::false_type
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 enum EPropagationMode
 {
-    sequential_propagation,
-    parallel_propagation
+    sequential_propagation
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -623,26 +622,9 @@ struct IReactiveNode
 {
     virtual ~IReactiveNode() = default;
 
-    /// Returns unique type identifier
-    virtual const char* GetNodeType() const = 0;
-
     // Note: Could get rid of this ugly ptr by adding a template parameter to the interface
     // But that would mean all engine nodes need that template parameter too - so rather cast
     virtual void Tick( void* turnPtr ) = 0;
-
-    /// Input nodes can be manipulated externally.
-    virtual bool IsInputNode() const = 0;
-
-    /// Output nodes can't have any successors.
-    virtual bool IsOutputNode() const = 0;
-
-    /// Dynamic nodes may change in topology as a result of tick.
-    virtual bool IsDynamicNode() const = 0;
-
-    // Number of predecessors.
-    // This information is statically available at compile time on the graph layer,
-    // so the engine does not have to calculate it again.
-    virtual int DependencyCount() const = 0;
 
     // Heavyweight nodes are worth parallelizing.
     virtual bool IsHeavyweight() const = 0;
@@ -811,21 +793,6 @@ public:
 
     // Nodes can't be copied
     NodeBase( const NodeBase& ) = delete;
-
-    virtual bool IsInputNode() const override
-    {
-        return false;
-    }
-
-    virtual bool IsOutputNode() const override
-    {
-        return false;
-    }
-
-    virtual bool IsDynamicNode() const override
-    {
-        return false;
-    }
 
     virtual bool IsHeavyweight() const override
     {
@@ -1737,78 +1704,6 @@ public:
 private:
     DataVectT storedContinuations_;
     ObsVectT detachedObservers_;
-};
-
-// Thread-safe implementation
-template <>
-class ContinuationManager<parallel_propagation>
-{
-    struct Data_
-    {
-        Data_( IContinuationTarget* target, TransactionFlagsT flags, TransactionFuncT&& func )
-            : Target( target )
-            , Flags( flags )
-            , Func( func )
-        {}
-
-        IContinuationTarget* Target;
-        TransactionFlagsT Flags;
-        TransactionFuncT Func;
-    };
-
-    using DataVecT = std::vector<Data_>;
-    using ObsVectT = std::vector<IObserver*>;
-
-public:
-    void StoreContinuation(
-        IContinuationTarget& target, TransactionFlagsT flags, TransactionFuncT&& cont )
-    {
-        storedContinuations_.local().emplace_back( &target, flags, std::move( cont ) );
-        ++contCount_;
-    }
-
-    bool HasContinuations() const
-    {
-        return contCount_ != 0;
-    }
-
-    void StartContinuations( const WaitingStatePtrT& waitingStatePtr )
-    {
-        for( auto& v : storedContinuations_ )
-        {
-            for( auto& t : v )
-            {
-                t.Target->AsyncContinuation( t.Flags, waitingStatePtr, std::move( t.Func ) );
-            }
-        }
-
-        storedContinuations_.clear();
-        contCount_ = 0;
-    }
-
-    void QueueObserverForDetach( IObserver& obs )
-    {
-        detachedObservers_.local().push_back( &obs );
-    }
-
-    template <typename D>
-    void DetachQueuedObservers()
-    {
-        for( auto& v : detachedObservers_ )
-        {
-            for( auto* o : v )
-            {
-                o->UnregisterSelf();
-            }
-            v.clear();
-        }
-    }
-
-private:
-    tbb::enumerable_thread_specific<DataVecT> storedContinuations_;
-    tbb::enumerable_thread_specific<ObsVectT> detachedObservers_;
-
-    size_t contCount_ = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2748,16 +2643,6 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "SignalContinuationNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1;
-    }
-
     virtual void Tick( void* turnPtr ) override
     {
         auto& storedValue = trigger_->ValueRef();
@@ -2801,16 +2686,6 @@ public:
     ~EventContinuationNode()
     {
         Engine::OnNodeDestroy( *this );
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "EventContinuationNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1;
     }
 
     virtual void Tick( void* turnPtr ) override
@@ -2893,16 +2768,6 @@ public:
             deps_ );
 
         Engine::OnNodeDestroy( *this );
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "SyncedContinuationNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1 + sizeof...( TDepValues );
     }
 
     virtual void Tick( void* turnPtr ) override
@@ -3155,134 +3020,6 @@ public:
 private:
     TurnIdT id_;
 };
-
-namespace pulsecount
-{
-
-using std::atomic;
-using std::vector;
-
-using tbb::empty_task;
-using tbb::spin_rw_mutex;
-using tbb::task;
-using tbb::task_list;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Turn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class Turn : public TurnBase
-{
-public:
-    Turn( TurnIdT id, TransactionFlagsT flags );
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Node
-///////////////////////////////////////////////////////////////////////////////////////////////////
-enum class ENodeMark
-{
-    unmarked,
-    visited,
-    should_update
-};
-
-enum class ENodeState
-{
-    unchanged,
-    changed,
-    dyn_defer,
-    dyn_repeat
-};
-
-class Node : public IReactiveNode
-{
-public:
-    using ShiftMutexT = spin_rw_mutex;
-
-    inline void IncCounter()
-    {
-        counter_.fetch_add( 1, std::memory_order_relaxed );
-    }
-
-    inline bool DecCounter()
-    {
-        return counter_.fetch_sub( 1, std::memory_order_relaxed ) > 1;
-    }
-
-    inline void SetCounter( int c )
-    {
-        counter_.store( c, std::memory_order_relaxed );
-    }
-
-    inline ENodeMark Mark() const
-    {
-        return mark_.load( std::memory_order_relaxed );
-    }
-
-    inline void SetMark( ENodeMark mark )
-    {
-        mark_.store( mark, std::memory_order_relaxed );
-    }
-
-    inline bool ExchangeMark( ENodeMark mark )
-    {
-        return mark_.exchange( mark, std::memory_order_relaxed ) != mark;
-    }
-
-    ShiftMutexT ShiftMutex;
-    NodeVector<Node> Successors;
-
-    ENodeState State = ENodeState::unchanged;
-
-private:
-    atomic<int> counter_{ 0 };
-    atomic<ENodeMark> mark_{ ENodeMark::unmarked };
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EngineBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class EngineBase : public IReactiveEngine<Node, Turn>
-{
-public:
-    using NodeShiftMutexT = Node::ShiftMutexT;
-    using NodeVectT = vector<Node*>;
-
-    void OnNodeAttach( Node& node, Node& parent );
-    void OnNodeDetach( Node& node, Node& parent );
-
-    void OnInputChange( Node& node, Turn& turn );
-    void Propagate( Turn& turn );
-
-    void OnNodePulse( Node& node, Turn& turn );
-    void OnNodeIdlePulse( Node& node, Turn& turn );
-
-    void OnDynamicNodeAttach( Node& node, Node& parent, Turn& turn );
-    void OnDynamicNodeDetach( Node& node, Node& parent, Turn& turn );
-
-private:
-    NodeVectT changedInputs_;
-    empty_task& rootTask_ = *new( task::allocate_root() ) empty_task;
-    task_list spawnList_;
-};
-
-} // namespace pulsecount
-} // namespace impl
-
-template <::react::impl::EPropagationMode>
-class PulsecountEngine;
-
-template <>
-class PulsecountEngine<::react::impl::parallel_propagation>
-    : public ::react::impl::pulsecount::EngineBase
-{};
-
-namespace impl
-{
-
-template <>
-struct NodeUpdateTimerEnabled<PulsecountEngine<parallel_propagation>> : std::true_type
-{};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// TopoQueue - Sequential
@@ -3626,256 +3363,6 @@ private:
     tbb::enumerable_thread_specific<ThreadLocalBuffer> collectBuffer_;
 };
 
-namespace subtree
-{
-
-using std::atomic;
-using std::vector;
-
-using tbb::empty_task;
-using tbb::spin_rw_mutex;
-using tbb::task;
-using tbb::task_list;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Turn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class Turn : public TurnBase
-{
-public:
-    Turn( TurnIdT id, TransactionFlagsT flags );
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Node
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class Node : public IReactiveNode
-{
-public:
-    using ShiftMutexT = spin_rw_mutex;
-
-    inline bool IsQueued() const
-    {
-        return flags_.Test<flag_queued>();
-    }
-
-    inline void SetQueuedFlag()
-    {
-        flags_.Set<flag_queued>();
-    }
-
-    inline void ClearQueuedFlag()
-    {
-        flags_.Clear<flag_queued>();
-    }
-
-    inline bool IsMarked() const
-    {
-        return flags_.Test<flag_marked>();
-    }
-
-    inline void SetMarkedFlag()
-    {
-        flags_.Set<flag_marked>();
-    }
-
-    inline void ClearMarkedFlag()
-    {
-        flags_.Clear<flag_marked>();
-    }
-
-    inline bool IsChanged() const
-    {
-        return flags_.Test<flag_changed>();
-    }
-
-    inline void SetChangedFlag()
-    {
-        flags_.Set<flag_changed>();
-    }
-
-    inline void ClearChangedFlag()
-    {
-        flags_.Clear<flag_changed>();
-    }
-
-    inline bool IsDeferred() const
-    {
-        return flags_.Test<flag_deferred>();
-    }
-
-    inline void SetDeferredFlag()
-    {
-        flags_.Set<flag_deferred>();
-    }
-
-    inline void ClearDeferredFlag()
-    {
-        flags_.Clear<flag_deferred>();
-    }
-
-    inline bool IsRepeated() const
-    {
-        return flags_.Test<flag_repeated>();
-    }
-
-    inline void SetRepeatedFlag()
-    {
-        flags_.Set<flag_repeated>();
-    }
-
-    inline void ClearRepeatedFlag()
-    {
-        flags_.Clear<flag_repeated>();
-    }
-
-    inline bool IsInitial() const
-    {
-        return flags_.Test<flag_initial>();
-    }
-
-    inline void SetInitialFlag()
-    {
-        flags_.Set<flag_initial>();
-    }
-
-    inline void ClearInitialFlag()
-    {
-        flags_.Clear<flag_initial>();
-    }
-
-    inline bool IsRoot() const
-    {
-        return flags_.Test<flag_root>();
-    }
-
-    inline void SetRootFlag()
-    {
-        flags_.Set<flag_root>();
-    }
-
-    inline void ClearRootFlag()
-    {
-        flags_.Clear<flag_root>();
-    }
-
-    inline bool ShouldUpdate() const
-    {
-        return shouldUpdate_.load( std::memory_order_relaxed );
-    }
-
-    inline void SetShouldUpdate( bool b )
-    {
-        shouldUpdate_.store( b, std::memory_order_relaxed );
-    }
-
-    inline void SetReadyCount( int c )
-    {
-        readyCount_.store( c, std::memory_order_relaxed );
-    }
-
-    inline bool IncReadyCount()
-    {
-        auto t = readyCount_.fetch_add( 1, std::memory_order_relaxed );
-        return t < ( WaitCount - 1 );
-    }
-
-    inline bool DecReadyCount()
-    {
-        return readyCount_.fetch_sub( 1, std::memory_order_relaxed ) > 1;
-    }
-
-    NodeVector<Node> Successors;
-    ShiftMutexT ShiftMutex;
-    uint16_t Level = 0;
-    uint16_t NewLevel = 0;
-    uint16_t WaitCount = 0;
-
-private:
-    enum EFlags : uint16_t
-    {
-        flag_queued = 0,
-        flag_marked,
-        flag_changed,
-        flag_deferred,
-        flag_repeated,
-        flag_initial,
-        flag_root
-    };
-
-    EnumFlags<EFlags> flags_;
-    atomic<uint16_t> readyCount_{ 0 };
-    atomic<bool> shouldUpdate_{ false };
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Functors
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-struct GetLevelFunctor
-{
-    int operator()( const T* x ) const
-    {
-        return x->Level;
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EngineBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class EngineBase : public IReactiveEngine<Node, Turn>
-{
-public:
-    using TopoQueueT = TopoQueue<Node*, GetLevelFunctor<Node>>;
-    using NodeShiftMutexT = Node::ShiftMutexT;
-
-    void OnNodeAttach( Node& node, Node& parent );
-    void OnNodeDetach( Node& node, Node& parent );
-
-    void OnInputChange( Node& node, Turn& turn );
-    void Propagate( Turn& turn );
-
-    void OnNodePulse( Node& node, Turn& turn );
-    void OnNodeIdlePulse( Node& node, Turn& turn );
-
-    void OnDynamicNodeAttach( Node& node, Node& parent, Turn& turn );
-    void OnDynamicNodeDetach( Node& node, Node& parent, Turn& turn );
-
-private:
-    void applyAsyncDynamicAttach( Node& node, Node& parent, Turn& turn );
-    void applyAsyncDynamicDetach( Node& node, Node& parent, Turn& turn );
-
-    void invalidateSuccessors( Node& node );
-    void processChildren( Node& node, Turn& turn );
-
-    void markSubtree( Node& root );
-
-    TopoQueueT scheduledNodes_;
-    vector<Node*> subtreeRoots_;
-
-    empty_task& rootTask_ = *new( task::allocate_root() ) empty_task;
-    task_list spawnList_;
-
-    bool isInPhase2_ = false;
-};
-
-} // namespace subtree
-} // namespace impl
-
-template <::react::impl::EPropagationMode>
-class SubtreeEngine;
-
-template <>
-class SubtreeEngine<::react::impl::parallel_propagation> : public ::react::impl::subtree::EngineBase
-{};
-
-namespace impl
-{
-
-template <>
-struct NodeUpdateTimerEnabled<SubtreeEngine<parallel_propagation>> : std::true_type
-{};
-
 namespace toposort
 {
 
@@ -4047,20 +3534,6 @@ class ToposortEngine<::react::impl::sequential_propagation>
     : public ::react::impl::toposort::SeqEngineBase
 {};
 
-template <>
-class ToposortEngine<::react::impl::parallel_propagation>
-    : public ::react::impl::toposort::ParEngineBase
-{};
-
-namespace impl
-{
-
-template <>
-struct NodeUpdateTimerEnabled<ToposortEngine<parallel_propagation>> : std::true_type
-{};
-
-} // namespace impl
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Forward declarations
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4095,9 +3568,6 @@ namespace impl
 enum EDomainMode
 {
     sequential,
-    sequential_concurrent,
-    parallel,
-    parallel_concurrent
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4121,8 +3591,6 @@ public:
         = ::react::impl::NodeUpdateTimerEnabled<typename Policy::Engine>::value;
 
     static const bool is_concurrent = Policy::input_mode == ::react::impl::concurrent_input;
-
-    static const bool is_parallel = Policy::propagation_mode == ::react::impl::parallel_propagation;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     /// Aliases for reactives of this domain
@@ -4173,27 +3641,6 @@ struct ModeSelector<sequential>
     static const EPropagationMode propagation = sequential_propagation;
 };
 
-template <>
-struct ModeSelector<sequential_concurrent>
-{
-    static const EInputMode input = concurrent_input;
-    static const EPropagationMode propagation = sequential_propagation;
-};
-
-template <>
-struct ModeSelector<parallel>
-{
-    static const EInputMode input = consecutive_input;
-    static const EPropagationMode propagation = parallel_propagation;
-};
-
-template <>
-struct ModeSelector<parallel_concurrent>
-{
-    static const EInputMode input = concurrent_input;
-    static const EPropagationMode propagation = parallel_propagation;
-};
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// GetDefaultEngine - Get default engine type for given propagation mode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4204,12 +3651,6 @@ template <>
 struct GetDefaultEngine<sequential_propagation>
 {
     using Type = ToposortEngine<sequential_propagation>;
-};
-
-template <>
-struct GetDefaultEngine<parallel_propagation>
-{
-    using Type = SubtreeEngine<parallel_propagation>;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4303,10 +3744,7 @@ using ::react::impl::ETransactionFlags;
 
 // Domain modes
 using ::react::impl::EDomainMode;
-using ::react::impl::parallel;
-using ::react::impl::parallel_concurrent;
 using ::react::impl::sequential;
-using ::react::impl::sequential_concurrent;
 
 // Expose enum type so aliases for engines can be declared, but don't
 // expose the actual enum values as they are reserved for internal use.
@@ -4728,16 +4166,6 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "SignalObserverNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1;
-    }
-
     virtual void Tick( void* turnPtr ) override
     {
         bool shouldDetach = false;
@@ -4803,16 +4231,6 @@ public:
     ~EventObserverNode()
     {
         Engine::OnNodeDestroy( *this );
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "EventObserverNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1;
     }
 
     virtual void Tick( void* turnPtr ) override
@@ -4884,16 +4302,6 @@ public:
     ~SyncedObserverNode()
     {
         Engine::OnNodeDestroy( *this );
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "SyncedObserverNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1 + sizeof...( TDepValues );
     }
 
     virtual void Tick( void* turnPtr ) override
@@ -5546,21 +4954,6 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "VarNode";
-    }
-
-    virtual bool IsInputNode() const override
-    {
-        return true;
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 0;
-    }
-
     virtual void Tick( void* turnPtr ) override
     {
         REACT_ASSERT( false, "Ticked VarNode\n" );
@@ -5753,16 +5146,6 @@ public:
         }
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "SignalOpNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return TOp::dependency_count;
-    }
-
     TOp StealOp()
     {
         REACT_ASSERT( wasOpStolen_ == false, "Op was already stolen." );
@@ -5831,21 +5214,6 @@ public:
         {
             Engine::OnNodeIdlePulse( *this, turn );
         }
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "FlattenNode";
-    }
-
-    virtual bool IsDynamicNode() const override
-    {
-        return true;
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 2;
     }
 
 private:
@@ -6706,7 +6074,7 @@ class SignalNode;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Note: Weird design due to empty base class optimization
 template <typename D>
-struct BufferClearAccessPolicy : private ConditionalCriticalSection<tbb::spin_mutex, D::is_parallel>
+struct BufferClearAccessPolicy : private ConditionalCriticalSection<tbb::spin_mutex, false>
 {
     template <typename F>
     void AccessBufferForClearing( const F& f )
@@ -6779,21 +6147,6 @@ public:
     ~EventSourceNode()
     {
         Engine::OnNodeDestroy( *this );
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "EventSourceNode";
-    }
-
-    virtual bool IsInputNode() const override
-    {
-        return true;
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 0;
     }
 
     virtual void Tick( void* turnPtr ) override
@@ -7111,16 +6464,6 @@ public:
         }
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "EventOpNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return TOp::dependency_count;
-    }
-
     TOp StealOp()
     {
         REACT_ASSERT( wasOpStolen_ == false, "Op was already stolen." );
@@ -7175,21 +6518,6 @@ public:
         Engine::OnNodeDetach( *this, *outer_ );
         Engine::OnNodeDetach( *this, *inner_ );
         Engine::OnNodeDestroy( *this );
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "EventFlattenNode";
-    }
-
-    virtual bool IsDynamicNode() const override
-    {
-        return true;
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 2;
     }
 
     virtual void Tick( void* turnPtr ) override
@@ -7306,16 +6634,6 @@ public:
         }
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "SyncedEventTransformNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1 + sizeof...( TDepValues );
-    }
-
 private:
     using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
 
@@ -7398,17 +6716,6 @@ public:
             Engine::OnNodeIdlePulse( *this, turn );
         }
     }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "SyncedEventFilterNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1 + sizeof...( TDepValues );
-    }
-
     virtual bool IsHeavyweight() const override
     {
         return this->IsUpdateThresholdExceeded();
@@ -7471,16 +6778,6 @@ public:
         {
             Engine::OnNodeIdlePulse( *this, turn );
         }
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "EventProcessingNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1;
     }
 
 private:
@@ -7558,16 +6855,6 @@ public:
         {
             Engine::OnNodeIdlePulse( *this, turn );
         }
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "SycnedEventProcessingNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1 + sizeof...( TDepValues );
     }
 
 private:
@@ -7664,16 +6951,6 @@ public:
         {
             Engine::OnNodeIdlePulse( *this, turn );
         }
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "EventJoinNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return sizeof...( TValues );
     }
 
 private:
@@ -8571,16 +7848,6 @@ public:
         }
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "IterateNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1;
-    }
-
 private:
     std::shared_ptr<EventStreamNode<D, E>> events_;
 
@@ -8627,16 +7894,6 @@ public:
 
         // Always assume change
         Engine::OnNodePulse( *this, turn );
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "IterateByRefNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1;
     }
 
 protected:
@@ -8718,16 +7975,6 @@ public:
         }
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "SyncedIterateNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1 + sizeof...( TDepValues );
-    }
-
 private:
     using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
 
@@ -8806,16 +8053,6 @@ public:
         }
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "SyncedIterateByRefNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1 + sizeof...( TDepValues );
-    }
-
 private:
     using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
 
@@ -8849,11 +8086,6 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "HoldNode";
-    }
-
     virtual void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
@@ -8880,11 +8112,6 @@ public:
         {
             Engine::OnNodeIdlePulse( *this, turn );
         }
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1;
     }
 
 private:
@@ -8948,16 +8175,6 @@ public:
         }
     }
 
-    virtual const char* GetNodeType() const override
-    {
-        return "SnapshotNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 2;
-    }
-
 private:
     const std::shared_ptr<SignalNode<D, S>> target_;
     const std::shared_ptr<EventStreamNode<D, E>> trigger_;
@@ -9003,16 +8220,6 @@ public:
         {
             Engine::OnNodeIdlePulse( *this, turn );
         }
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "MonitorNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 1;
     }
 
 private:
@@ -9067,16 +8274,6 @@ public:
         {
             Engine::OnNodeIdlePulse( *this, turn );
         }
-    }
-
-    virtual const char* GetNodeType() const override
-    {
-        return "PulseNode";
-    }
-
-    virtual int DependencyCount() const override
-    {
-        return 2;
     }
 
 private:
@@ -9281,646 +8478,6 @@ auto ChangedTo( const Signal<D, S>& target, V&& value ) -> Events<D, Token>
 
 namespace impl
 {
-namespace pulsecount
-{
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Constants
-///////////////////////////////////////////////////////////////////////////////////////////////////
-static const uint chunk_size = 8;
-static const uint dfs_threshold = 3;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// MarkerTask
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class MarkerTask : public task
-{
-public:
-    using BufferT = NodeBuffer<Node, chunk_size>;
-
-    template <typename TInput>
-    MarkerTask( TInput srcBegin, TInput srcEnd )
-        : nodes_( srcBegin, srcEnd )
-    {}
-
-    MarkerTask( MarkerTask& other, SplitTag )
-        : nodes_( other.nodes_, SplitTag() )
-    {}
-
-    task* execute()
-    {
-        uint splitCount = 0;
-
-        while( !nodes_.IsEmpty() )
-        {
-            Node& node = splitCount > dfs_threshold ? *nodes_.PopBack() : *nodes_.PopFront();
-
-            // Increment counter of each successor and add it to smaller stack
-            for( auto* succ : node.Successors )
-            {
-                succ->IncCounter();
-
-                // Skip if already marked as reachable
-                if( !succ->ExchangeMark( ENodeMark::visited ) )
-                {
-                    continue;
-                }
-
-                nodes_.PushBack( succ );
-
-                if( nodes_.IsFull() )
-                {
-                    splitCount++;
-
-                    //Delegate half the work to new task
-                    auto& t = *new( task::allocate_additional_child_of( *parent() ) )
-                                  MarkerTask( *this, SplitTag{} );
-
-                    spawn( t );
-                }
-            }
-        }
-
-        return nullptr;
-    }
-
-private:
-    BufferT nodes_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// UpdaterTask
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class UpdaterTask : public task
-{
-public:
-    using BufferT = NodeBuffer<Node, chunk_size>;
-
-    template <typename TInput>
-    UpdaterTask( Turn& turn, TInput srcBegin, TInput srcEnd )
-        : turn_( turn )
-        , nodes_( srcBegin, srcEnd )
-    {}
-
-    UpdaterTask( Turn& turn, Node* node )
-        : turn_( turn )
-        , nodes_( node )
-    {}
-
-    UpdaterTask( UpdaterTask& other, SplitTag )
-        : turn_( other.turn_ )
-        , nodes_( other.nodes_, SplitTag() )
-    {}
-
-    task* execute()
-    {
-        uint splitCount = 0;
-
-        while( !nodes_.IsEmpty() )
-        {
-            Node& node = splitCount > dfs_threshold ? *nodes_.PopBack() : *nodes_.PopFront();
-
-            if( node.Mark() == ENodeMark::should_update )
-            {
-                node.Tick( &turn_ );
-            }
-
-            // Defer if node was dynamically attached to a predecessor that
-            // has not pulsed yet
-            if( node.State == ENodeState::dyn_defer )
-            {
-                continue;
-            }
-
-            // Repeat the update if a node was dynamically attached to a
-            // predecessor that has already pulsed
-            while( node.State == ENodeState::dyn_repeat )
-            {
-                node.Tick( &turn_ );
-            }
-
-            // Mark successors for update?
-            bool update = node.State == ENodeState::changed;
-            node.State = ENodeState::unchanged;
-
-            { // node.ShiftMutex
-                Node::ShiftMutexT::scoped_lock lock( node.ShiftMutex, false );
-
-                for( auto* succ : node.Successors )
-                {
-                    if( update )
-                    {
-                        succ->SetMark( ENodeMark::should_update );
-                    }
-
-                    // Delay tick?
-                    if( succ->DecCounter() )
-                    {
-                        continue;
-                    }
-
-                    // Heavyweight - spawn new task
-                    if( succ->IsHeavyweight() )
-                    {
-                        auto& t = *new( task::allocate_additional_child_of( *parent() ) )
-                                      UpdaterTask( turn_, succ );
-
-                        spawn( t );
-                    }
-                    // Leightweight - add to buffer, split if full
-                    else
-                    {
-                        nodes_.PushBack( succ );
-
-                        if( nodes_.IsFull() )
-                        {
-                            splitCount++;
-
-                            //Delegate half the work to new task
-                            auto& t = *new( task::allocate_additional_child_of( *parent() ) )
-                                          UpdaterTask( *this, SplitTag{} );
-
-                            spawn( t );
-                        }
-                    }
-                }
-
-                node.SetMark( ENodeMark::unmarked );
-            } // ~node.ShiftMutex
-        }
-
-        return nullptr;
-    }
-
-private:
-    Turn& turn_;
-    BufferT nodes_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Turn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-inline Turn::Turn( TurnIdT id, TransactionFlagsT flags )
-    : TurnBase( id, flags )
-{}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// PulsecountEngine
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-inline void EngineBase::OnNodeAttach( Node& node, Node& parent )
-{
-    parent.Successors.Add( node );
-}
-
-inline void EngineBase::OnNodeDetach( Node& node, Node& parent )
-{
-    parent.Successors.Remove( node );
-}
-
-inline void EngineBase::OnInputChange( Node& node, Turn& turn )
-{
-    changedInputs_.push_back( &node );
-    node.State = ENodeState::changed;
-}
-
-template <typename TTask, typename TIt, typename... TArgs>
-void spawnTasks(
-    task& rootTask, task_list& spawnList, const size_t count, TIt start, TIt end, TArgs&... args )
-{
-    assert( 1 + count <= static_cast<size_t>( ( std::numeric_limits<int>::max )() ) );
-
-    rootTask.set_ref_count( 1 + static_cast<int>( count ) );
-
-    for( size_t i = 0; i < ( count - 1 ); i++ )
-    {
-        spawnList.push_back(
-            *new( rootTask.allocate_child() ) TTask( args..., start, start + chunk_size ) );
-        start += chunk_size;
-    }
-
-    spawnList.push_back( *new( rootTask.allocate_child() ) TTask( args..., start, end ) );
-
-    rootTask.spawn_and_wait_for_all( spawnList );
-
-    spawnList.clear();
-}
-
-inline void EngineBase::Propagate( Turn& turn )
-{
-    const size_t initialTaskCount = ( changedInputs_.size() - 1 ) / chunk_size + 1;
-
-    spawnTasks<MarkerTask>(
-        rootTask_, spawnList_, initialTaskCount, changedInputs_.begin(), changedInputs_.end() );
-
-    spawnTasks<UpdaterTask>( rootTask_,
-        spawnList_,
-        initialTaskCount,
-        changedInputs_.begin(),
-        changedInputs_.end(),
-        turn );
-
-    changedInputs_.clear();
-}
-
-inline void EngineBase::OnNodePulse( Node& node, Turn& turn )
-{
-    node.State = ENodeState::changed;
-}
-
-inline void EngineBase::OnNodeIdlePulse( Node& node, Turn& turn )
-{
-    node.State = ENodeState::unchanged;
-}
-
-inline void EngineBase::OnDynamicNodeAttach( Node& node, Node& parent, Turn& turn )
-{ // parent.ShiftMutex (write)
-    NodeShiftMutexT::scoped_lock lock( parent.ShiftMutex, true );
-
-    parent.Successors.Add( node );
-
-    // Has already nudged its neighbors?
-    if( parent.Mark() == ENodeMark::unmarked )
-    {
-        node.State = ENodeState::dyn_repeat;
-    }
-    else
-    {
-        node.State = ENodeState::dyn_defer;
-        node.IncCounter();
-        node.SetMark( ENodeMark::should_update );
-    }
-} // ~parent.ShiftMutex (write)
-
-inline void EngineBase::OnDynamicNodeDetach( Node& node, Node& parent, Turn& turn )
-{ // parent.ShiftMutex (write)
-    NodeShiftMutexT::scoped_lock lock( parent.ShiftMutex, true );
-
-    parent.Successors.Remove( node );
-} // ~parent.ShiftMutex (write)
-
-} // namespace pulsecount
-
-namespace subtree
-{
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Parameters
-///////////////////////////////////////////////////////////////////////////////////////////////////
-static const uint chunk_size = 8;
-static const uint dfs_threshold = 3;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Turn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-inline Turn::Turn( TurnIdT id, TransactionFlagsT flags )
-    : TurnBase( id, flags )
-{}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// PulsecountEngine
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-inline void EngineBase::OnNodeAttach( Node& node, Node& parent )
-{
-    parent.Successors.Add( node );
-
-    if( node.Level <= parent.Level )
-    {
-        node.Level = parent.Level + 1;
-    }
-}
-
-inline void EngineBase::OnNodeDetach( Node& node, Node& parent )
-{
-    parent.Successors.Remove( node );
-}
-
-inline void EngineBase::OnInputChange( Node& node, Turn& turn )
-{
-    processChildren( node, turn );
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// UpdaterTask
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class UpdaterTask : public task
-{
-public:
-    using BufferT = NodeBuffer<Node, chunk_size>;
-
-    UpdaterTask( Turn& turn, Node* node )
-        : turn_( turn )
-        , nodes_( node )
-    {}
-
-    UpdaterTask( UpdaterTask& other, SplitTag )
-        : turn_( other.turn_ )
-        , nodes_( other.nodes_, SplitTag() )
-    {}
-
-    task* execute()
-    {
-        uint splitCount = 0;
-
-        while( !nodes_.IsEmpty() )
-        {
-            Node& node = splitCount > dfs_threshold ? *nodes_.PopBack() : *nodes_.PopFront();
-
-            if( node.IsInitial() || node.ShouldUpdate() )
-            {
-                node.Tick( &turn_ );
-            }
-
-            node.ClearInitialFlag();
-            node.SetShouldUpdate( false );
-
-            // Defer if node was dynamically attached to a predecessor that
-            // has not pulsed yet
-            if( node.IsDeferred() )
-            {
-                node.ClearDeferredFlag();
-                continue;
-            }
-
-            // Repeat the update if a node was dynamically attached to a
-            // predecessor that has already pulsed
-            while( node.IsRepeated() )
-            {
-                node.ClearRepeatedFlag();
-                node.Tick( &turn_ );
-            }
-
-            node.SetReadyCount( 0 );
-
-            // Mark successors for update?
-            bool update = node.IsChanged();
-
-            { // node.ShiftMutex
-                Node::ShiftMutexT::scoped_lock lock( node.ShiftMutex, false );
-
-                for( auto* succ : node.Successors )
-                {
-                    if( update )
-                    {
-                        succ->SetShouldUpdate( true );
-                    }
-
-                    // Wait for more?
-                    if( succ->IncReadyCount() )
-                    {
-                        continue;
-                    }
-
-                    // Heavyweight - spawn new task
-                    if( succ->IsHeavyweight() )
-                    {
-                        auto& t = *new( task::allocate_additional_child_of( *parent() ) )
-                                      UpdaterTask( turn_, succ );
-
-                        spawn( t );
-                    }
-                    // Leightweight - add to buffer, split if full
-                    else
-                    {
-                        nodes_.PushBack( succ );
-
-                        if( nodes_.IsFull() )
-                        {
-                            ++splitCount;
-
-                            //Delegate half the work to new task
-                            auto& t = *new( task::allocate_additional_child_of( *parent() ) )
-                                          UpdaterTask( *this, SplitTag() );
-
-                            spawn( t );
-                        }
-                    }
-                }
-
-                node.ClearMarkedFlag();
-            } // ~node.ShiftMutex
-        }
-
-        return nullptr;
-    }
-
-private:
-    Turn& turn_;
-    BufferT nodes_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EngineBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-inline void EngineBase::Propagate( Turn& turn )
-{
-    // Phase 1
-    while( scheduledNodes_.FetchNext() )
-    {
-        for( auto* curNode : scheduledNodes_.NextValues() )
-        {
-            if( curNode->Level < curNode->NewLevel )
-            {
-                curNode->Level = curNode->NewLevel;
-                invalidateSuccessors( *curNode );
-                scheduledNodes_.Push( curNode );
-                continue;
-            }
-
-            curNode->ClearQueuedFlag();
-            curNode->Tick( &turn );
-        }
-    }
-
-    // Phase 2
-    isInPhase2_ = true;
-
-    assert( ( 1 + subtreeRoots_.size() )
-            <= static_cast<size_t>( ( std::numeric_limits<int>::max )() ) );
-
-    rootTask_.set_ref_count( 1 + static_cast<int>( subtreeRoots_.size() ) );
-
-    for( auto* node : subtreeRoots_ )
-    {
-        // Ignore if root flag has been cleared because node was part of another subtree
-        if( !node->IsRoot() )
-        {
-            rootTask_.decrement_ref_count();
-            continue;
-        }
-
-        spawnList_.push_back( *new( rootTask_.allocate_child() ) UpdaterTask( turn, node ) );
-
-        node->ClearRootFlag();
-    }
-
-    rootTask_.spawn_and_wait_for_all( spawnList_ );
-
-    subtreeRoots_.clear();
-    spawnList_.clear();
-
-    isInPhase2_ = false;
-}
-
-inline void EngineBase::OnNodePulse( Node& node, Turn& turn )
-{
-    if( isInPhase2_ )
-    {
-        node.SetChangedFlag();
-    }
-    else
-    {
-        processChildren( node, turn );
-    }
-}
-
-inline void EngineBase::OnNodeIdlePulse( Node& node, Turn& turn )
-{
-    if( isInPhase2_ )
-    {
-        node.ClearChangedFlag();
-    }
-}
-
-inline void EngineBase::OnDynamicNodeAttach( Node& node, Node& parent, Turn& turn )
-{
-    if( isInPhase2_ )
-    {
-        applyAsyncDynamicAttach( node, parent, turn );
-    }
-    else
-    {
-        OnNodeAttach( node, parent );
-
-        invalidateSuccessors( node );
-
-        // Re-schedule this node
-        node.SetQueuedFlag();
-        scheduledNodes_.Push( &node );
-    }
-}
-
-inline void EngineBase::OnDynamicNodeDetach( Node& node, Node& parent, Turn& turn )
-{
-    if( isInPhase2_ )
-    {
-        applyAsyncDynamicDetach( node, parent, turn );
-    }
-    else
-    {
-        OnNodeDetach( node, parent );
-    }
-}
-
-inline void EngineBase::applyAsyncDynamicAttach( Node& node, Node& parent, Turn& turn )
-{ // parent.ShiftMutex (write)
-    NodeShiftMutexT::scoped_lock lock( parent.ShiftMutex, true );
-
-    parent.Successors.Add( node );
-
-    // Level recalulation applied when added to topoqueue next time.
-    // During the async phase 2 it's not needed.
-    if( node.NewLevel <= parent.Level )
-    {
-        node.NewLevel = parent.Level + 1;
-    }
-
-    // Has already nudged its neighbors?
-    if( !parent.IsMarked() )
-    {
-        node.SetRepeatedFlag();
-    }
-    else
-    {
-        node.SetDeferredFlag();
-        node.SetShouldUpdate( true );
-        node.DecReadyCount();
-    }
-} // ~parent.ShiftMutex (write)
-
-inline void EngineBase::applyAsyncDynamicDetach( Node& node, Node& parent, Turn& turn )
-{ // parent.ShiftMutex (write)
-    NodeShiftMutexT::scoped_lock lock( parent.ShiftMutex, true );
-
-    parent.Successors.Remove( node );
-} // ~parent.ShiftMutex (write)
-
-inline void EngineBase::processChildren( Node& node, Turn& turn )
-{
-    // Add children to queue
-    for( auto* succ : node.Successors )
-    {
-        // Ignore if node part of marked subtree
-        if( succ->IsMarked() )
-        {
-            continue;
-        }
-
-        // Light nodes use sequential toposort in phase 1
-        if( !succ->IsHeavyweight() )
-        {
-            if( !succ->IsQueued() )
-            {
-                succ->SetQueuedFlag();
-                scheduledNodes_.Push( succ );
-            }
-        }
-        // Heavy nodes + subtrees are deferred for parallel updating in phase 2
-        else
-        {
-            // Force an initial update for heavy non-input nodes.
-            // (non-atomic flag, unlike ShouldUpdate)
-            if( !succ->IsInputNode() )
-            {
-                succ->SetInitialFlag();
-            }
-
-            succ->SetChangedFlag();
-            succ->SetRootFlag();
-
-            markSubtree( *succ );
-
-            subtreeRoots_.push_back( succ );
-        }
-    }
-}
-
-inline void EngineBase::markSubtree( Node& root )
-{
-    root.SetMarkedFlag();
-    root.WaitCount = 0;
-
-    for( auto* succ : root.Successors )
-    {
-        if( !succ->IsMarked() )
-        {
-            markSubtree( *succ );
-
-            // Successor of another marked node? -> not a root anymore
-        }
-        else if( succ->IsRoot() )
-        {
-            succ->ClearRootFlag();
-        }
-
-        ++succ->WaitCount;
-    }
-}
-
-inline void EngineBase::invalidateSuccessors( Node& node )
-{
-    for( auto* succ : node.Successors )
-    {
-        if( succ->NewLevel <= node.Level )
-        {
-            succ->NewLevel = node.Level + 1;
-        }
-    }
-}
-
-} // namespace subtree
-
 namespace toposort
 {
 

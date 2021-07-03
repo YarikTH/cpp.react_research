@@ -7,57 +7,18 @@
 #pragma once
 
 #include <algorithm>
-#include <array>
 #include <atomic>
 #include <cassert>
-#include <chrono>
-#include <condition_variable>
 #include <cstddef>
 #include <cstdint>
 #include <deque>
-#include <functional>
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <mutex>
-#include <string>
-#include <thread>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "tbb/concurrent_queue.h"
-#include "tbb/concurrent_vector.h"
-#include "tbb/enumerable_thread_specific.h"
-#include "tbb/parallel_for.h"
-#include "tbb/queuing_mutex.h"
-#include "tbb/spin_mutex.h"
-#include "tbb/spin_rw_mutex.h"
-#include "tbb/task.h"
-#include "tbb/task_group.h"
-#include "tbb/tbb_stddef.h"
-
-#if _WIN32 || _WIN64
-#    define REACT_FIXME_CUSTOM_TIMER 1
-#else
-#    define REACT_FIXME_CUSTOM_TIMER 0
-#endif
-
-#if REACT_FIXME_CUSTOM_TIMER
-#    include <windows.h>
-#else
-
-#    include <chrono>
-
-#endif
-
-#ifdef _DEBUG
-#    define REACT_MESSAGE( ... ) printf( __VA_ARGS__ )
-#else
-#    define REACT_MESSAGE
-#endif
 
 // Assert with message
 #define REACT_ASSERT( condition, ... )                                                             \
@@ -305,180 +266,6 @@ public:
 #define REACT_EXPAND_PACK( ... ) ::react::impl::pass( ( __VA_ARGS__, 0 )... )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// GetPerformanceFrequency
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Todo: Initialization not thread-safe
-#if REACT_FIXME_CUSTOM_TIMER
-inline const LARGE_INTEGER& GetPerformanceFrequency()
-{
-    static bool init = false;
-    static LARGE_INTEGER frequency;
-
-    if( init == false )
-    {
-        QueryPerformanceFrequency( &frequency );
-        init = true;
-    }
-
-    return frequency;
-}
-#endif
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ConditionalTimer
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <long long threshold, bool is_enabled>
-class ConditionalTimer
-{
-public:
-    class ScopedTimer
-    {
-    public:
-        // Note:
-        // Count is passed by ref so it can be set later if it's not known at time of creation
-        ScopedTimer( const ConditionalTimer&, const size_t& count );
-    };
-
-    void Reset();
-    void ForceThresholdExceeded( bool isExceeded );
-    bool IsThresholdExceeded() const;
-};
-
-// Disabled
-template <long long threshold>
-class ConditionalTimer<threshold, false>
-{
-public:
-    // Defines scoped timer that does nothing
-    class ScopedTimer
-    {
-    public:
-        ScopedTimer( const ConditionalTimer&, const size_t& count )
-        {}
-    };
-
-    void Reset()
-    {}
-
-    void ForceThresholdExceeded( bool isExceeded )
-    {}
-
-    bool IsThresholdExceeded() const
-    {
-        return false;
-    }
-};
-
-// Enabled
-template <long long threshold>
-class ConditionalTimer<threshold, true>
-{
-public:
-#if REACT_FIXME_CUSTOM_TIMER
-    using TimestampT = LARGE_INTEGER;
-#else
-    using ClockT = std::chrono::high_resolution_clock;
-    using TimestampT = std::chrono::time_point<ClockT>;
-#endif
-
-    class ScopedTimer
-    {
-    public:
-        ScopedTimer( ConditionalTimer& parent, const size_t& count )
-            : parent_( parent )
-            , count_( count )
-        {
-            if( !parent_.shouldMeasure_ )
-            {
-                return;
-            }
-
-            startMeasure();
-        }
-
-        ~ScopedTimer()
-        {
-            if( !parent_.shouldMeasure_ )
-            {
-                return;
-            }
-
-            parent_.shouldMeasure_ = false;
-
-            endMeasure();
-        }
-
-    private:
-        void startMeasure()
-        {
-            startTime_ = now();
-        }
-
-        void endMeasure()
-        {
-#if REACT_FIXME_CUSTOM_TIMER
-            TimestampT endTime = now();
-
-            LARGE_INTEGER durationUS;
-
-            durationUS.QuadPart = endTime.QuadPart - startTime_.QuadPart;
-            durationUS.QuadPart *= 1000000;
-            durationUS.QuadPart /= GetPerformanceFrequency().QuadPart;
-
-            parent_.isThresholdExceeded_ = ( durationUS.QuadPart - ( threshold * count_ ) ) > 0;
-#else
-            using std::chrono::duration_cast;
-            using std::chrono::microseconds;
-
-            parent_.isThresholdExceeded_ = duration_cast<microseconds>( now() - startTime_ ).count()
-                                         > ( threshold * count_ );
-#endif
-        }
-
-        ConditionalTimer& parent_;
-        TimestampT startTime_;
-        const size_t& count_;
-    };
-
-    static TimestampT now()
-    {
-#if REACT_FIXME_CUSTOM_TIMER
-        TimestampT result;
-        QueryPerformanceCounter( &result );
-        return result;
-#else
-        return ClockT::now();
-#endif
-    }
-
-    void Reset()
-    {
-        shouldMeasure_ = true;
-        isThresholdExceeded_ = false;
-    }
-
-    void ForceThresholdExceeded( bool isExceeded )
-    {
-        shouldMeasure_ = false;
-        isThresholdExceeded_ = isExceeded;
-    }
-
-    bool IsThresholdExceeded() const
-    {
-        return isThresholdExceeded_;
-    }
-
-private:
-    // Only measure once
-    bool shouldMeasure_ = true;
-
-    // Until we have measured, assume the threshold is exceeded.
-    // The cost of initially not parallelizing what should be parallelized is much higher
-    // than for the other way around.
-    bool isThresholdExceeded_ = true;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// IReactiveEngine
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename TNode, typename TTurn>
@@ -625,9 +412,6 @@ struct IReactiveNode
     // Note: Could get rid of this ugly ptr by adding a template parameter to the interface
     // But that would mean all engine nodes need that template parameter too - so rather cast
     virtual void Tick( void* turnPtr ) = 0;
-
-    // Heavyweight nodes are worth parallelizing.
-    virtual bool IsHeavyweight() const = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -701,86 +485,10 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// WeightHint
-///////////////////////////////////////////////////////////////////////////////////////////////////
-enum class WeightHint
-{
-    automatic,
-    light,
-    heavy
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// UpdateTimingPolicy
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, long long threshold>
-class UpdateTimingPolicy : private ConditionalTimer<threshold, D::uses_node_update_timer>
-{
-    using ScopedTimer = typename UpdateTimingPolicy::ScopedTimer;
-
-public:
-    class ScopedUpdateTimer : private ScopedTimer
-    {
-    public:
-        ScopedUpdateTimer( UpdateTimingPolicy& parent, const size_t& count )
-            : ScopedTimer( parent, count )
-        {}
-    };
-
-    void ResetUpdateThreshold()
-    {
-        this->Reset();
-    }
-
-    void ForceUpdateThresholdExceeded( bool v )
-    {
-        this->ForceThresholdExceeded( v );
-    }
-
-    bool IsUpdateThresholdExceeded() const
-    {
-        return this->IsThresholdExceeded();
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// DepCounter
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-struct CountHelper
-{
-    static const int value = T::dependency_count;
-};
-
-template <typename T>
-struct CountHelper<std::shared_ptr<T>>
-{
-    static const int value = 1;
-};
-
-template <int N, typename... Args>
-struct DepCounter;
-
-template <>
-struct DepCounter<0>
-{
-    static int const value = 0;
-};
-
-template <int N, typename First, typename... Args>
-struct DepCounter<N, First, Args...>
-{
-    static int const value
-        = CountHelper<typename std::decay<First>::type>::value + DepCounter<N - 1, Args...>::value;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// NodeBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D>
-class NodeBase
-    : public D::Policy::Engine::NodeT
-    , public UpdateTimingPolicy<D, 500>
+class NodeBase : public D::Policy::Engine::NodeT
 {
 public:
     using DomainT = D;
@@ -793,21 +501,6 @@ public:
 
     // Nodes can't be copied
     NodeBase( const NodeBase& ) = delete;
-
-    virtual bool IsHeavyweight() const override
-    {
-        return this->IsUpdateThresholdExceeded();
-    }
-
-    void SetWeightHint( WeightHint weight )
-    {
-        switch( weight )
-        {
-            case WeightHint::heavy: this->ForceUpdateThresholdExceeded( true ); break;
-            case WeightHint::light: this->ForceUpdateThresholdExceeded( false ); break;
-            case WeightHint::automatic: this->ResetUpdateThreshold(); break;
-        }
-    }
 };
 
 template <typename D>
@@ -928,9 +621,6 @@ public:
         apply( reinterpret_cast<const DetachFunctor<D, TNode, TDeps...>&>( functor ), deps_ );
     }
 
-public:
-    static const int dependency_count = DepCounter<sizeof...( TDeps ), TDeps...>::value;
-
 protected:
     DepHolderT deps_;
 };
@@ -1034,12 +724,6 @@ public:
         return ptr_ != nullptr;
     }
 
-    void SetWeightHint( WeightHint weight )
-    {
-        assert( IsValid() );
-        ptr_->SetWeightHint( weight );
-    }
-
 protected:
     std::shared_ptr<TNode> ptr_;
 
@@ -1081,34 +765,6 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// UniqueReactiveBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode>
-class MovableReactive : public ReactiveBase<TNode>
-{
-public:
-    MovableReactive() = default;
-
-    MovableReactive( MovableReactive&& other )
-        : MovableReactive::ReactiveBase( std::move( other ) )
-    {}
-
-    explicit MovableReactive( std::shared_ptr<TNode>&& ptr )
-        : MovableReactive::ReactiveBase( std::move( ptr ) )
-    {}
-
-    MovableReactive& operator=( MovableReactive&& other )
-    {
-        MovableReactive::ReactiveBase::operator=( std::move( other ) );
-        return *this;
-    }
-
-    // Deleted copy ctor and assignment
-    MovableReactive( const MovableReactive& ) = delete;
-    MovableReactive& operator=( const MovableReactive& ) = delete;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// GetNodePtr
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename TNode>
@@ -1116,459 +772,6 @@ const std::shared_ptr<TNode>& GetNodePtr( const ReactiveBase<TNode>& node )
 {
     return node.ptr_;
 }
-
-// A non-exception-safe pointer wrapper with conditional intrusive ref counting.
-template <typename T>
-class IntrusiveRefCountingPtr
-{
-    enum
-    {
-        tag_ref_counted = 0x1
-    };
-
-public:
-    IntrusiveRefCountingPtr()
-        : ptrData_( reinterpret_cast<uintptr_t>( nullptr ) )
-    {}
-
-    IntrusiveRefCountingPtr( T* ptr )
-        : ptrData_( reinterpret_cast<uintptr_t>( ptr ) )
-    {
-        if( ptr != nullptr && ptr->IsRefCounted() )
-        {
-            ptr->IncRefCount();
-            ptrData_ |= tag_ref_counted;
-        }
-    }
-
-    IntrusiveRefCountingPtr( const IntrusiveRefCountingPtr& other )
-        : ptrData_( other.ptrData_ )
-    {
-        if( isValidRefCountedPtr() )
-        {
-            Get()->IncRefCount();
-        }
-    }
-
-    IntrusiveRefCountingPtr( IntrusiveRefCountingPtr&& other )
-        : ptrData_( other.ptrData_ )
-    {
-        other.ptrData_ = reinterpret_cast<uintptr_t>( nullptr );
-    }
-
-    ~IntrusiveRefCountingPtr()
-    {
-        if( isValidRefCountedPtr() )
-        {
-            Get()->DecRefCount();
-        }
-    }
-
-    IntrusiveRefCountingPtr& operator=( const IntrusiveRefCountingPtr& other )
-    {
-        if( this != &other )
-        {
-            if( other.isValidRefCountedPtr() )
-            {
-                other.Get()->IncRefCount();
-            }
-
-            if( isValidRefCountedPtr() )
-            {
-                Get()->DecRefCount();
-            }
-
-            ptrData_ = other.ptrData_;
-        }
-
-        return *this;
-    }
-
-    IntrusiveRefCountingPtr& operator=( IntrusiveRefCountingPtr&& other )
-    {
-        if( this != &other )
-        {
-            if( isValidRefCountedPtr() )
-            {
-                Get()->DecRefCount();
-            }
-
-            ptrData_ = other.ptrData_;
-            other.ptrData_ = reinterpret_cast<uintptr_t>( nullptr );
-        }
-
-        return *this;
-    }
-
-    T* Get() const
-    {
-        return reinterpret_cast<T*>( ptrData_ & ~tag_ref_counted );
-    }
-
-    T& operator*() const
-    {
-        return *Get();
-    }
-
-    T* operator->() const
-    {
-        return Get();
-    }
-
-    bool operator==( const IntrusiveRefCountingPtr& other ) const
-    {
-        return Get() == other.Get();
-    }
-
-    bool operator!=( const IntrusiveRefCountingPtr& other ) const
-    {
-        return !( *this == other );
-    }
-
-private:
-    bool isValidRefCountedPtr() const
-    {
-        return ptrData_ != reinterpret_cast<uintptr_t>( nullptr )
-            && ( ptrData_ & tag_ref_counted ) != 0;
-    }
-
-    uintptr_t ptrData_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IWaitingState
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class IWaitingState
-{
-public:
-    virtual inline ~IWaitingState()
-    {}
-
-    virtual void Wait() = 0;
-
-    virtual void IncWaitCount() = 0;
-    virtual void DecWaitCount() = 0;
-
-protected:
-    virtual bool IsRefCounted() const = 0;
-    virtual void IncRefCount() = 0;
-    virtual void DecRefCount() = 0;
-
-    friend class IntrusiveRefCountingPtr<IWaitingState>;
-};
-
-using WaitingStatePtrT = IntrusiveRefCountingPtr<IWaitingState>;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// WaitingStateBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class WaitingStateBase : public IWaitingState
-{
-public:
-    virtual inline void Wait() override
-    {
-        std::unique_lock<std::mutex> lock( mutex_ );
-        condition_.wait( lock, [this] { return !isWaiting_; } );
-    }
-
-    virtual inline void IncWaitCount() override
-    {
-        auto oldVal = waitCount_.fetch_add( 1, std::memory_order_relaxed );
-
-        if( oldVal == 0 )
-        { // mutex_
-            std::lock_guard<std::mutex> scopedLock( mutex_ );
-            isWaiting_ = true;
-        } // ~mutex_
-    }
-
-    virtual inline void DecWaitCount() override
-    {
-        auto oldVal = waitCount_.fetch_sub( 1, std::memory_order_relaxed );
-
-        if( oldVal == 1 )
-        { // mutex_
-            std::lock_guard<std::mutex> scopedLock( mutex_ );
-            isWaiting_ = false;
-            condition_.notify_all();
-        } // ~mutex_
-    }
-
-    inline bool IsWaiting()
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-        return isWaiting_;
-    } // ~mutex_
-
-    template <typename F>
-    auto Run( F&& func ) -> decltype( func( false ) )
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-        return func( isWaiting_ );
-    } // ~mutex_
-
-    template <typename F>
-    bool RunIfWaiting( F&& func )
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-
-        if( !isWaiting_ )
-        {
-            return false;
-        }
-
-        func();
-        return true;
-    } // ~mutex_
-
-    template <typename F>
-    bool RunIfNotWaiting( F&& func )
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-
-        if( isWaiting_ )
-        {
-            return false;
-        }
-
-        func();
-        return true;
-    } // ~mutex_
-
-private:
-    std::atomic<uint> waitCount_{ 0 };
-    std::condition_variable condition_;
-    std::mutex mutex_;
-    bool isWaiting_ = false;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// UniqueWaitingState
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class UniqueWaitingState : public WaitingStateBase
-{
-protected:
-    // Do nothing
-    virtual inline bool IsRefCounted() const override
-    {
-        return false;
-    }
-
-    virtual inline void IncRefCount() override
-    {}
-
-    virtual inline void DecRefCount() override
-    {}
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// SharedWaitingState
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class SharedWaitingState : public WaitingStateBase
-{
-private:
-    SharedWaitingState() = default;
-
-public:
-    static inline WaitingStatePtrT Create()
-    {
-        return WaitingStatePtrT( new SharedWaitingState() );
-    }
-
-protected:
-    virtual inline bool IsRefCounted() const override
-    {
-        return true;
-    }
-
-    virtual inline void IncRefCount() override
-    {
-        refCount_.fetch_add( 1, std::memory_order_relaxed );
-    }
-
-    virtual inline void DecRefCount() override
-    {
-        auto oldVal = refCount_.fetch_sub( 1, std::memory_order_relaxed );
-
-        if( oldVal == 1 )
-        {
-            delete this;
-        }
-    }
-
-private:
-    std::atomic<uint> refCount_{ 0 };
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// SharedWaitingStateCollection
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class SharedWaitingStateCollection : public IWaitingState
-{
-private:
-    SharedWaitingStateCollection( std::vector<WaitingStatePtrT>&& others )
-        : others_( std::move( others ) )
-    {}
-
-public:
-    static inline WaitingStatePtrT Create( std::vector<WaitingStatePtrT>&& others )
-    {
-        return WaitingStatePtrT( new SharedWaitingStateCollection( std::move( others ) ) );
-    }
-
-    virtual inline bool IsRefCounted() const override
-    {
-        return true;
-    }
-
-    virtual inline void Wait() override
-    {
-        for( const auto& e : others_ )
-        {
-            e->Wait();
-        }
-    }
-
-    virtual inline void IncWaitCount() override
-    {
-        for( const auto& e : others_ )
-        {
-            e->IncWaitCount();
-        }
-    }
-
-    virtual inline void DecWaitCount() override
-    {
-        for( const auto& e : others_ )
-        {
-            e->DecWaitCount();
-        }
-    }
-
-    virtual inline void IncRefCount() override
-    {
-        refCount_.fetch_add( 1, std::memory_order_relaxed );
-    }
-
-    virtual inline void DecRefCount() override
-    {
-        auto oldVal = refCount_.fetch_sub( 1, std::memory_order_relaxed );
-
-        if( oldVal == 1 )
-        {
-            delete this;
-        }
-    }
-
-private:
-    std::atomic<uint> refCount_{ 0 };
-    std::vector<WaitingStatePtrT> others_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// BlockingCondition
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class BlockingCondition
-{
-public:
-    inline void Block()
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-        blocked_ = true;
-    } // ~mutex_
-
-    inline void Unblock()
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-        blocked_ = false;
-        condition_.notify_all();
-    } // ~mutex_
-
-    inline void WaitForUnblock()
-    {
-        std::unique_lock<std::mutex> lock( mutex_ );
-        condition_.wait( lock, [this] { return !blocked_; } );
-    }
-
-    inline bool IsBlocked()
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-        return blocked_;
-    } // ~mutex_
-
-    template <typename F>
-    auto Run( F&& func ) -> decltype( func( false ) )
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-        return func( blocked_ );
-    } // ~mutex_
-
-    template <typename F>
-    bool RunIfBlocked( F&& func )
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-
-        if( !blocked_ )
-        {
-            return false;
-        }
-
-        func();
-        return true;
-    } // ~mutex_
-
-    template <typename F>
-    bool RunIfUnblocked( F&& func )
-    { // mutex_
-        std::lock_guard<std::mutex> scopedLock( mutex_ );
-
-        if( blocked_ )
-        {
-            return false;
-        }
-
-        func();
-        return true;
-    } // ~mutex_
-
-private:
-    std::mutex mutex_;
-    std::condition_variable condition_;
-
-    bool blocked_ = false;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ConditionalCriticalSection
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TMutex, bool is_enabled>
-class ConditionalCriticalSection;
-
-template <typename TMutex>
-class ConditionalCriticalSection<TMutex, false>
-{
-public:
-    template <typename F>
-    void Access( const F& f )
-    {
-        f();
-    }
-};
-
-template <typename TMutex>
-class ConditionalCriticalSection<TMutex, true>
-{
-public:
-    template <typename F>
-    void Access( const F& f )
-    { // mutex_
-        std::lock_guard<TMutex> lock( mutex_ );
-
-        f();
-    } // ~mutex_
-private:
-    TMutex mutex_;
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Forward declarations
@@ -1584,31 +787,13 @@ class InputManager;
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 using TurnIdT = uint;
-using TransactionFuncT = std::function<void()>;
-
-enum ETransactionFlags
-{
-    allow_merging = 1 << 0
-};
-
-using TransactionFlagsT = std::underlying_type<ETransactionFlags>::type;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// EInputMode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 enum EInputMode
 {
-    consecutive_input,
-    concurrent_input
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IContinuationTarget
-///////////////////////////////////////////////////////////////////////////////////////////////////
-struct IContinuationTarget
-{
-    virtual void AsyncContinuation( TransactionFlagsT, const WaitingStatePtrT&, TransactionFuncT&& )
-        = 0;
+    consecutive_input
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1624,68 +809,13 @@ template <typename T>
 REACT_TLS bool ThreadLocalInputState<T>::IsTransactionActive( false );
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ContinuationManager
+/// DetachedObserversManager
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface
-template <EPropagationMode>
-class ContinuationManager
+class DetachedObserversManager
 {
-public:
-    void StoreContinuation(
-        IContinuationTarget& target, TransactionFlagsT flags, TransactionFuncT&& cont );
-
-    bool HasContinuations() const;
-    void StartContinuations( const WaitingStatePtrT& waitingStatePtr );
-
-    void QueueObserverForDetach( IObserver& obs );
-
-    template <typename D>
-    void DetachQueuedObservers();
-};
-
-// Non thread-safe implementation
-template <>
-class ContinuationManager<sequential_propagation>
-{
-    struct Data_
-    {
-        Data_( IContinuationTarget* target, TransactionFlagsT flags, TransactionFuncT&& func )
-            : Target( target )
-            , Flags( flags )
-            , Func( func )
-        {}
-
-        IContinuationTarget* Target;
-        TransactionFlagsT Flags;
-        TransactionFuncT Func;
-    };
-
-    using DataVectT = std::vector<Data_>;
     using ObsVectT = std::vector<IObserver*>;
 
 public:
-    void StoreContinuation(
-        IContinuationTarget& target, TransactionFlagsT flags, TransactionFuncT&& cont )
-    {
-        storedContinuations_.emplace_back( &target, flags, std::move( cont ) );
-    }
-
-    bool HasContinuations() const
-    {
-        return !storedContinuations_.empty();
-    }
-
-    void StartContinuations( const WaitingStatePtrT& waitingStatePtr )
-    {
-        for( auto& t : storedContinuations_ )
-        {
-            t.Target->AsyncContinuation( t.Flags, waitingStatePtr, std::move( t.Func ) );
-        }
-
-        storedContinuations_.clear();
-    }
-
-    // Todo: Move this somewhere else
     void QueueObserverForDetach( IObserver& obs )
     {
         detachedObservers_.push_back( &obs );
@@ -1702,494 +832,33 @@ public:
     }
 
 private:
-    DataVectT storedContinuations_;
     ObsVectT detachedObservers_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// TransactionQueue
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface
-template <EInputMode>
-class TransactionQueue
-{
-public:
-    class QueueEntry
-    {
-    public:
-        explicit QueueEntry( TransactionFlagsT flags );
-
-        void RunMergedInputs();
-
-        size_t GetWaitingStatePtrCount() const;
-        void MoveWaitingStatePtrs( std::vector<WaitingStatePtrT>& out );
-
-        void Release();
-
-        bool IsAsync() const;
-    };
-
-    template <typename F>
-    bool TryMergeSync( F&& inputFunc );
-
-    template <typename F>
-    bool TryMergeAsync( F&& inputFunc, WaitingStatePtrT&& waitingStatePtr );
-
-    void EnterQueue( QueueEntry& turn );
-    void ExitQueue( QueueEntry& turn );
-};
-
-// Non thread-safe implementation
-template <>
-class TransactionQueue<consecutive_input>
-{
-public:
-    class QueueEntry
-    {
-    public:
-        explicit QueueEntry( TransactionFlagsT flags )
-        {}
-
-        void RunMergedInputs()
-        {}
-
-        size_t GetWaitingStatePtrCount() const
-        {
-            return 0;
-        }
-
-        void MoveWaitingStatePtrs( std::vector<WaitingStatePtrT>& out )
-        {}
-
-        void Release()
-        {}
-
-        bool IsAsync() const
-        {
-            return false;
-        }
-    };
-
-    template <typename F>
-    bool TryMergeSync( F&& inputFunc )
-    {
-        return false;
-    }
-
-    template <typename F>
-    bool TryMergeAsync( F&& inputFunc, WaitingStatePtrT&& waitingStatePtr )
-    {
-        return false;
-    }
-
-    void EnterQueue( QueueEntry& turn )
-    {}
-
-    void ExitQueue( QueueEntry& turn )
-    {}
-};
-
-// Thread-safe implementation
-template <>
-class TransactionQueue<concurrent_input>
-{
-public:
-    class QueueEntry
-    {
-    public:
-        explicit QueueEntry( TransactionFlagsT flags )
-            : isMergeable_( ( flags & allow_merging ) != 0 )
-        {}
-
-        void Append( QueueEntry& tr )
-        {
-            successor_ = &tr;
-            tr.waitingState_.IncWaitCount();
-            ++waitingStatePtrCount_;
-        }
-
-        void WaitForUnblock()
-        {
-            waitingState_.Wait();
-        }
-
-        void RunMergedInputs() const
-        {
-            for( const auto& e : merged_ )
-            {
-                e.InputFunc();
-            }
-        }
-
-        size_t GetWaitingStatePtrCount() const
-        {
-            return waitingStatePtrCount_;
-        }
-
-        void MoveWaitingStatePtrs( std::vector<WaitingStatePtrT>& out )
-        {
-            if( waitingStatePtrCount_ == 0 )
-            {
-                return;
-            }
-
-            for( const auto& e : merged_ )
-            {
-                if( e.WaitingStatePtr != nullptr )
-                {
-                    out.push_back( std::move( e.WaitingStatePtr ) );
-                }
-            }
-
-            if( successor_ )
-            {
-                out.push_back( WaitingStatePtrT( &successor_->waitingState_ ) );
-
-                // Ownership of successors waiting state has been transfered,
-                // we no longer need it
-                successor_ = nullptr;
-            }
-
-            waitingStatePtrCount_ = 0;
-        }
-
-        void Release()
-        {
-            if( waitingStatePtrCount_ == 0 )
-            {
-                return;
-            }
-
-            // Release merged
-            for( const auto& e : merged_ )
-            {
-                if( e.WaitingStatePtr != nullptr )
-                {
-                    e.WaitingStatePtr->DecWaitCount();
-                }
-            }
-
-            // Waiting state ptrs may point to stack of waiting threads.
-            // After decwaitcount, they may start running and terminate.
-            // Thus, clear merged ASAP because it now contains invalid ptrs.
-            merged_.clear();
-
-            // Release next thread in queue
-            if( successor_ )
-            {
-                successor_->waitingState_.DecWaitCount();
-            }
-        }
-
-        template <typename F, typename P>
-        bool TryMerge( F&& inputFunc, P&& waitingStatePtr )
-        {
-            if( !isMergeable_ )
-            {
-                return false;
-            }
-
-            // Only merge if target is still waiting
-            bool merged = waitingState_.RunIfWaiting( [&] {
-                if( waitingStatePtr != nullptr )
-                {
-                    waitingStatePtr->IncWaitCount();
-                    ++waitingStatePtrCount_;
-                }
-
-                merged_.emplace_back(
-                    std::forward<F>( inputFunc ), std::forward<P>( waitingStatePtr ) );
-            } );
-
-            return merged;
-        }
-
-    private:
-        struct MergedData
-        {
-            template <typename F, typename P>
-            MergedData( F&& func, P&& waitingStatePtr )
-                : InputFunc( std::forward<F>( func ) )
-                , WaitingStatePtr( std::forward<P>( waitingStatePtr ) )
-            {}
-
-            std::function<void()> InputFunc;
-            WaitingStatePtrT WaitingStatePtr;
-        };
-
-        using MergedDataVectT = std::vector<MergedData>;
-
-        bool isMergeable_;
-        QueueEntry* successor_ = nullptr;
-        MergedDataVectT merged_;
-        UniqueWaitingState waitingState_;
-        size_t waitingStatePtrCount_ = 0;
-    };
-
-    template <typename F>
-    bool TryMergeSync( F&& inputFunc )
-    {
-        bool merged = false;
-
-        UniqueWaitingState st;
-        WaitingStatePtrT p( &st );
-
-        { // seqMutex_
-            SeqMutexT::scoped_lock lock( seqMutex_ );
-
-            if( tail_ )
-            {
-                merged = tail_->TryMerge( std::forward<F>( inputFunc ), p );
-            }
-        } // ~seqMutex_
-
-        if( merged )
-        {
-            p->Wait();
-        }
-
-        return merged;
-    }
-
-    template <typename F>
-    bool TryMergeAsync( F&& inputFunc, WaitingStatePtrT&& waitingStatePtr )
-    {
-        bool merged = false;
-
-        { // seqMutex_
-            SeqMutexT::scoped_lock lock( seqMutex_ );
-
-            if( tail_ )
-            {
-                merged
-                    = tail_->TryMerge( std::forward<F>( inputFunc ), std::move( waitingStatePtr ) );
-            }
-        } // ~seqMutex_
-
-        return merged;
-    }
-
-    void EnterQueue( QueueEntry& tr )
-    {
-        { // seqMutex_
-            SeqMutexT::scoped_lock lock( seqMutex_ );
-
-            if( tail_ )
-            {
-                tail_->Append( tr );
-            }
-
-            tail_ = &tr;
-        } // ~seqMutex_
-
-        tr.WaitForUnblock();
-    }
-
-    void ExitQueue( QueueEntry& tr )
-    {
-        { // seqMutex_
-            SeqMutexT::scoped_lock lock( seqMutex_ );
-
-            if( tail_ == &tr )
-            {
-                tail_ = nullptr;
-            }
-        } // ~seqMutex_
-
-        tr.Release();
-    }
-
-private:
-    using SeqMutexT = tbb::queuing_mutex;
-
-    SeqMutexT seqMutex_;
-    QueueEntry* tail_ = nullptr;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// AsyncWorker
-///////////////////////////////////////////////////////////////////////////////////////////////////
-struct AsyncItem
-{
-    TransactionFlagsT Flags;
-    WaitingStatePtrT WaitingStatePtr;
-    TransactionFuncT Func;
-};
-
-// Interface
-template <typename D, EInputMode>
-class AsyncWorker
-{
-public:
-    AsyncWorker( InputManager<D>& mgr );
-
-    void PushItem( AsyncItem&& item );
-
-    void PopItem( AsyncItem& item );
-    bool TryPopItem( AsyncItem& item );
-
-    bool IncrementItemCount( size_t n );
-    bool DecrementItemCount( size_t n );
-
-    void Start();
-};
-
-// Disabled
-template <typename D>
-struct AsyncWorker<D, consecutive_input>
-{
-public:
-    AsyncWorker( InputManager<D>& mgr )
-    {}
-
-    void PushItem( AsyncItem&& item )
-    {
-        assert( false );
-    }
-
-    void PopItem( AsyncItem& item )
-    {
-        assert( false );
-    }
-
-    bool TryPopItem( AsyncItem& item )
-    {
-        assert( false );
-        return false;
-    }
-
-    bool IncrementItemCount( size_t n )
-    {
-        assert( false );
-        return false;
-    }
-
-    bool DecrementItemCount( size_t n )
-    {
-        assert( false );
-        return false;
-    }
-
-    void Start()
-    {
-        assert( false );
-    }
-};
-
-// Enabled
-template <typename D>
-struct AsyncWorker<D, concurrent_input>
-{
-    using DataT = tbb::concurrent_bounded_queue<AsyncItem>;
-
-    class WorkerTask : public tbb::task
-    {
-    public:
-        WorkerTask( InputManager<D>& mgr )
-            : mgr_( mgr )
-        {}
-
-        tbb::task* execute()
-        {
-            mgr_.processAsyncQueue();
-            return nullptr;
-        }
-
-    private:
-        InputManager<D>& mgr_;
-    };
-
-public:
-    AsyncWorker( InputManager<D>& mgr )
-        : mgr_( mgr )
-    {}
-
-    void PushItem( AsyncItem&& item )
-    {
-        data_.push( std::move( item ) );
-    }
-
-    void PopItem( AsyncItem& item )
-    {
-        data_.pop( item );
-    }
-
-    bool TryPopItem( AsyncItem& item )
-    {
-        return data_.try_pop( item );
-    }
-
-    bool IncrementItemCount( size_t n )
-    {
-        return count_.fetch_add( n, std::memory_order_relaxed ) == 0;
-    }
-
-    bool DecrementItemCount( size_t n )
-    {
-        return count_.fetch_sub( n, std::memory_order_relaxed ) == n;
-    }
-
-    void Start()
-    {
-        tbb::task::enqueue( *new( tbb::task::allocate_root() ) WorkerTask( mgr_ ) );
-    }
-
-private:
-    DataT data_;
-    std::atomic<size_t> count_{ 0 };
-
-    InputManager<D>& mgr_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// InputManager
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D>
-class InputManager : public IContinuationTarget
+class InputManager
 {
-private:
-    // Select between thread-safe and non thread-safe implementations
-    using TransactionQueueT = TransactionQueue<D::Policy::input_mode>;
-    using QueueEntryT = typename TransactionQueueT::QueueEntry;
-
-    using ContinuationManagerT = ContinuationManager<D::Policy::propagation_mode>;
-    using AsyncWorkerT = AsyncWorker<D, D::Policy::input_mode>;
-
-    template <typename, EInputMode>
-    friend class AsyncWorker;
-
 public:
     using TurnT = typename D::TurnT;
     using Engine = typename D::Engine;
 
     InputManager()
-        : asyncWorker_( *this )
     {}
 
     template <typename F>
-    void DoTransaction( TransactionFlagsT flags, F&& func )
+    void DoTransaction( F&& func )
     {
-        // Attempt to add input to another turn.
-        // If successful, blocks until other turn is done and returns.
-        bool canMerge = ( flags & allow_merging ) != 0;
-        if( canMerge && transactionQueue_.TryMergeSync( std::forward<F>( func ) ) )
-        {
-            return;
-        }
-
         bool shouldPropagate = false;
-
-        QueueEntryT tr( flags );
-
-        transactionQueue_.EnterQueue( tr );
 
         // Phase 1 - Input admission
         ThreadLocalInputState<>::IsTransactionActive = true;
 
-        TurnT turn( nextTurnId(), flags );
+        TurnT turn( nextTurnId() );
         Engine::OnTurnAdmissionStart( turn );
         func();
-        tr.RunMergedInputs();
         Engine::OnTurnAdmissionEnd( turn );
 
         ThreadLocalInputState<>::IsTransactionActive = false;
@@ -2210,24 +879,7 @@ public:
             Engine::Propagate( turn );
         }
 
-        finalizeSyncTransaction( tr );
-    }
-
-    template <typename F>
-    void AsyncTransaction(
-        TransactionFlagsT flags, const WaitingStatePtrT& waitingStatePtr, F&& func )
-    {
-        if( waitingStatePtr != nullptr )
-        {
-            waitingStatePtr->IncWaitCount();
-        }
-
-        asyncWorker_.PushItem( AsyncItem{ flags, waitingStatePtr, std::forward<F>( func ) } );
-
-        if( asyncWorker_.IncrementItemCount( 1 ) )
-        {
-            asyncWorker_.Start();
-        }
+        finalizeSyncTransaction();
     }
 
     template <typename R, typename V>
@@ -2256,24 +908,9 @@ public:
         }
     }
 
-    //IContinuationTarget
-    virtual void AsyncContinuation( TransactionFlagsT flags,
-        const WaitingStatePtrT& waitingStatePtr,
-        TransactionFuncT&& cont ) override
-    {
-        AsyncTransaction( flags, waitingStatePtr, std::move( cont ) );
-    }
-    //~IContinuationTarget
-
-    void StoreContinuation(
-        IContinuationTarget& target, TransactionFlagsT flags, TransactionFuncT&& cont )
-    {
-        continuationManager_.StoreContinuation( target, flags, std::move( cont ) );
-    }
-
     void QueueObserverForDetach( IObserver& obs )
     {
-        continuationManager_.QueueObserverForDetach( obs );
+        detachedObserversManager_.QueueObserverForDetach( obs );
     }
 
 private:
@@ -2293,14 +930,9 @@ private:
     template <typename R, typename V>
     void addSimpleInput( R& r, V&& v )
     {
-        QueueEntryT tr( 0 );
-
-        transactionQueue_.EnterQueue( tr );
-
-        TurnT turn( nextTurnId(), 0 );
+        TurnT turn( nextTurnId() );
         Engine::OnTurnAdmissionStart( turn );
         r.AddInput( std::forward<V>( v ) );
-        tr.RunMergedInputs();
         Engine::OnTurnAdmissionEnd( turn );
 
         if( r.ApplyInput( &turn ) )
@@ -2308,17 +940,13 @@ private:
             Engine::Propagate( turn );
         }
 
-        finalizeSyncTransaction( tr );
+        finalizeSyncTransaction();
     }
 
     template <typename R, typename F>
     void modifySimpleInput( R& r, const F& func )
     {
-        QueueEntryT tr( 0 );
-
-        transactionQueue_.EnterQueue( tr );
-
-        TurnT turn( nextTurnId(), 0 );
+        TurnT turn( nextTurnId() );
         Engine::OnTurnAdmissionStart( turn );
         r.ModifyInput( func );
         Engine::OnTurnAdmissionEnd( turn );
@@ -2328,28 +956,12 @@ private:
 
         Engine::Propagate( turn );
 
-        finalizeSyncTransaction( tr );
+        finalizeSyncTransaction();
     }
 
-    void finalizeSyncTransaction( QueueEntryT& tr )
+    void finalizeSyncTransaction()
     {
-        continuationManager_.template DetachQueuedObservers<D>();
-
-        if( continuationManager_.HasContinuations() )
-        {
-            UniqueWaitingState st;
-            WaitingStatePtrT p( &st );
-
-            continuationManager_.StartContinuations( p );
-
-            transactionQueue_.ExitQueue( tr );
-
-            p->Wait();
-        }
-        else
-        {
-            transactionQueue_.ExitQueue( tr );
-        }
+        detachedObserversManager_.template DetachQueuedObservers<D>();
     }
 
     // This input is part of an active transaction
@@ -2367,181 +979,7 @@ private:
         changedInputs_.push_back( &r );
     }
 
-    void processAsyncQueue()
-    {
-        AsyncItem item;
-
-        std::vector<WaitingStatePtrT> waitingStatePtrs;
-
-        bool skipPop = false;
-
-        while( true )
-        {
-            size_t popCount = 0;
-
-            if( !skipPop )
-            {
-                // Blocks if queue is empty.
-                // This should never happen,
-                // and if (maybe due to some memory access internals), only briefly
-                asyncWorker_.PopItem( item );
-                popCount++;
-            }
-            else
-            {
-                skipPop = false;
-            }
-
-            // First try to merge to an existing synchronous item in the queue
-            bool canMerge = ( item.Flags & allow_merging ) != 0;
-            if( canMerge
-                && transactionQueue_.TryMergeAsync(
-                    std::move( item.Func ), std::move( item.WaitingStatePtr ) ) )
-            {
-                continue;
-            }
-
-            bool shouldPropagate = false;
-
-            QueueEntryT tr( item.Flags );
-
-            // Blocks until turn is at the front of the queue
-            transactionQueue_.EnterQueue( tr );
-
-            TurnT turn( nextTurnId(), item.Flags );
-
-            // Phase 1 - Input admission
-            ThreadLocalInputState<>::IsTransactionActive = true;
-
-            Engine::OnTurnAdmissionStart( turn );
-
-            // Input of current item
-            item.Func();
-
-            // Merged sync inputs that arrived while this item was queued
-            tr.RunMergedInputs();
-
-            // Save data, item might be re-used for next input
-            if( item.WaitingStatePtr != nullptr )
-            {
-                waitingStatePtrs.push_back( std::move( item.WaitingStatePtr ) );
-            }
-
-            // If the current item supports merging, try to add more mergeable inputs
-            // to this turn
-            if( canMerge )
-            {
-                uint extraCount = 0;
-                // Todo: Make configurable
-                while( extraCount < 1024 && asyncWorker_.TryPopItem( item ) )
-                {
-                    ++popCount;
-
-                    bool canMergeNext = ( item.Flags & allow_merging ) != 0;
-                    if( canMergeNext )
-                    {
-                        item.Func();
-
-                        if( item.WaitingStatePtr != nullptr )
-                        {
-                            waitingStatePtrs.push_back( std::move( item.WaitingStatePtr ) );
-                        }
-
-                        ++extraCount;
-                    }
-                    else
-                    {
-                        // We already popped an item we could not merge
-                        // Process it in the next iteration
-                        skipPop = true;
-
-                        // Break at first item that cannot be merged.
-                        // We only allow merging of continuous ranges.
-                        break;
-                    }
-                }
-            }
-
-            Engine::OnTurnAdmissionEnd( turn );
-
-            ThreadLocalInputState<>::IsTransactionActive = false;
-
-            // Phase 2 - Apply input node changes
-            for( auto* p : changedInputs_ )
-            {
-                if( p->ApplyInput( &turn ) )
-                {
-                    shouldPropagate = true;
-                }
-            }
-            changedInputs_.clear();
-
-            // Phase 3 - Propagate changes
-            if( shouldPropagate )
-            {
-                Engine::Propagate( turn );
-            }
-
-            continuationManager_.template DetachQueuedObservers<D>();
-
-            // Has continuations? If so, status ptrs have to be passed on to
-            // continuation transactions
-            if( continuationManager_.HasContinuations() )
-            {
-                // Merge all waiting state ptrs for this transaction into a single vector
-                tr.MoveWaitingStatePtrs( waitingStatePtrs );
-
-                // More than 1 waiting state -> create collection from vector
-                if( waitingStatePtrs.size() > 1 )
-                {
-                    WaitingStatePtrT p(
-                        SharedWaitingStateCollection::Create( std::move( waitingStatePtrs ) ) );
-
-                    continuationManager_.StartContinuations( p );
-
-                    transactionQueue_.ExitQueue( tr );
-                    p->DecWaitCount();
-                }
-                // Exactly one status ptr -> pass it on directly
-                else if( waitingStatePtrs.size() == 1 )
-                {
-                    WaitingStatePtrT p( std::move( waitingStatePtrs[0] ) );
-
-                    continuationManager_.StartContinuations( p );
-
-                    transactionQueue_.ExitQueue( tr );
-                    p->DecWaitCount();
-                }
-                // No status ptrs
-                else
-                {
-                    continuationManager_.StartContinuations( nullptr );
-                }
-            }
-            else
-            {
-                transactionQueue_.ExitQueue( tr );
-
-                for( auto& p : waitingStatePtrs )
-                {
-                    p->DecWaitCount();
-                }
-            }
-
-            waitingStatePtrs.clear();
-
-            // Stop this task if the number of items has just been decremented zero.
-            // A new task will be started by the thread that increments the item count from zero.
-            if( asyncWorker_.DecrementItemCount( popCount ) )
-            {
-                break;
-            }
-        }
-    }
-
-    TransactionQueueT transactionQueue_;
-    ContinuationManagerT continuationManager_;
-    AsyncWorkerT asyncWorker_;
+    DetachedObserversManager detachedObserversManager_;
 
     std::atomic<TurnIdT> nextTurnId_{ 0 };
 
@@ -2596,217 +1034,6 @@ struct AddContinuationRangeWrapper
     }
 
     F MyFunc;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ContinuationNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D>
-class ContinuationNode : public NodeBase<D>
-{
-public:
-    ContinuationNode( TransactionFlagsT turnFlags )
-        : turnFlags_( turnFlags )
-    {}
-
-    virtual bool IsOutputNode() const
-    {
-        return true;
-    }
-
-protected:
-    TransactionFlagsT turnFlags_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// SignalContinuationNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename DOut, typename S, typename TFunc>
-class SignalContinuationNode : public ContinuationNode<D>
-{
-    using Engine = typename SignalContinuationNode::Engine;
-
-public:
-    template <typename F>
-    SignalContinuationNode(
-        TransactionFlagsT turnFlags, const std::shared_ptr<SignalNode<D, S>>& trigger, F&& func )
-        : SignalContinuationNode::ContinuationNode( turnFlags )
-        , trigger_( trigger )
-        , func_( std::forward<F>( func ) )
-    {
-        Engine::OnNodeCreate( *this );
-        Engine::OnNodeAttach( *this, *trigger );
-    }
-
-    ~SignalContinuationNode()
-    {
-        Engine::OnNodeDestroy( *this );
-    }
-
-    virtual void Tick( void* turnPtr ) override
-    {
-        auto& storedValue = trigger_->ValueRef();
-        auto& storedFunc = func_;
-
-        TransactionFuncT cont(
-            // Copy value and func
-            [storedFunc, storedValue]() mutable { storedFunc( storedValue ); } );
-
-        DomainSpecificInputManager<D>::Instance().StoreContinuation(
-            DomainSpecificInputManager<DOut>::Instance(), this->turnFlags_, std::move( cont ) );
-    }
-
-private:
-    std::shared_ptr<SignalNode<D, S>> trigger_;
-
-    TFunc func_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EventContinuationNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename DOut, typename E, typename TFunc>
-class EventContinuationNode : public ContinuationNode<D>
-{
-    using Engine = typename EventContinuationNode::Engine;
-
-public:
-    template <typename F>
-    EventContinuationNode( TransactionFlagsT turnFlags,
-        const std::shared_ptr<EventStreamNode<D, E>>& trigger,
-        F&& func )
-        : EventContinuationNode::ContinuationNode( turnFlags )
-        , trigger_( trigger )
-        , func_( std::forward<F>( func ) )
-    {
-        Engine::OnNodeCreate( *this );
-        Engine::OnNodeAttach( *this, *trigger );
-    }
-
-    ~EventContinuationNode()
-    {
-        Engine::OnNodeDestroy( *this );
-    }
-
-    virtual void Tick( void* turnPtr ) override
-    {
-        auto& storedEvents = trigger_->Events();
-        auto& storedFunc = func_;
-
-        TransactionFuncT cont(
-            // Copy events and func
-            [storedFunc, storedEvents]() mutable { storedFunc( EventRange<E>( storedEvents ) ); } );
-
-        DomainSpecificInputManager<D>::Instance().StoreContinuation(
-            DomainSpecificInputManager<DOut>::Instance(), this->turnFlags_, std::move( cont ) );
-    }
-
-private:
-    std::shared_ptr<EventStreamNode<D, E>> trigger_;
-
-    TFunc func_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// SyncedContinuationNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename DOut, typename E, typename TFunc, typename... TDepValues>
-class SyncedContinuationNode : public ContinuationNode<D>
-{
-    using Engine = typename SyncedContinuationNode::Engine;
-
-    using ValueTupleT = std::tuple<TDepValues...>;
-
-    struct TupleBuilder_
-    {
-        ValueTupleT operator()( const std::shared_ptr<SignalNode<D, TDepValues>>&... deps )
-        {
-            return ValueTupleT( deps->ValueRef()... );
-        }
-    };
-
-    struct EvalFunctor_
-    {
-        EvalFunctor_( const E& e, TFunc& f )
-            : MyEvent( e )
-            , MyFunc( f )
-        {}
-
-        void operator()( const TDepValues&... vals )
-        {
-            MyFunc( MyEvent, vals... );
-        }
-
-        const E& MyEvent;
-        TFunc& MyFunc;
-    };
-
-public:
-    template <typename F>
-    SyncedContinuationNode( TransactionFlagsT turnFlags,
-        const std::shared_ptr<EventStreamNode<D, E>>& trigger,
-        F&& func,
-        const std::shared_ptr<SignalNode<D, TDepValues>>&... deps )
-        : SyncedContinuationNode::ContinuationNode( turnFlags )
-        , trigger_( trigger )
-        , func_( std::forward<F>( func ) )
-        , deps_( deps... )
-    {
-        Engine::OnNodeCreate( *this );
-        Engine::OnNodeAttach( *this, *trigger );
-
-        REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
-    }
-
-    ~SyncedContinuationNode()
-    {
-        Engine::OnNodeDetach( *this, *trigger_ );
-
-        apply(
-            DetachFunctor<D, SyncedContinuationNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
-                *this ),
-            deps_ );
-
-        Engine::OnNodeDestroy( *this );
-    }
-
-    virtual void Tick( void* turnPtr ) override
-    {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
-
-        // Update of this node could be triggered from deps,
-        // so make sure source doesnt contain events from last turn
-        trigger_->SetCurrentTurn( turn );
-
-        auto& storedEvents = trigger_->Events();
-        auto& storedFunc = func_;
-
-        // Copy values to tuple
-        ValueTupleT storedValues = apply( TupleBuilder_(), deps_ );
-
-        // Note: MSVC error, if using () initialization.
-        // Probably a compiler bug.
-        TransactionFuncT cont{ // Copy events, func, value tuple (note: 2x copy)
-            [storedFunc, storedEvents, storedValues]() mutable {
-                apply(
-                    [&storedFunc, &storedEvents]( const TDepValues&... vals ) {
-                        storedFunc( EventRange<E>( storedEvents ), vals... );
-                    },
-                    storedValues );
-            } };
-
-        DomainSpecificInputManager<D>::Instance().StoreContinuation(
-            DomainSpecificInputManager<DOut>::Instance(), this->turnFlags_, std::move( cont ) );
-    }
-
-private:
-    using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
-
-    std::shared_ptr<EventStreamNode<D, E>> trigger_;
-
-    TFunc func_;
-    DepHolderT deps_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2888,127 +1115,12 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// NodeBuffer
-///////////////////////////////////////////////////////////////////////////////////////////////////
-struct SplitTag
-{};
-
-template <typename T, size_t N>
-class NodeBuffer
-{
-public:
-    using DataT = std::array<T*, N>;
-    using iterator = typename DataT::iterator;
-    using const_iterator = typename DataT::const_iterator;
-
-    static const size_t split_size = N / 2;
-
-    NodeBuffer()
-        : size_( 0 )
-        , front_( nodes_.begin() )
-        , back_( nodes_.begin() )
-    {}
-
-    NodeBuffer( T* node )
-        : size_( 1 )
-        , front_( nodes_.begin() )
-        , back_( nodes_.begin() + 1 )
-    {
-        nodes_[0] = node;
-    }
-
-    template <typename TInput>
-    NodeBuffer( TInput srcBegin, TInput srcEnd )
-        : size_( std::distance( srcBegin, srcEnd ) )
-        , // parentheses to allow narrowing conversion
-        front_( nodes_.begin() )
-        , back_( size_ != N ? nodes_.begin() + size_ : nodes_.begin() )
-    {
-        std::copy( srcBegin, srcEnd, front_ );
-    }
-
-    // Other must be full
-    NodeBuffer( NodeBuffer& other, SplitTag )
-        : size_( split_size )
-        , front_( nodes_.begin() )
-        , back_( nodes_.begin() )
-    {
-        for( size_t i = 0; i < split_size; i++ )
-        {
-            *( back_++ ) = other.PopFront();
-        }
-    }
-
-    void PushFront( T* e )
-    {
-        size_++;
-        decrement( front_ );
-        *front_ = e;
-    }
-
-    void PushBack( T* e )
-    {
-        size_++;
-        *back_ = e;
-        increment( back_ );
-    }
-
-    T* PopFront()
-    {
-        size_--;
-        auto t = *front_;
-        increment( front_ );
-        return t;
-    }
-
-    T* PopBack()
-    {
-        size_--;
-        decrement( back_ );
-        return *back_;
-    }
-
-    bool IsFull() const
-    {
-        return size_ == N;
-    }
-
-    bool IsEmpty() const
-    {
-        return size_ == 0;
-    }
-
-private:
-    inline void increment( iterator& it )
-    {
-        if( ++it == nodes_.end() )
-        {
-            it = nodes_.begin();
-        }
-    }
-
-    inline void decrement( iterator& it )
-    {
-        if( it == nodes_.begin() )
-        {
-            it = nodes_.end();
-        }
-        --it;
-    }
-
-    DataT nodes_;
-    size_t size_;
-    iterator front_;
-    iterator back_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// TurnBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class TurnBase
 {
 public:
-    inline TurnBase( TurnIdT id, TransactionFlagsT flags )
+    inline TurnBase( TurnIdT id )
         : id_( id )
     {}
 
@@ -3124,258 +1236,8 @@ private:
     int minLevel_ = ( std::numeric_limits<int>::max )();
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// WeightedRange - Implements tbb range concept
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TIt, uint grain_size>
-class WeightedRange
-{
-public:
-    using const_iterator = TIt;
-    using ValueT = typename TIt::value_type;
-
-    WeightedRange() = default;
-    WeightedRange( const WeightedRange& ) = default;
-
-    WeightedRange( const TIt& a, const TIt& b, uint weight )
-        : begin_( a )
-        , end_( b )
-        , weight_( weight )
-    {}
-
-    WeightedRange( WeightedRange& source, tbb::split )
-    {
-        uint sum = 0;
-        TIt p = source.begin_;
-        while( p != source.end_ )
-        {
-            // Note: assuming a pair with weight as second until more flexibility is needed
-            sum += p->second;
-            ++p;
-            if( sum >= grain_size )
-            {
-                break;
-            }
-        }
-
-        // New [p,b)
-        begin_ = p;
-        end_ = source.end_;
-        weight_ = source.weight_ - sum;
-
-        // Source [a,p)
-        source.end_ = p;
-        source.weight_ = sum;
-    }
-
-    // tbb range interface
-    bool empty() const
-    {
-        return !( Size() > 0 );
-    }
-
-    bool is_divisible() const
-    {
-        return weight_ > grain_size && Size() > 1;
-    }
-
-    // iteration interface
-    const_iterator begin() const
-    {
-        return begin_;
-    }
-
-    const_iterator end() const
-    {
-        return end_;
-    }
-
-    size_t Size() const
-    {
-        return end_ - begin_;
-    }
-
-    uint Weight() const
-    {
-        return weight_;
-    }
-
-private:
-    TIt begin_;
-    TIt end_;
-    uint weight_ = 0;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ConcurrentTopoQueue
-/// Usage based on two phases:
-///     1. Multiple threads push nodes to the queue concurrently.
-///     2. FetchNext() prepares all nodes of the next level in NextNodes().
-///         The previous contents of NextNodes() are automatically cleared.
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T, uint grain_size, typename TLevelFunc, typename TWeightFunc>
-class ConcurrentTopoQueue
-{
-private:
-    struct Entry;
-
-public:
-    using QueueDataT = std::vector<Entry>;
-    using NextDataT = std::vector<std::pair<T, uint>>;
-    using NextRangeT = WeightedRange<typename NextDataT::const_iterator, grain_size>;
-
-    ConcurrentTopoQueue() = default;
-    ConcurrentTopoQueue( const ConcurrentTopoQueue& ) = default;
-
-    template <typename FIn1, typename FIn2>
-    ConcurrentTopoQueue( FIn1&& levelFunc, FIn2&& weightFunc )
-        : levelFunc_( std::forward<FIn1>( levelFunc ) )
-        , weightFunc_( std::forward<FIn2>( weightFunc ) )
-    {}
-
-    void Push( const T& value )
-    {
-        auto& t = collectBuffer_.local();
-
-        auto level = levelFunc_( value );
-        auto weight = weightFunc_( value );
-
-        t.Data.emplace_back( value, level, weight );
-
-        t.Weight += weight;
-
-        if( t.MinLevel > level )
-        {
-            t.MinLevel = level;
-        }
-    }
-
-    bool FetchNext()
-    {
-        nextData_.clear();
-        uint totalWeight = 0;
-
-        // Determine current min level
-        minLevel_ = ( std::numeric_limits<int>::max )();
-        for( const auto& buf : collectBuffer_ )
-        {
-            if( minLevel_ > buf.MinLevel )
-            {
-                minLevel_ = buf.MinLevel;
-            }
-        }
-
-        // For each thread local buffer...
-        for( auto& buf : collectBuffer_ )
-        {
-            auto& v = buf.Data;
-
-            // Swap min level nodes to end of v
-            auto p = std::partition( v.begin(), v.end(), LevelCompFunctor{ minLevel_ } );
-
-            // Reserve once to avoid multiple re-allocations
-            nextData_.reserve( std::distance( p, v.end() ) );
-
-            // Move min level values to global next data
-            for( auto it = p; it != v.end(); ++it )
-            {
-                nextData_.emplace_back( std::move( it->Value ), it->Weight );
-            }
-
-            // Truncate remaining
-            v.resize( std::distance( v.begin(), p ) );
-
-            // Calc new min level and weight for this buffer
-            buf.MinLevel = ( std::numeric_limits<int>::max )();
-            int oldWeight = buf.Weight;
-            buf.Weight = 0;
-            for( const auto& x : v )
-            {
-                buf.Weight += x.Weight;
-
-                if( buf.MinLevel > x.Level )
-                {
-                    buf.MinLevel = x.Level;
-                }
-            }
-
-            // Add diff to nodes_ weight
-            totalWeight += oldWeight - buf.Weight;
-        }
-
-        nextRange_ = NextRangeT{ nextData_.begin(), nextData_.end(), totalWeight };
-
-        // Found more nodes?
-        return !nextData_.empty();
-    }
-
-    const NextRangeT& NextRange() const
-    {
-        return nextRange_;
-    }
-
-private:
-    struct Entry
-    {
-        Entry() = default;
-        Entry( const Entry& ) = default;
-
-        Entry( const T& value, int level, uint weight )
-            : Value( value )
-            , Level( level )
-            , Weight( weight )
-        {}
-
-        T Value;
-        int Level;
-        uint Weight;
-    };
-
-    struct LevelCompFunctor
-    {
-        LevelCompFunctor( int level )
-            : Level{ level }
-        {}
-
-        bool operator()( const Entry& e ) const
-        {
-            return e.Level != Level;
-        }
-
-        const int Level;
-    };
-
-    struct ThreadLocalBuffer
-    {
-        QueueDataT Data;
-        int MinLevel = ( std::numeric_limits<int>::max )();
-        uint Weight = 0;
-    };
-
-    int minLevel_ = ( std::numeric_limits<int>::max )();
-
-    NextDataT nextData_;
-    NextRangeT nextRange_;
-
-    TLevelFunc levelFunc_;
-    TWeightFunc weightFunc_;
-
-    tbb::enumerable_thread_specific<ThreadLocalBuffer> collectBuffer_;
-};
-
 namespace toposort
 {
-
-using std::atomic;
-using std::vector;
-using tbb::concurrent_vector;
-using tbb::spin_mutex;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Parameters
-///////////////////////////////////////////////////////////////////////////////////////////////////
-static const uint min_weight = 1;
-static const uint grain_size = 100;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SeqNode
@@ -3391,47 +1253,12 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ParNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class ParNode : public IReactiveNode
-{
-public:
-    using InvalidateMutexT = spin_mutex;
-
-    int Level{ 0 };
-    int NewLevel{ 0 };
-    atomic<bool> Collected{ false };
-
-    NodeVector<ParNode> Successors;
-    InvalidateMutexT InvalidateMutex;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ShiftRequestData
-///////////////////////////////////////////////////////////////////////////////////////////////////
-struct DynRequestData
-{
-    bool ShouldAttach;
-    ParNode* Node;
-    ParNode* Parent;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// ExclusiveSeqTurn
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class SeqTurn : public TurnBase
 {
 public:
-    SeqTurn( TurnIdT id, TransactionFlagsT flags );
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ExclusiveParTurn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class ParTurn : public TurnBase
-{
-public:
-    ParTurn( TurnIdT id, TransactionFlagsT flags );
+    SeqTurn( TurnIdT id );
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3443,15 +1270,6 @@ struct GetLevelFunctor
     int operator()( const T* x ) const
     {
         return x->Level;
-    }
-};
-
-template <typename T>
-struct GetWeightFunctor
-{
-    uint operator()( T* x ) const
-    {
-        return x->IsHeavyweight() ? grain_size : 1;
     }
 };
 
@@ -3491,35 +1309,6 @@ private:
     virtual void processChildren( SeqNode& node, SeqTurn& turn ) override;
 
     TopoQueueT scheduledNodes_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ParEngineBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class ParEngineBase : public EngineBase<ParNode, ParTurn>
-{
-public:
-    using DynRequestVectT = concurrent_vector<DynRequestData>;
-    using TopoQueueT = ConcurrentTopoQueue<ParNode*,
-        grain_size,
-        GetLevelFunctor<ParNode>,
-        GetWeightFunctor<ParNode>>;
-
-    void Propagate( ParTurn& turn );
-
-    void OnDynamicNodeAttach( ParNode& node, ParNode& parent, ParTurn& turn );
-    void OnDynamicNodeDetach( ParNode& node, ParNode& parent, ParTurn& turn );
-
-private:
-    void applyDynamicAttach( ParNode& node, ParNode& parent, ParTurn& turn );
-    void applyDynamicDetach( ParNode& node, ParNode& parent, ParTurn& turn );
-
-    void invalidateSuccessors( ParNode& node );
-
-    virtual void processChildren( ParNode& node, ParTurn& turn ) override;
-
-    TopoQueueT topoQueue_;
-    DynRequestVectT dynRequests_;
 };
 
 } // namespace toposort
@@ -3590,8 +1379,6 @@ public:
     static const bool uses_node_update_timer
         = ::react::impl::NodeUpdateTimerEnabled<typename Policy::Engine>::value;
 
-    static const bool is_concurrent = Policy::input_mode == ::react::impl::concurrent_input;
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     /// Aliases for reactives of this domain
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -3610,21 +1397,6 @@ public:
     using ObserverT = Observer<D>;
 
     using ScopedObserverT = ScopedObserver<D>;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ContinuationBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename D2>
-class ContinuationBase : public MovableReactive<NodeBase<D>>
-{
-public:
-    ContinuationBase() = default;
-
-    template <typename T>
-    ContinuationBase( T&& t )
-        : ContinuationBase::MovableReactive( std::forward<T>( t ) )
-    {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3736,11 +1508,6 @@ class SignalPack;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-using ::react::impl::TransactionFlagsT;
-
-// ETransactionFlags
-using ::react::impl::allow_merging;
-using ::react::impl::ETransactionFlags;
 
 // Domain modes
 using ::react::impl::EDomainMode;
@@ -3750,221 +1517,6 @@ using ::react::impl::sequential;
 // expose the actual enum values as they are reserved for internal use.
 using ::react::impl::EPropagationMode;
 
-using ::react::impl::WeightHint;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// TransactionStatus
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class TransactionStatus
-{
-    using StateT = ::react::impl::SharedWaitingState;
-    using PtrT = ::react::impl::WaitingStatePtrT;
-
-public:
-    // Default ctor
-    inline TransactionStatus()
-        : statePtr_( StateT::Create() )
-    {}
-
-    // Move ctor
-    inline TransactionStatus( TransactionStatus&& other )
-        : statePtr_( std::move( other.statePtr_ ) )
-    {
-        other.statePtr_ = StateT::Create();
-    }
-
-    // Move assignment
-    inline TransactionStatus& operator=( TransactionStatus&& other )
-    {
-        if( this != &other )
-        {
-            statePtr_ = std::move( other.statePtr_ );
-            other.statePtr_ = StateT::Create();
-        }
-        return *this;
-    }
-
-    // Deleted copy ctor & assignment
-    TransactionStatus( const TransactionStatus& ) = delete;
-    TransactionStatus& operator=( const TransactionStatus& ) = delete;
-
-    inline void Wait()
-    {
-        assert( statePtr_.Get() != nullptr );
-        statePtr_->Wait();
-    }
-
-private:
-    PtrT statePtr_;
-
-    template <typename D, typename F>
-    friend void AsyncTransaction( TransactionStatus& status, F&& func );
-
-    template <typename D, typename F>
-    friend void AsyncTransaction( TransactionFlagsT flags, TransactionStatus& status, F&& func );
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Continuation
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename D2 = D>
-class Continuation : public ::react::impl::ContinuationBase<D, D2>
-{
-private:
-    using NodePtrT = ::react::impl::NodeBasePtrT<D>;
-
-public:
-    using SourceDomainT = D;
-    using TargetDomainT = D2;
-
-    // Default ctor
-    Continuation() = default;
-
-    // Move ctor
-    Continuation( Continuation&& other )
-        : Continuation::ContinuationBase( std::move( other ) )
-    {}
-
-    // Node ctor
-    explicit Continuation( NodePtrT&& nodePtr )
-        : Continuation::ContinuationBase( std::move( nodePtr ) )
-    {}
-
-    // Move assignment
-    Continuation& operator=( Continuation&& other )
-    {
-        Continuation::ContinuationBase::operator=( std::move( other ) );
-        return *this;
-    }
-
-    // Deleted copy ctor & assignment
-    Continuation( const Continuation& ) = delete;
-    Continuation& operator=( const Continuation& ) = delete;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// MakeContinuation - Signals
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename DOut = D, typename S, typename FIn>
-auto MakeContinuation( TransactionFlagsT flags, const Signal<D, S>& trigger, FIn&& func )
-    -> Continuation<D, DOut>
-{
-    static_assert(
-        DOut::is_concurrent, "MakeContinuation: Target domain does not support concurrent input." );
-
-    using ::react::impl::SignalContinuationNode;
-    using F = typename std::decay<FIn>::type;
-
-    return Continuation<D, DOut>( std::make_shared<SignalContinuationNode<D, DOut, S, F>>(
-        flags, GetNodePtr( trigger ), std::forward<FIn>( func ) ) );
-}
-
-template <typename D, typename DOut = D, typename S, typename FIn>
-auto MakeContinuation( const Signal<D, S>& trigger, FIn&& func ) -> Continuation<D, DOut>
-{
-    return MakeContinuation<D, DOut>( 0, trigger, std::forward<FIn>( func ) );
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// MakeContinuation - Events
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename DOut = D, typename E, typename FIn>
-auto MakeContinuation( TransactionFlagsT flags, const Events<D, E>& trigger, FIn&& func )
-    -> Continuation<D, DOut>
-{
-    static_assert(
-        DOut::is_concurrent, "MakeContinuation: Target domain does not support concurrent input." );
-
-    using ::react::impl::AddContinuationRangeWrapper;
-    using ::react::impl::EventContinuationNode;
-    using ::react::impl::EventRange;
-    using ::react::impl::IsCallableWith;
-
-    using F = typename std::decay<FIn>::type;
-
-    using WrapperT = typename std::conditional<IsCallableWith<F, void, EventRange<E>>::value,
-        F,
-        typename std::conditional<IsCallableWith<F, void, E>::value,
-            AddContinuationRangeWrapper<E, F>,
-            void>::type>::type;
-
-    static_assert( !std::is_same<WrapperT, void>::value,
-        "MakeContinuation: Passed function does not match any of the supported signatures." );
-
-    return Continuation<D, DOut>( std::make_shared<EventContinuationNode<D, DOut, E, WrapperT>>(
-        flags, GetNodePtr( trigger ), std::forward<FIn>( func ) ) );
-}
-
-template <typename D, typename DOut = D, typename E, typename FIn>
-auto MakeContinuation( const Events<D, E>& trigger, FIn&& func ) -> Continuation<D, DOut>
-{
-    return MakeContinuation<D, DOut>( 0, trigger, std::forward<FIn>( func ) );
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// MakeContinuation - Synced
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename DOut = D, typename E, typename FIn, typename... TDepValues>
-auto MakeContinuation( TransactionFlagsT flags,
-    const Events<D, E>& trigger,
-    const SignalPack<D, TDepValues...>& depPack,
-    FIn&& func ) -> Continuation<D, DOut>
-{
-    static_assert(
-        DOut::is_concurrent, "MakeContinuation: Target domain does not support concurrent input." );
-
-    using ::react::impl::AddContinuationRangeWrapper;
-    using ::react::impl::EventRange;
-    using ::react::impl::IsCallableWith;
-    using ::react::impl::SyncedContinuationNode;
-
-    using F = typename std::decay<FIn>::type;
-
-    using WrapperT =
-        typename std::conditional<IsCallableWith<F, void, EventRange<E>, TDepValues...>::value,
-            F,
-            typename std::conditional<IsCallableWith<F, void, E, TDepValues...>::value,
-                AddContinuationRangeWrapper<E, F, TDepValues...>,
-                void>::type>::type;
-
-    static_assert( !std::is_same<WrapperT, void>::value,
-        "MakeContinuation: Passed function does not match any of the supported signatures." );
-
-    struct NodeBuilder_
-    {
-        NodeBuilder_( TransactionFlagsT flags, const Events<D, E>& trigger, FIn&& func )
-            : MyFlags( flags )
-            , MyTrigger( trigger )
-            , MyFunc( std::forward<FIn>( func ) )
-        {}
-
-        auto operator()( const Signal<D, TDepValues>&... deps ) -> Continuation<D, DOut>
-        {
-            return Continuation<D, DOut>(
-                std::make_shared<SyncedContinuationNode<D, DOut, E, WrapperT, TDepValues...>>(
-                    MyFlags,
-                    GetNodePtr( MyTrigger ),
-                    std::forward<FIn>( MyFunc ),
-                    GetNodePtr( deps )... ) );
-        }
-
-        TransactionFlagsT MyFlags;
-        const Events<D, E>& MyTrigger;
-        FIn MyFunc;
-    };
-
-    return ::react::impl::apply(
-        NodeBuilder_( flags, trigger, std::forward<FIn>( func ) ), depPack.Data );
-}
-
-template <typename D, typename DOut = D, typename E, typename FIn, typename... TDepValues>
-auto MakeContinuation(
-    const Events<D, E>& trigger, const SignalPack<D, TDepValues...>& depPack, FIn&& func )
-    -> Continuation<D, DOut>
-{
-    return MakeContinuation<D, DOut>( 0, trigger, depPack, std::forward<FIn>( func ) );
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
 /// DoTransaction
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -3972,62 +1524,7 @@ template <typename D, typename F>
 void DoTransaction( F&& func )
 {
     using ::react::impl::DomainSpecificInputManager;
-    DomainSpecificInputManager<D>::Instance().DoTransaction( 0, std::forward<F>( func ) );
-}
-
-template <typename D, typename F>
-void DoTransaction( TransactionFlagsT flags, F&& func )
-{
-    using ::react::impl::DomainSpecificInputManager;
-    DomainSpecificInputManager<D>::Instance().DoTransaction( flags, std::forward<F>( func ) );
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-/// AsyncTransaction
-///////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename F>
-void AsyncTransaction( F&& func )
-{
-    static_assert(
-        D::is_concurrent, "AsyncTransaction: Domain does not support concurrent input." );
-
-    using ::react::impl::DomainSpecificInputManager;
-    DomainSpecificInputManager<D>::Instance().AsyncTransaction(
-        0, nullptr, std::forward<F>( func ) );
-}
-
-template <typename D, typename F>
-void AsyncTransaction( TransactionFlagsT flags, F&& func )
-{
-    static_assert(
-        D::is_concurrent, "AsyncTransaction: Domain does not support concurrent input." );
-
-    using ::react::impl::DomainSpecificInputManager;
-    DomainSpecificInputManager<D>::Instance().AsyncTransaction(
-        flags, nullptr, std::forward<F>( func ) );
-}
-
-template <typename D, typename F>
-void AsyncTransaction( TransactionStatus& status, F&& func )
-{
-    static_assert(
-        D::is_concurrent, "AsyncTransaction: Domain does not support concurrent input." );
-
-    using ::react::impl::DomainSpecificInputManager;
-
-    DomainSpecificInputManager<D>::Instance().AsyncTransaction(
-        0, status.statePtr_, std::forward<F>( func ) );
-}
-
-template <typename D, typename F>
-void AsyncTransaction( TransactionFlagsT flags, TransactionStatus& status, F&& func )
-{
-    static_assert(
-        D::is_concurrent, "AsyncTransaction: Domain does not support concurrent input." );
-
-    using ::react::impl::DomainSpecificInputManager;
-    DomainSpecificInputManager<D>::Instance().AsyncTransaction(
-        flags, status.statePtr_, std::forward<F>( func ) );
+    DomainSpecificInputManager<D>::Instance().DoTransaction( std::forward<F>( func ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4171,15 +1668,12 @@ public:
         bool shouldDetach = false;
 
         if( auto p = subject_.lock() )
-        { // timer
-            using TimerT = typename SignalObserverNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, 1 );
-
+        {
             if( func_( p->ValueRef() ) == ObserverAction::stop_and_detach )
             {
                 shouldDetach = true;
             }
-        } // ~timer
+        }
 
         if( shouldDetach )
         {
@@ -4238,13 +1732,9 @@ public:
         bool shouldDetach = false;
 
         if( auto p = subject_.lock() )
-        { // timer
-            using TimerT = typename EventObserverNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, p->Events().size() );
-
+        {
             shouldDetach = func_( EventRange<E>( p->Events() ) ) == ObserverAction::stop_and_detach;
-
-        } // ~timer
+        }
 
         if( shouldDetach )
         {
@@ -4317,10 +1807,7 @@ public:
             // so make sure source doesnt contain events from last turn
             p->SetCurrentTurn( turn );
 
-            { // timer
-                using TimerT = typename SyncedObserverNode::ScopedUpdateTimer;
-                TimerT scopedTimer( *this, p->Events().size() );
-
+            {
                 shouldDetach
                     = apply(
                           [this, &p]( const std::shared_ptr<SignalNode<D, TDepValues>>&... args ) {
@@ -4328,8 +1815,7 @@ public:
                           },
                           deps_ )
                    == ObserverAction::stop_and_detach;
-
-            } // ~timer
+            }
         }
 
         if( shouldDetach )
@@ -4385,7 +1871,6 @@ template <typename D, typename E>
 class Events;
 
 using ::react::impl::ObserverAction;
-using ::react::impl::WeightHint;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Observer
@@ -4446,12 +1931,6 @@ public:
         return nodePtr_ != nullptr;
     }
 
-    void SetWeightHint( WeightHint weight )
-    {
-        assert( IsValid() );
-        nodePtr_->SetWeightHint( weight );
-    }
-
 private:
     // Owned by subject
     NodeT* nodePtr_;
@@ -4496,11 +1975,6 @@ public:
     bool IsValid() const
     {
         return obs_.IsValid();
-    }
-
-    void SetWeightHint( WeightHint weight )
-    {
-        obs_.SetWeightHint( weight );
     }
 
 private:
@@ -4672,9 +2146,6 @@ class Observer;
 template <typename D>
 class ScopedObserver;
 
-template <typename TSourceDomain, typename TTargetDomain>
-class Continuation;
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// IsSignal
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4746,21 +2217,6 @@ struct IsObserver<Observer<D>>
 
 template <typename D>
 struct IsObserver<ScopedObserver<D>>
-{
-    static const bool value = true;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IsContinuation
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-struct IsContinuation
-{
-    static const bool value = false;
-};
-
-template <typename D, typename D2>
-struct IsContinuation<Continuation<D, D2>>
 {
     static const bool value = true;
 };
@@ -4863,12 +2319,6 @@ struct IsReactive<Observer<D>>
 
 template <typename D>
 struct IsReactive<ScopedObserver<D>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename D2>
-struct IsReactive<Continuation<D, D2>>
 {
     static const bool value = true;
 };
@@ -5123,10 +2573,7 @@ public:
 
         bool changed = false;
 
-        { // timer
-            using TimerT = typename SignalOpNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, 1 );
-
+        {
             S newValue = op_.Evaluate();
 
             if( !Equals( this->value_, newValue ) )
@@ -5134,7 +2581,7 @@ public:
                 this->value_ = std::move( newValue );
                 changed = true;
             }
-        } // ~timer
+        }
 
         if( changed )
         {
@@ -5788,11 +3235,6 @@ public:
         return Signal::SignalBase::IsValid();
     }
 
-    void SetWeightHint( WeightHint weight )
-    {
-        Signal::SignalBase::SetWeightHint( weight );
-    }
-
     S Flatten() const
     {
         static_assert( IsSignal<S>::value || IsEvent<S>::value,
@@ -5856,11 +3298,6 @@ public:
     bool IsValid() const
     {
         return Signal::SignalBase::IsValid();
-    }
-
-    void SetWeightHint( WeightHint weight )
-    {
-        Signal::SignalBase::SetWeightHint( weight );
     }
 };
 
@@ -6068,28 +3505,10 @@ template <typename D, typename S>
 class SignalNode;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// BufferClearAccessPolicy
-///
-/// Provides thread safe access to clear event buffer if parallel updating is enabled.
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Note: Weird design due to empty base class optimization
-template <typename D>
-struct BufferClearAccessPolicy : private ConditionalCriticalSection<tbb::spin_mutex, false>
-{
-    template <typename F>
-    void AccessBufferForClearing( const F& f )
-    {
-        this->Access( f );
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// EventStreamNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D, typename E>
-class EventStreamNode
-    : public ObservableNode<D>
-    , private BufferClearAccessPolicy<D>
+class EventStreamNode : public ObservableNode<D>
 {
 public:
     using DataT = std::vector<E>;
@@ -6100,7 +3519,7 @@ public:
 
     void SetCurrentTurn( const TurnT& turn, bool forceUpdate = false, bool noClear = false )
     {
-        this->AccessBufferForClearing( [&] {
+        [&] {
             if( curTurnId_ != turn.Id() || forceUpdate )
             {
                 curTurnId_ = turn.Id();
@@ -6109,7 +3528,7 @@ public:
                     events_.clear();
                 }
             }
-        } );
+        }();
     }
 
     DataT& Events()
@@ -6442,17 +3861,7 @@ public:
 
         this->SetCurrentTurn( turn, true );
 
-        { // timer
-            size_t count = 0;
-            using TimerT = typename EventOpNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, count );
-
-            op_.Collect( turn, EventCollector( this->events_ ) );
-
-            // Note: Count was passed by reference, so we can still change before the dtor
-            // of the scoped timer is called
-            count = this->events_.size();
-        } // ~timer
+        op_.Collect( turn, EventCollector( this->events_ ) );
 
         if( !this->events_.empty() )
         {
@@ -6609,10 +4018,7 @@ public:
 
         // Don't time if there is nothing to do
         if( !source_->Events().empty() )
-        { // timer
-            using TimerT = typename SyncedEventTransformNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, source_->Events().size() );
-
+        {
             for( const auto& e : source_->Events() )
             {
                 this->events_.push_back( apply(
@@ -6621,8 +4027,7 @@ public:
                     },
                     deps_ ) );
             }
-
-        } // ~timer
+        }
 
         if( !this->events_.empty() )
         {
@@ -6690,10 +4095,7 @@ public:
 
         // Don't time if there is nothing to do
         if( !source_->Events().empty() )
-        { // timer
-            using TimerT = typename SyncedEventFilterNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, source_->Events().size() );
-
+        {
             for( const auto& e : source_->Events() )
             {
                 if( apply(
@@ -6705,7 +4107,7 @@ public:
                     this->events_.push_back( e );
                 }
             }
-        } // ~timer
+        }
 
         if( !this->events_.empty() )
         {
@@ -6715,10 +4117,6 @@ public:
         {
             Engine::OnNodeIdlePulse( *this, turn );
         }
-    }
-    virtual bool IsHeavyweight() const override
-    {
-        return this->IsUpdateThresholdExceeded();
     }
 
 private:
@@ -6762,13 +4160,7 @@ public:
 
         this->SetCurrentTurn( turn, true );
 
-        { // timer
-            using TimerT = typename EventProcessingNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, source_->Events().size() );
-
-            func_( EventRange<TIn>( source_->Events() ), std::back_inserter( this->events_ ) );
-
-        } // ~timer
+        func_( EventRange<TIn>( source_->Events() ), std::back_inserter( this->events_ ) );
 
         if( !this->events_.empty() )
         {
@@ -6833,10 +4225,7 @@ public:
 
         // Don't time if there is nothing to do
         if( !source_->Events().empty() )
-        { // timer
-            using TimerT = typename SyncedEventProcessingNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, source_->Events().size() );
-
+        {
             apply(
                 [this]( const std::shared_ptr<SignalNode<D, TDepValues>>&... args ) {
                     func_( EventRange<TIn>( source_->Events() ),
@@ -6844,8 +4233,7 @@ public:
                         args->ValueRef()... );
                 },
                 deps_ );
-
-        } // ~timer
+        }
 
         if( !this->events_.empty() )
         {
@@ -7029,8 +4417,6 @@ class Signal;
 
 template <typename D, typename... TValues>
 class SignalPack;
-
-using ::react::impl::WeightHint;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// MakeEventSource
@@ -7414,11 +4800,6 @@ public:
         return Events::EventStreamBase::IsValid();
     }
 
-    void SetWeightHint( WeightHint weight )
-    {
-        Events::EventStreamBase::SetWeightHint( weight );
-    }
-
     auto Tokenize() const -> decltype( ::react::Tokenize( std::declval<Events>() ) )
     {
         return ::react::Tokenize( *this );
@@ -7491,11 +4872,6 @@ public:
     bool IsValid() const
     {
         return Events::EventStreamBase::IsValid();
-    }
-
-    void SetWeightHint( WeightHint weight )
-    {
-        Events::EventStreamBase::SetWeightHint( weight );
     }
 
     auto Tokenize() const -> decltype( ::react::Tokenize( std::declval<Events>() ) )
@@ -7825,10 +5201,7 @@ public:
 
         bool changed = false;
 
-        { // timer
-            using TimerT = typename IterateNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, events_->Events().size() );
-
+        {
             S newValue = func_( EventRange<E>( events_->Events() ), this->value_ );
 
             if( !Equals( newValue, this->value_ ) )
@@ -7836,7 +5209,7 @@ public:
                 this->value_ = std::move( newValue );
                 changed = true;
             }
-        } // ~timer
+        }
 
         if( changed )
         {
@@ -7884,13 +5257,7 @@ public:
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
 
-        { // timer
-            using TimerT = typename IterateByRefNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, events_->Events().size() );
-
-            func_( EventRange<E>( events_->Events() ), this->value_ );
-
-        } // ~timer
+        func_( EventRange<E>( events_->Events() ), this->value_ );
 
         // Always assume change
         Engine::OnNodePulse( *this, turn );
@@ -7947,10 +5314,7 @@ public:
         bool changed = false;
 
         if( !events_->Events().empty() )
-        { // timer
-            using TimerT = typename SyncedIterateNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, events_->Events().size() );
-
+        {
             S newValue = apply(
                 [this]( const std::shared_ptr<SignalNode<D, TDepValues>>&... args ) {
                     return func_(
@@ -7963,7 +5327,7 @@ public:
                 changed = true;
                 this->value_ = std::move( newValue );
             }
-        } // ~timer
+        }
 
         if( changed )
         {
@@ -8030,10 +5394,7 @@ public:
         bool changed = false;
 
         if( !events_->Events().empty() )
-        { // timer
-            using TimerT = typename SyncedIterateByRefNode::ScopedUpdateTimer;
-            TimerT scopedTimer( *this, events_->Events().size() );
-
+        {
             apply(
                 [this]( const std::shared_ptr<SignalNode<D, TDepValues>>&... args ) {
                     func_( EventRange<E>( events_->Events() ), this->value_, args->ValueRef()... );
@@ -8041,7 +5402,7 @@ public:
                 deps_ );
 
             changed = true;
-        } // ~timer
+        }
 
         if( changed )
         {
@@ -8484,15 +5845,8 @@ namespace toposort
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SeqTurn
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-inline SeqTurn::SeqTurn( TurnIdT id, TransactionFlagsT flags )
-    : TurnBase( id, flags )
-{}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ParTurn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-inline ParTurn::ParTurn( TurnIdT id, TransactionFlagsT flags )
-    : TurnBase( id, flags )
+inline SeqTurn::SeqTurn( TurnIdT id )
+    : TurnBase( id )
 {}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -8529,8 +5883,6 @@ void EngineBase<TNode, TTurn>::OnNodePulse( TNode& node, TTurn& turn )
 
 // Explicit instantiation
 template class EngineBase<SeqNode, SeqTurn>;
-
-template class EngineBase<ParNode, ParTurn>;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SeqEngineBase
@@ -8593,108 +5945,6 @@ inline void SeqEngineBase::invalidateSuccessors( SeqNode& node )
             succ->NewLevel = node.Level + 1;
         }
     }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ParEngineBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-inline void ParEngineBase::Propagate( ParTurn& turn )
-{
-    while( topoQueue_.FetchNext() )
-    {
-        //using RangeT = tbb::blocked_range<vector<ParNode*>::const_iterator>;
-        using RangeT = ParEngineBase::TopoQueueT::NextRangeT;
-
-        // Iterate all nodes of current level and start processing them in parallel
-        tbb::parallel_for( topoQueue_.NextRange(), [&]( const RangeT& range ) {
-            for( const auto& e : range )
-            {
-                auto* curNode = e.first;
-
-                if( curNode->Level < curNode->NewLevel )
-                {
-                    curNode->Level = curNode->NewLevel;
-                    invalidateSuccessors( *curNode );
-                    topoQueue_.Push( curNode );
-                    continue;
-                }
-
-                curNode->Collected = false;
-
-                // Tick -> if changed: OnNodePulse -> adds child nodes to the queue
-                curNode->Tick( &turn );
-            }
-        } );
-
-        if( dynRequests_.size() > 0 )
-        {
-            for( auto req : dynRequests_ )
-            {
-                if( req.ShouldAttach )
-                {
-                    applyDynamicAttach( *req.Node, *req.Parent, turn );
-                }
-                else
-                {
-                    applyDynamicDetach( *req.Node, *req.Parent, turn );
-                }
-            }
-            dynRequests_.clear();
-        }
-    }
-}
-
-inline void ParEngineBase::OnDynamicNodeAttach( ParNode& node, ParNode& parent, ParTurn& turn )
-{
-    DynRequestData data{ true, &node, &parent };
-    dynRequests_.push_back( data );
-}
-
-inline void ParEngineBase::OnDynamicNodeDetach( ParNode& node, ParNode& parent, ParTurn& turn )
-{
-    DynRequestData data{ false, &node, &parent };
-    dynRequests_.push_back( data );
-}
-
-inline void ParEngineBase::applyDynamicAttach( ParNode& node, ParNode& parent, ParTurn& turn )
-{
-    this->OnNodeAttach( node, parent );
-
-    invalidateSuccessors( node );
-
-    // Re-schedule this node
-    node.Collected = true;
-    topoQueue_.Push( &node );
-}
-
-inline void ParEngineBase::applyDynamicDetach( ParNode& node, ParNode& parent, ParTurn& turn )
-{
-    this->OnNodeDetach( node, parent );
-}
-
-inline void ParEngineBase::processChildren( ParNode& node, ParTurn& turn )
-{
-    // Add children to queue
-    for( auto* succ : node.Successors )
-    {
-        if( !succ->Collected.exchange( true, std::memory_order_relaxed ) )
-        {
-            topoQueue_.Push( succ );
-        }
-    }
-}
-
-inline void ParEngineBase::invalidateSuccessors( ParNode& node )
-{
-    for( auto* succ : node.Successors )
-    { // succ->InvalidateMutex
-        ParNode::InvalidateMutexT::scoped_lock lock( succ->InvalidateMutex );
-
-        if( succ->NewLevel <= node.Level )
-        {
-            succ->NewLevel = node.Level + 1;
-        }
-    } // ~succ->InvalidateMutex
 }
 
 } // namespace toposort

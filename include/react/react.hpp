@@ -170,7 +170,7 @@ struct AddDummyArgWrapper
 {
     AddDummyArgWrapper( const AddDummyArgWrapper& other ) = default;
 
-    AddDummyArgWrapper( AddDummyArgWrapper&& other )
+    AddDummyArgWrapper( AddDummyArgWrapper&& other ) noexcept
         : MyFunc( std::move( other.MyFunc ) )
     {}
 
@@ -193,7 +193,7 @@ struct AddDummyArgWrapper<TArg, F, void, TDepValues...>
 public:
     AddDummyArgWrapper( const AddDummyArgWrapper& other ) = default;
 
-    AddDummyArgWrapper( AddDummyArgWrapper&& other )
+    AddDummyArgWrapper( AddDummyArgWrapper&& other ) noexcept
         : MyFunc( std::move( other.MyFunc ) )
     {}
 
@@ -218,7 +218,7 @@ struct AddDefaultReturnValueWrapper
 {
     AddDefaultReturnValueWrapper( const AddDefaultReturnValueWrapper& ) = default;
 
-    AddDefaultReturnValueWrapper( AddDefaultReturnValueWrapper&& other )
+    AddDefaultReturnValueWrapper( AddDefaultReturnValueWrapper&& other ) noexcept
         : MyFunc( std::move( other.MyFunc ) )
     {}
 
@@ -430,8 +430,7 @@ struct IInputNode
 class IObserver
 {
 public:
-    virtual ~IObserver()
-    {}
+    virtual ~IObserver() = default;
 
     virtual void UnregisterSelf() = 0;
 
@@ -589,7 +588,7 @@ public:
         : deps_( std::forward<TDepsIn>( deps )... )
     {}
 
-    ReactiveOpBase( ReactiveOpBase&& other )
+    ReactiveOpBase( ReactiveOpBase&& other ) noexcept
         : deps_( std::move( other.deps_ ) )
     {}
 
@@ -700,7 +699,7 @@ public:
     ReactiveBase( const ReactiveBase& ) = default;
 
     // Move ctor (VS2013 doesn't default generate that yet)
-    ReactiveBase( ReactiveBase&& other )
+    ReactiveBase( ReactiveBase&& other ) noexcept
         : ptr_( std::move( other.ptr_ ) )
     {}
 
@@ -713,7 +712,7 @@ public:
     ReactiveBase& operator=( const ReactiveBase& ) = default;
 
     // Move assignment
-    ReactiveBase& operator=( ReactiveBase&& other )
+    ReactiveBase& operator=( ReactiveBase&& other ) noexcept
     {
         ptr_.reset( std::move( other ) );
         return *this;
@@ -742,7 +741,7 @@ public:
 
     CopyableReactive( const CopyableReactive& ) = default;
 
-    CopyableReactive( CopyableReactive&& other )
+    CopyableReactive( CopyableReactive&& other ) noexcept
         : CopyableReactive::ReactiveBase( std::move( other ) )
     {}
 
@@ -752,7 +751,7 @@ public:
 
     CopyableReactive& operator=( const CopyableReactive& ) = default;
 
-    CopyableReactive& operator=( CopyableReactive&& other )
+    CopyableReactive& operator=( CopyableReactive&& other ) noexcept
     {
         CopyableReactive::ReactiveBase::operator=( std::move( other ) );
         return *this;
@@ -1009,65 +1008,6 @@ template <typename D, typename E>
 class EventStreamNode;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// AddContinuationRangeWrapper
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename E, typename F, typename... TArgs>
-struct AddContinuationRangeWrapper
-{
-    AddContinuationRangeWrapper( const AddContinuationRangeWrapper& other ) = default;
-
-    AddContinuationRangeWrapper( AddContinuationRangeWrapper&& other )
-        : MyFunc( std::move( other.MyFunc ) )
-    {}
-
-    template <typename FIn, class = typename DisableIfSame<FIn, AddContinuationRangeWrapper>::type>
-    explicit AddContinuationRangeWrapper( FIn&& func )
-        : MyFunc( std::forward<FIn>( func ) )
-    {}
-
-    void operator()( EventRange<E> range, const TArgs&... args )
-    {
-        for( const auto& e : range )
-        {
-            MyFunc( e, args... );
-        }
-    }
-
-    F MyFunc;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EnumFlags
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-class EnumFlags
-{
-public:
-    using FlagsT = typename std::underlying_type<T>::type;
-
-    template <T x>
-    void Set()
-    {
-        flags_ |= 1 << x;
-    }
-
-    template <T x>
-    void Clear()
-    {
-        flags_ &= ~( 1 << x );
-    }
-
-    template <T x>
-    bool Test() const
-    {
-        return ( flags_ & ( 1 << x ) ) != 0;
-    }
-
-private:
-    FlagsT flags_ = 0;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// NodeVector
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename TNode>
@@ -1210,13 +1150,13 @@ private:
             , Level( level )
         {}
 
-        T Value;
-        int Level;
+        T Value{};
+        int Level{};
     };
 
     struct LevelCompFunctor
     {
-        LevelCompFunctor( int level )
+        explicit LevelCompFunctor( int level )
             : Level( level )
         {}
 
@@ -1306,7 +1246,7 @@ public:
 private:
     void invalidateSuccessors( SeqNode& node );
 
-    virtual void processChildren( SeqNode& node, SeqTurn& turn ) override;
+    void processChildren( SeqNode& node, SeqTurn& turn ) override;
 
     TopoQueueT scheduledNodes_;
 };
@@ -1597,7 +1537,7 @@ struct AddObserverRangeWrapper
 {
     AddObserverRangeWrapper( const AddObserverRangeWrapper& other ) = default;
 
-    AddObserverRangeWrapper( AddObserverRangeWrapper&& other )
+    AddObserverRangeWrapper( AddObserverRangeWrapper&& other ) noexcept
         : MyFunc( std::move( other.MyFunc ) )
     {}
 
@@ -1663,7 +1603,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         bool shouldDetach = false;
 
@@ -1681,7 +1621,7 @@ public:
         }
     }
 
-    virtual void UnregisterSelf() override
+    void UnregisterSelf() override
     {
         if( auto p = subject_.lock() )
         {
@@ -1690,7 +1630,7 @@ public:
     }
 
 private:
-    virtual void detachObserver() override
+    void detachObserver() override
     {
         if( auto p = subject_.lock() )
         {
@@ -1727,7 +1667,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         bool shouldDetach = false;
 
@@ -1742,7 +1682,7 @@ public:
         }
     }
 
-    virtual void UnregisterSelf() override
+    void UnregisterSelf() override
     {
         if( auto p = subject_.lock() )
         {
@@ -1794,7 +1734,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -1824,7 +1764,7 @@ public:
         }
     }
 
-    virtual void UnregisterSelf() override
+    void UnregisterSelf() override
     {
         if( auto p = subject_.lock() )
         {
@@ -1890,7 +1830,7 @@ public:
     {}
 
     // Move ctor
-    Observer( Observer&& other )
+    Observer( Observer&& other ) noexcept
         : nodePtr_( other.nodePtr_ )
         , subjectPtr_( std::move( other.subjectPtr_ ) )
     {
@@ -1905,7 +1845,7 @@ public:
     {}
 
     // Move assignment
-    Observer& operator=( Observer&& other )
+    Observer& operator=( Observer&& other ) noexcept
     {
         nodePtr_ = other.nodePtr_;
         subjectPtr_ = std::move( other.subjectPtr_ );
@@ -1947,7 +1887,7 @@ class ScopedObserver
 {
 public:
     // Move ctor
-    ScopedObserver( ScopedObserver&& other )
+    ScopedObserver( ScopedObserver&& other ) noexcept
         : obs_( std::move( other.obs_ ) )
     {}
 
@@ -1957,7 +1897,7 @@ public:
     {}
 
     // Move assignment
-    ScopedObserver& operator=( ScopedObserver&& other )
+    ScopedObserver& operator=( ScopedObserver&& other ) noexcept
     {
         obs_ = std::move( other.obs_ );
     }
@@ -2399,12 +2339,12 @@ public:
         Engine::OnNodeCreate( *this );
     }
 
-    ~VarNode()
+    ~VarNode() override
     {
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         REACT_ASSERT( false, "Ticked VarNode\n" );
     }
@@ -2441,7 +2381,7 @@ public:
         }
     }
 
-    virtual bool ApplyInput( void* turnPtr ) override
+    bool ApplyInput( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -2494,7 +2434,7 @@ public:
         , func_( std::forward<FIn>( func ) )
     {}
 
-    FunctionOp( FunctionOp&& other )
+    FunctionOp( FunctionOp&& other ) noexcept
         : FunctionOp::ReactiveOpBase( std::move( other ) )
         , func_( std::move( other.func_ ) )
     {}
@@ -2566,7 +2506,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -2633,7 +2573,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -2908,12 +2848,12 @@ REACT_DECLARE_OP( --, Decrement )
     template <typename L, typename R>                                                              \
     struct name##OpRFunctor                                                                        \
     {                                                                                              \
-        name##OpRFunctor( name##OpRFunctor&& other )                                               \
+        name##OpRFunctor( name##OpRFunctor&& other ) noexcept                                      \
             : LeftVal( std::move( other.LeftVal ) )                                                \
         {}                                                                                         \
                                                                                                    \
         template <typename T>                                                                      \
-        name##OpRFunctor( T&& val )                                                                \
+        explicit name##OpRFunctor( T&& val )                                                       \
             : LeftVal( std::forward<T>( val ) )                                                    \
         {}                                                                                         \
                                                                                                    \
@@ -2931,12 +2871,12 @@ REACT_DECLARE_OP( --, Decrement )
     template <typename L, typename R>                                                              \
     struct name##OpLFunctor                                                                        \
     {                                                                                              \
-        name##OpLFunctor( name##OpLFunctor&& other )                                               \
+        name##OpLFunctor( name##OpLFunctor&& other ) noexcept                                      \
             : RightVal( std::move( other.RightVal ) )                                              \
         {}                                                                                         \
                                                                                                    \
         template <typename T>                                                                      \
-        name##OpLFunctor( T&& val )                                                                \
+        explicit name##OpLFunctor( T&& val )                                                       \
             : RightVal( std::forward<T>( val ) )                                                   \
         {}                                                                                         \
                                                                                                    \
@@ -3196,7 +3136,7 @@ public:
     Signal( const Signal& ) = default;
 
     // Move ctor
-    Signal( Signal&& other )
+    Signal( Signal&& other ) noexcept
         : Signal::SignalBase( std::move( other ) )
     {}
 
@@ -3209,7 +3149,7 @@ public:
     Signal& operator=( const Signal& ) = default;
 
     // Move assignment
-    Signal& operator=( Signal&& other )
+    Signal& operator=( Signal&& other ) noexcept
     {
         Signal::SignalBase::operator=( std::move( other ) );
         return *this;
@@ -3261,7 +3201,7 @@ public:
     Signal( const Signal& ) = default;
 
     // Move ctor
-    Signal( Signal&& other )
+    Signal( Signal&& other ) noexcept
         : Signal::SignalBase( std::move( other ) )
     {}
 
@@ -3274,7 +3214,7 @@ public:
     Signal& operator=( const Signal& ) = default;
 
     // Move assignment
-    Signal& operator=( Signal&& other )
+    Signal& operator=( Signal&& other ) noexcept
     {
         Signal::SignalBase::operator=( std::move( other ) );
         return *this;
@@ -3319,7 +3259,7 @@ public:
     VarSignal( const VarSignal& ) = default;
 
     // Move ctor
-    VarSignal( VarSignal&& other )
+    VarSignal( VarSignal&& other ) noexcept
         : VarSignal::Signal( std::move( other ) )
     {}
 
@@ -3332,7 +3272,7 @@ public:
     VarSignal& operator=( const VarSignal& ) = default;
 
     // Move assignment
-    VarSignal& operator=( VarSignal&& other )
+    VarSignal& operator=( VarSignal&& other ) noexcept
     {
         VarSignal::SignalBase::operator=( std::move( other ) );
         return *this;
@@ -3385,7 +3325,7 @@ public:
     VarSignal( const VarSignal& ) = default;
 
     // Move ctor
-    VarSignal( VarSignal&& other )
+    VarSignal( VarSignal&& other ) noexcept
         : VarSignal::Signal( std::move( other ) )
     {}
 
@@ -3398,7 +3338,7 @@ public:
     VarSignal& operator=( const VarSignal& ) = default;
 
     // Move assignment
-    VarSignal& operator=( VarSignal&& other )
+    VarSignal& operator=( VarSignal&& other ) noexcept
     {
         VarSignal::Signal::operator=( std::move( other ) );
         return *this;
@@ -3434,7 +3374,7 @@ public:
     TempSignal( const TempSignal& ) = default;
 
     // Move ctor
-    TempSignal( TempSignal&& other )
+    TempSignal( TempSignal&& other ) noexcept
         : TempSignal::Signal( std::move( other ) )
     {}
 
@@ -3447,7 +3387,7 @@ public:
     TempSignal& operator=( const TempSignal& ) = default;
 
     // Move assignemnt
-    TempSignal& operator=( TempSignal&& other )
+    TempSignal& operator=( TempSignal&& other ) noexcept
     {
         TempSignal::Signal::operator=( std::move( other ) );
         return *this;
@@ -3563,12 +3503,12 @@ public:
         Engine::OnNodeCreate( *this );
     }
 
-    ~EventSourceNode()
+    ~EventSourceNode() override
     {
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         REACT_ASSERT( false, "Ticked EventSourceNode\n" );
     }
@@ -3586,7 +3526,7 @@ public:
         this->events_.push_back( std::forward<V>( v ) );
     }
 
-    virtual bool ApplyInput( void* turnPtr ) override
+    bool ApplyInput( void* turnPtr ) override
     {
         if( this->events_.size() > 0 && !changedFlag_ )
         {
@@ -3620,7 +3560,7 @@ public:
         : EventMergeOp::ReactiveOpBase( DontMove(), std::forward<TDepsIn>( deps )... )
     {}
 
-    EventMergeOp( EventMergeOp&& other )
+    EventMergeOp( EventMergeOp&& other ) noexcept
         : EventMergeOp::ReactiveOpBase( std::move( other ) )
     {}
 
@@ -3685,7 +3625,7 @@ public:
         , filter_( std::forward<TFilterIn>( filter ) )
     {}
 
-    EventFilterOp( EventFilterOp&& other )
+    EventFilterOp( EventFilterOp&& other ) noexcept
         : EventFilterOp::ReactiveOpBase{ std::move( other ) }
         , filter_( std::move( other.filter_ ) )
     {}
@@ -3765,7 +3705,7 @@ public:
         , func_( std::forward<TFuncIn>( func ) )
     {}
 
-    EventTransformOp( EventTransformOp&& other )
+    EventTransformOp( EventTransformOp&& other ) noexcept
         : EventTransformOp::ReactiveOpBase( std::move( other ) )
         , func_( std::move( other.func_ ) )
     {}
@@ -3854,7 +3794,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -3929,7 +3869,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         typedef typename D::Engine::TurnT TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -4006,7 +3946,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -4083,7 +4023,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -4153,7 +4093,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -4213,7 +4153,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -4283,7 +4223,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
 
@@ -4771,7 +4711,7 @@ public:
     Events( const Events& ) = default;
 
     // Move ctor
-    Events( Events&& other )
+    Events( Events&& other ) noexcept
         : Events::EventStreamBase( std::move( other ) )
     {}
 
@@ -4784,7 +4724,7 @@ public:
     Events& operator=( const Events& ) = default;
 
     // Move assignment
-    Events& operator=( Events&& other )
+    Events& operator=( Events&& other ) noexcept
     {
         Events::EventStreamBase::operator=( std::move( other ) );
         return *this;
@@ -4845,7 +4785,7 @@ public:
     Events( const Events& ) = default;
 
     // Move ctor
-    Events( Events&& other )
+    Events( Events&& other ) noexcept
         : Events::EventStreamBase( std::move( other ) )
     {}
 
@@ -4858,7 +4798,7 @@ public:
     Events& operator=( const Events& ) = default;
 
     // Move assignment
-    Events& operator=( Events&& other )
+    Events& operator=( Events&& other ) noexcept
     {
         Events::EventStreamBase::operator=( std::move( other ) );
         return *this;
@@ -4919,7 +4859,7 @@ public:
     EventSource( const EventSource& ) = default;
 
     // Move ctor
-    EventSource( EventSource&& other )
+    EventSource( EventSource&& other ) noexcept
         : EventSource::Events( std::move( other ) )
     {}
 
@@ -4932,7 +4872,7 @@ public:
     EventSource& operator=( const EventSource& ) = default;
 
     // Move assignment
-    EventSource& operator=( EventSource&& other )
+    EventSource& operator=( EventSource&& other ) noexcept
     {
         EventSource::Events::operator=( std::move( other ) );
         return *this;
@@ -5002,7 +4942,7 @@ public:
     EventSource( const EventSource& ) = default;
 
     // Move ctor
-    EventSource( EventSource&& other )
+    EventSource( EventSource&& other ) noexcept
         : EventSource::Events( std::move( other ) )
     {}
 
@@ -5015,7 +4955,7 @@ public:
     EventSource& operator=( const EventSource& ) = default;
 
     // Move assignment
-    EventSource& operator=( EventSource&& other )
+    EventSource& operator=( EventSource&& other ) noexcept
     {
         EventSource::Events::operator=( std::move( other ) );
         return *this;
@@ -5059,7 +4999,7 @@ public:
     TempEvents( const TempEvents& ) = default;
 
     // Move ctor
-    TempEvents( TempEvents&& other )
+    TempEvents( TempEvents&& other ) noexcept
         : TempEvents::Events( std::move( other ) )
     {}
 
@@ -5072,7 +5012,7 @@ public:
     TempEvents& operator=( const TempEvents& ) = default;
 
     // Move assignment
-    TempEvents& operator=( TempEvents&& other )
+    TempEvents& operator=( TempEvents&& other ) noexcept
     {
         TempEvents::EventStreamBase::operator=( std::move( other ) );
         return *this;
@@ -5122,7 +5062,7 @@ struct AddIterateRangeWrapper
 {
     AddIterateRangeWrapper( const AddIterateRangeWrapper& other ) = default;
 
-    AddIterateRangeWrapper( AddIterateRangeWrapper&& other )
+    AddIterateRangeWrapper( AddIterateRangeWrapper&& other ) noexcept
         : MyFunc( std::move( other.MyFunc ) )
     {}
 
@@ -5149,7 +5089,7 @@ struct AddIterateByRefRangeWrapper
 {
     AddIterateByRefRangeWrapper( const AddIterateByRefRangeWrapper& other ) = default;
 
-    AddIterateByRefRangeWrapper( AddIterateByRefRangeWrapper&& other )
+    AddIterateByRefRangeWrapper( AddIterateByRefRangeWrapper&& other ) noexcept
         : MyFunc( std::move( other.MyFunc ) )
     {}
 
@@ -5252,7 +5192,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -5304,7 +5244,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -5384,7 +5324,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -5447,7 +5387,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -5506,7 +5446,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -5564,7 +5504,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         using TurnT = typename D::Engine::TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
@@ -5614,7 +5554,7 @@ public:
         Engine::OnNodeDestroy( *this );
     }
 
-    virtual void Tick( void* turnPtr ) override
+    void Tick( void* turnPtr ) override
     {
         typedef typename D::Engine::TurnT TurnT;
         TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );

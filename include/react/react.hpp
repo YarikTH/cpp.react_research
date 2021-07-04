@@ -266,49 +266,279 @@ public:
 #define REACT_EXPAND_PACK( ... ) ::react::impl::pass( ( __VA_ARGS__, 0 )... )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IReactiveEngine
+/// TopoQueue - Sequential
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode, typename TTurn>
-struct IReactiveEngine
+template <typename T, typename TLevelFunc>
+class TopoQueue
 {
-    using NodeT = TNode;
-    using TurnT = TTurn;
+private:
+    struct Entry;
 
-    void OnTurnAdmissionStart( TurnT& turn )
+public:
+    // Store the level as part of the entry for cheap comparisons
+    using QueueDataT = std::vector<Entry>;
+    using NextDataT = std::vector<T>;
+
+    TopoQueue() = default;
+    TopoQueue( const TopoQueue& ) = default;
+
+    template <typename FIn>
+    TopoQueue( FIn&& levelFunc )
+        : levelFunc_( std::forward<FIn>( levelFunc ) )
     {}
 
-    void OnTurnAdmissionEnd( TurnT& turn )
+    void Push( const T& value )
+    {
+        queueData_.emplace_back( value, levelFunc_( value ) );
+    }
+
+    bool FetchNext()
+    {
+        // Throw away previous values
+        nextData_.clear();
+
+        // Find min level of nodes in queue data
+        minLevel_ = ( std::numeric_limits<int>::max )();
+        for( const auto& e : queueData_ )
+        {
+            if( minLevel_ > e.Level )
+            {
+                minLevel_ = e.Level;
+            }
+        }
+
+        // Swap entries with min level to the end
+        auto p
+            = std::partition( queueData_.begin(), queueData_.end(), LevelCompFunctor{ minLevel_ } );
+
+        // Reserve once to avoid multiple re-allocations
+        nextData_.reserve( std::distance( p, queueData_.end() ) );
+
+        // Move min level values to next data
+        for( auto it = p; it != queueData_.end(); ++it )
+        {
+            nextData_.push_back( std::move( it->Value ) );
+        }
+
+        // Truncate moved entries
+        queueData_.resize( std::distance( queueData_.begin(), p ) );
+
+        return !nextData_.empty();
+    }
+
+    const NextDataT& NextValues() const
+    {
+        return nextData_;
+    }
+
+private:
+    struct Entry
+    {
+        Entry() = default;
+        Entry( const Entry& ) = default;
+
+        Entry( const T& value, int level )
+            : Value( value )
+            , Level( level )
+        {}
+
+        T Value{};
+        int Level{};
+    };
+
+    struct LevelCompFunctor
+    {
+        explicit LevelCompFunctor( int level )
+            : Level( level )
+        {}
+
+        bool operator()( const Entry& e ) const
+        {
+            return e.Level != Level;
+        }
+
+        const int Level;
+    };
+
+    NextDataT nextData_;
+    QueueDataT queueData_;
+
+    TLevelFunc levelFunc_;
+
+    int minLevel_ = ( std::numeric_limits<int>::max )();
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// NodeVector
+///////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename TNode>
+class NodeVector
+{
+private:
+    typedef std::vector<TNode*> DataT;
+
+public:
+    void Add( TNode& node )
+    {
+        data_.push_back( &node );
+    }
+
+    void Remove( const TNode& node )
+    {
+        data_.erase( std::find( data_.begin(), data_.end(), &node ) );
+    }
+
+    typedef typename DataT::iterator iterator;
+    typedef typename DataT::const_iterator const_iterator;
+
+    iterator begin()
+    {
+        return data_.begin();
+    }
+
+    iterator end()
+    {
+        return data_.end();
+    }
+
+    const_iterator begin() const
+    {
+        return data_.begin();
+    }
+
+    const_iterator end() const
+    {
+        return data_.end();
+    }
+
+private:
+    DataT data_;
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// ReactiveNode
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class ReactiveNode
+{
+public:
+    int Level{ 0 };
+    int NewLevel{ 0 };
+    bool Queued{ false };
+
+    NodeVector<ReactiveNode> Successors;
+
+    virtual ~ReactiveNode() = default;
+
+    // Note: Could get rid of this ugly ptr by adding a template parameter to the interface
+    // But that would mean all engine nodes need that template parameter too - so rather cast
+    virtual void Tick( void* turnPtr ) = 0;
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Common types & constants
+///////////////////////////////////////////////////////////////////////////////////////////////////
+using TurnIdT = uint;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Turn
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class Turn
+{
+public:
+    inline Turn( TurnIdT id )
+        : id_( id )
     {}
 
-    void OnInputChange( NodeT& node, TurnT& turn )
-    {}
+    inline TurnIdT Id() const
+    {
+        return id_;
+    }
 
-    void Propagate( TurnT& turn )
-    {}
+private:
+    TurnIdT id_;
+};
 
-    void OnNodeCreate( NodeT& node )
-    {}
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Functors
+///////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+struct GetLevelFunctor
+{
+    int operator()( const T* x ) const
+    {
+        return x->Level;
+    }
+};
 
-    void OnNodeDestroy( NodeT& node )
-    {}
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// ToposortEngine
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class ToposortEngine
+{
+public:
+    using NodeT = ReactiveNode;
+    using TurnT = Turn;
 
-    void OnNodeAttach( NodeT& node, NodeT& parent )
-    {}
+    using TopoQueueT = TopoQueue<ReactiveNode*, GetLevelFunctor<ReactiveNode>>;
 
-    void OnNodeDetach( NodeT& node, NodeT& parent )
-    {}
+    void Propagate( Turn& turn );
 
-    void OnNodePulse( NodeT& node, TurnT& turn )
-    {}
+    static void OnNodeAttach( ReactiveNode& node, ReactiveNode& parent )
+    {
+        parent.Successors.Add( node );
 
-    void OnNodeIdlePulse( NodeT& node, TurnT& turn )
-    {}
+        if( node.Level <= parent.Level )
+        {
+            node.Level = parent.Level + 1;
+        }
+    }
 
-    void OnDynamicNodeAttach( NodeT& node, NodeT& parent, TurnT& turn )
-    {}
+    static void OnNodeDetach( ReactiveNode& node, ReactiveNode& parent )
+    {
+        parent.Successors.Remove( node );
+    }
 
-    void OnDynamicNodeDetach( NodeT& node, NodeT& parent, TurnT& turn )
-    {}
+    void OnInputChange( ReactiveNode& node )
+    {
+        processChildren( node );
+    }
+
+    void OnNodePulse( ReactiveNode& node )
+    {
+        processChildren( node );
+    }
+
+    void OnDynamicNodeAttach( ReactiveNode& node, ReactiveNode& parent )
+    {
+        OnNodeAttach( node, parent );
+
+        invalidateSuccessors( node );
+
+        // Re-schedule this node
+        node.Queued = true;
+        scheduledNodes_.Push( &node );
+    }
+
+    static void OnDynamicNodeDetach( ReactiveNode& node, ReactiveNode& parent )
+    {
+        OnNodeDetach( node, parent );
+    }
+
+private:
+    static void invalidateSuccessors( ReactiveNode& node )
+    {
+        for( auto* succ : node.Successors )
+        {
+            if( succ->NewLevel <= node.Level )
+            {
+                succ->NewLevel = node.Level + 1;
+            }
+        }
+    }
+
+    void processChildren( ReactiveNode& node );
+
+    TopoQueueT scheduledNodes_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -326,29 +556,14 @@ struct EngineInterface
         return engine;
     }
 
-    static void OnTurnAdmissionStart( TurnT& turn )
+    static void OnInputChange( NodeT& node )
     {
-        Instance().OnTurnAdmissionStart( turn );
-    }
-
-    static void OnTurnAdmissionEnd( TurnT& turn )
-    {
-        Instance().OnTurnAdmissionEnd( turn );
-    }
-
-    static void OnInputChange( NodeT& node, TurnT& turn )
-    {
-        Instance().OnInputChange( node, turn );
+        Instance().OnInputChange( node );
     }
 
     static void Propagate( TurnT& turn )
     {
         Instance().Propagate( turn );
-    }
-
-    static void OnNodeCreate( NodeT& node )
-    {
-        Instance().OnNodeCreate( node );
     }
 
     static void OnNodeDestroy( NodeT& node )
@@ -366,37 +581,20 @@ struct EngineInterface
         Instance().OnNodeDetach( node, parent );
     }
 
-    static void OnNodePulse( NodeT& node, TurnT& turn )
+    static void OnNodePulse( NodeT& node )
     {
-        Instance().OnNodePulse( node, turn );
+        Instance().OnNodePulse( node );
     }
 
-    static void OnNodeIdlePulse( NodeT& node, TurnT& turn )
+    static void OnDynamicNodeAttach( NodeT& node, NodeT& parent )
     {
-        Instance().OnNodeIdlePulse( node, turn );
+        Instance().OnDynamicNodeAttach( node, parent );
     }
 
-    static void OnDynamicNodeAttach( NodeT& node, NodeT& parent, TurnT& turn )
+    static void OnDynamicNodeDetach( NodeT& node, NodeT& parent )
     {
-        Instance().OnDynamicNodeAttach( node, parent, turn );
+        Instance().OnDynamicNodeDetach( node, parent );
     }
-
-    static void OnDynamicNodeDetach( NodeT& node, NodeT& parent, TurnT& turn )
-    {
-        Instance().OnDynamicNodeDetach( node, parent, turn );
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IReactiveNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-struct IReactiveNode
-{
-    virtual ~IReactiveNode() = default;
-
-    // Note: Could get rid of this ugly ptr by adding a template parameter to the interface
-    // But that would mean all engine nodes need that template parameter too - so rather cast
-    virtual void Tick( void* turnPtr ) = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -472,11 +670,10 @@ private:
 /// NodeBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D>
-class NodeBase : public D::Policy::Engine::NodeT
+class NodeBase : public D::Engine::NodeT
 {
 public:
     using DomainT = D;
-    using Policy = typename D::Policy;
     using Engine = typename D::Engine;
     using NodeT = typename Engine::NodeT;
     using TurnT = typename Engine::TurnT;
@@ -765,11 +962,6 @@ template <typename D>
 class InputManager;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Common types & constants
-///////////////////////////////////////////////////////////////////////////////////////////////////
-using TurnIdT = uint;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// ThreadLocalInputState
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename = void>
@@ -830,9 +1022,8 @@ public:
         ThreadLocalInputState<>::IsTransactionActive = true;
 
         TurnT turn( nextTurnId() );
-        Engine::OnTurnAdmissionStart( turn );
+
         func();
-        Engine::OnTurnAdmissionEnd( turn );
 
         ThreadLocalInputState<>::IsTransactionActive = false;
 
@@ -904,9 +1095,7 @@ private:
     void addSimpleInput( R& r, V&& v )
     {
         TurnT turn( nextTurnId() );
-        Engine::OnTurnAdmissionStart( turn );
         r.AddInput( std::forward<V>( v ) );
-        Engine::OnTurnAdmissionEnd( turn );
 
         if( r.ApplyInput( &turn ) )
         {
@@ -920,9 +1109,9 @@ private:
     void modifySimpleInput( R& r, const F& func )
     {
         TurnT turn( nextTurnId() );
-        Engine::OnTurnAdmissionStart( turn );
+
         r.ModifyInput( func );
-        Engine::OnTurnAdmissionEnd( turn );
+
 
         // Return value, will always be true
         r.ApplyInput( &turn );
@@ -981,256 +1170,7 @@ class SignalNode;
 template <typename D, typename E>
 class EventStreamNode;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// NodeVector
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode>
-class NodeVector
-{
-private:
-    typedef std::vector<TNode*> DataT;
-
-public:
-    void Add( TNode& node )
-    {
-        data_.push_back( &node );
-    }
-
-    void Remove( const TNode& node )
-    {
-        data_.erase( std::find( data_.begin(), data_.end(), &node ) );
-    }
-
-    typedef typename DataT::iterator iterator;
-    typedef typename DataT::const_iterator const_iterator;
-
-    iterator begin()
-    {
-        return data_.begin();
-    }
-
-    iterator end()
-    {
-        return data_.end();
-    }
-
-    const_iterator begin() const
-    {
-        return data_.begin();
-    }
-
-    const_iterator end() const
-    {
-        return data_.end();
-    }
-
-private:
-    DataT data_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// TurnBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class TurnBase
-{
-public:
-    inline TurnBase( TurnIdT id )
-        : id_( id )
-    {}
-
-    inline TurnIdT Id() const
-    {
-        return id_;
-    }
-
-private:
-    TurnIdT id_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// TopoQueue - Sequential
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T, typename TLevelFunc>
-class TopoQueue
-{
-private:
-    struct Entry;
-
-public:
-    // Store the level as part of the entry for cheap comparisons
-    using QueueDataT = std::vector<Entry>;
-    using NextDataT = std::vector<T>;
-
-    TopoQueue() = default;
-    TopoQueue( const TopoQueue& ) = default;
-
-    template <typename FIn>
-    TopoQueue( FIn&& levelFunc )
-        : levelFunc_( std::forward<FIn>( levelFunc ) )
-    {}
-
-    void Push( const T& value )
-    {
-        queueData_.emplace_back( value, levelFunc_( value ) );
-    }
-
-    bool FetchNext()
-    {
-        // Throw away previous values
-        nextData_.clear();
-
-        // Find min level of nodes in queue data
-        minLevel_ = ( std::numeric_limits<int>::max )();
-        for( const auto& e : queueData_ )
-        {
-            if( minLevel_ > e.Level )
-            {
-                minLevel_ = e.Level;
-            }
-        }
-
-        // Swap entries with min level to the end
-        auto p
-            = std::partition( queueData_.begin(), queueData_.end(), LevelCompFunctor{ minLevel_ } );
-
-        // Reserve once to avoid multiple re-allocations
-        nextData_.reserve( std::distance( p, queueData_.end() ) );
-
-        // Move min level values to next data
-        for( auto it = p; it != queueData_.end(); ++it )
-        {
-            nextData_.push_back( std::move( it->Value ) );
-        }
-
-        // Truncate moved entries
-        queueData_.resize( std::distance( queueData_.begin(), p ) );
-
-        return !nextData_.empty();
-    }
-
-    const NextDataT& NextValues() const
-    {
-        return nextData_;
-    }
-
-private:
-    struct Entry
-    {
-        Entry() = default;
-        Entry( const Entry& ) = default;
-
-        Entry( const T& value, int level )
-            : Value( value )
-            , Level( level )
-        {}
-
-        T Value{};
-        int Level{};
-    };
-
-    struct LevelCompFunctor
-    {
-        explicit LevelCompFunctor( int level )
-            : Level( level )
-        {}
-
-        bool operator()( const Entry& e ) const
-        {
-            return e.Level != Level;
-        }
-
-        const int Level;
-    };
-
-    NextDataT nextData_;
-    QueueDataT queueData_;
-
-    TLevelFunc levelFunc_;
-
-    int minLevel_ = ( std::numeric_limits<int>::max )();
-};
-
-namespace toposort
-{
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// SeqNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class SeqNode : public IReactiveNode
-{
-public:
-    int Level{ 0 };
-    int NewLevel{ 0 };
-    bool Queued{ false };
-
-    NodeVector<SeqNode> Successors;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ExclusiveSeqTurn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class SeqTurn : public TurnBase
-{
-public:
-    SeqTurn( TurnIdT id );
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Functors
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-struct GetLevelFunctor
-{
-    int operator()( const T* x ) const
-    {
-        return x->Level;
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EngineBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode, typename TTurn>
-class EngineBase : public IReactiveEngine<TNode, TTurn>
-{
-public:
-    void OnNodeAttach( TNode& node, TNode& parent );
-    void OnNodeDetach( TNode& node, TNode& parent );
-
-    void OnInputChange( TNode& node, TTurn& turn );
-    void OnNodePulse( TNode& node, TTurn& turn );
-
-protected:
-    virtual void processChildren( TNode& node, TTurn& turn ) = 0;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// SeqEngineBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class SeqEngineBase : public EngineBase<SeqNode, SeqTurn>
-{
-public:
-    using TopoQueueT = TopoQueue<SeqNode*, GetLevelFunctor<SeqNode>>;
-
-    void Propagate( SeqTurn& turn );
-
-    void OnDynamicNodeAttach( SeqNode& node, SeqNode& parent, SeqTurn& turn );
-    void OnDynamicNodeDetach( SeqNode& node, SeqNode& parent, SeqTurn& turn );
-
-private:
-    void invalidateSuccessors( SeqNode& node );
-
-    void processChildren( SeqNode& node, SeqTurn& turn ) override;
-
-    TopoQueueT scheduledNodes_;
-};
-
-} // namespace toposort
-
 } // namespace impl
-
-class ToposortEngine : public ::react::impl::toposort::SeqEngineBase
-{};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Forward declarations
@@ -1255,6 +1195,15 @@ class Observer;
 template <typename D>
 class ScopedObserver;
 
+template <typename D, typename S, typename TOp>
+class TempSignal;
+
+template <typename D, typename E, typename TOp>
+class TempEvents;
+
+template <typename D, typename... TValues>
+class SignalPack;
+
 namespace impl
 {
 
@@ -1265,16 +1214,15 @@ namespace impl
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// DomainBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename TPolicy>
+template <typename D>
 class DomainBase
 {
 public:
-    using TurnT = typename TPolicy::Engine::TurnT;
+    using TurnT = typename ToposortEngine::TurnT;
 
     DomainBase() = delete;
 
-    using Policy = TPolicy;
-    using Engine = ::react::impl::EngineInterface<D, typename Policy::Engine>;
+    using Engine = ::react::impl::EngineInterface<D, ToposortEngine>;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     /// Aliases for reactives of this domain
@@ -1297,14 +1245,6 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// DomainPolicy
-///////////////////////////////////////////////////////////////////////////////////////////////////
-struct DomainPolicy
-{
-    using Engine = ToposortEngine;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Ensure singletons are created immediately after domain declaration (TODO hax)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D>
@@ -1319,38 +1259,6 @@ public:
 };
 
 } // namespace impl
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Forward declarations
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename S>
-class Signal;
-
-template <typename D, typename S>
-class VarSignal;
-
-template <typename D, typename S, typename TOp>
-class TempSignal;
-
-template <typename D, typename E>
-class Events;
-
-template <typename D, typename E>
-class EventSource;
-
-template <typename D, typename E, typename TOp>
-class TempEvents;
-
-enum class Token;
-
-template <typename D>
-class Observer;
-
-template <typename D>
-class ScopedObserver;
-
-template <typename D, typename... TValues>
-class SignalPack;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Common types & constants
@@ -1370,7 +1278,7 @@ void DoTransaction( F&& func )
 /// Domain definition macro
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define REACTIVE_DOMAIN( name )                                                                    \
-    struct name : public ::react::impl::DomainBase<name, ::react::impl::DomainPolicy>              \
+    struct name : public ::react::impl::DomainBase<name>                                           \
     {};                                                                                            \
     static ::react::impl::DomainInitializer<name> name##_initializer_;
 
@@ -1409,15 +1317,6 @@ void DoTransaction( F&& func )
 
 namespace impl
 {
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Forward declarations
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename S>
-class SignalNode;
-
-template <typename D, typename E>
-class EventStreamNode;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// ObserverAction
@@ -1471,11 +1370,6 @@ class ObserverNode
 {
 public:
     ObserverNode() = default;
-
-    virtual bool IsOutputNode() const
-    {
-        return true;
-    }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1493,14 +1387,12 @@ public:
         , subject_( subject )
         , func_( std::forward<F>( func ) )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *subject );
     }
 
     ~SignalObserverNode()
-    {
-        Engine::OnNodeDestroy( *this );
-    }
+    {}
 
     void Tick( void* ) override
     {
@@ -1557,14 +1449,11 @@ public:
         , subject_( subject )
         , func_( std::forward<F>( func ) )
     {
-        Engine::OnNodeCreate( *this );
         Engine::OnNodeAttach( *this, *subject );
     }
 
     ~EventObserverNode()
-    {
-        Engine::OnNodeDestroy( *this );
-    }
+    {}
 
     void Tick( void* ) override
     {
@@ -1622,16 +1511,14 @@ public:
         , func_( std::forward<F>( func ) )
         , deps_( deps... )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *subject );
 
         REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
     }
 
     ~SyncedObserverNode()
-    {
-        Engine::OnNodeDestroy( *this );
-    }
+    {}
 
     void Tick( void* turnPtr ) override
     {
@@ -1700,15 +1587,6 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Forward declarations
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename S>
-class Signal;
-
-template <typename D, typename... TValues>
-class SignalPack;
-
-template <typename D, typename E>
-class Events;
-
 using ::react::impl::ObserverAction;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1959,33 +1837,6 @@ auto Observe( const Events<D, E>& subject, const SignalPack<D, TDepValues...>& d
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Forward declarations
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename S>
-class Signal;
-
-template <typename D, typename S>
-class VarSignal;
-
-template <typename D, typename S, typename TOp>
-class TempSignal;
-
-template <typename D, typename E>
-class Events;
-
-template <typename D, typename E>
-class EventSource;
-
-template <typename D, typename E, typename TOp>
-class TempEvents;
-
-template <typename D>
-class Observer;
-
-template <typename D>
-class ScopedObserver;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// IsSignal
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
@@ -2035,129 +1886,6 @@ struct IsEvent<EventSource<D, T>>
 
 template <typename D, typename T, typename TOp>
 struct IsEvent<TempEvents<D, T, TOp>>
-{
-    static const bool value = true;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IsObserver
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-struct IsObserver
-{
-    static const bool value = false;
-};
-
-template <typename D>
-struct IsObserver<Observer<D>>
-{
-    static const bool value = true;
-};
-
-template <typename D>
-struct IsObserver<ScopedObserver<D>>
-{
-    static const bool value = true;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IsObservable
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-struct IsObservable
-{
-    static const bool value = false;
-};
-
-template <typename D, typename T>
-struct IsObservable<Signal<D, T>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T>
-struct IsObservable<VarSignal<D, T>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T, typename TOp>
-struct IsObservable<TempSignal<D, T, TOp>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T>
-struct IsObservable<Events<D, T>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T>
-struct IsObservable<EventSource<D, T>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T, typename TOp>
-struct IsObservable<TempEvents<D, T, TOp>>
-{
-    static const bool value = true;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IsReactive
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-struct IsReactive
-{
-    static const bool value = false;
-};
-
-template <typename D, typename T>
-struct IsReactive<Signal<D, T>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T>
-struct IsReactive<VarSignal<D, T>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T, typename TOp>
-struct IsReactive<TempSignal<D, T, TOp>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T>
-struct IsReactive<Events<D, T>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T>
-struct IsReactive<EventSource<D, T>>
-{
-    static const bool value = true;
-};
-
-template <typename D, typename T, typename TOp>
-struct IsReactive<TempEvents<D, T, TOp>>
-{
-    static const bool value = true;
-};
-
-template <typename D>
-struct IsReactive<Observer<D>>
-{
-    static const bool value = true;
-};
-
-template <typename D>
-struct IsReactive<ScopedObserver<D>>
 {
     static const bool value = true;
 };
@@ -2234,14 +1962,10 @@ public:
     VarNode( T&& value )
         : VarNode::SignalNode( std::forward<T>( value ) )
         , newValue_( value )
-    {
-        Engine::OnNodeCreate( *this );
-    }
+    {}
 
     ~VarNode() override
-    {
-        Engine::OnNodeDestroy( *this );
-    }
+    {}
 
     void Tick( void* ) override
     {
@@ -2280,11 +2004,8 @@ public:
         }
     }
 
-    bool ApplyInput( void* turnPtr ) override
+    bool ApplyInput( void* ) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
-
         if( isInputAdded_ )
         {
             isInputAdded_ = false;
@@ -2292,7 +2013,7 @@ public:
             if( !Equals( this->value_, newValue_ ) )
             {
                 this->value_ = std::move( newValue_ );
-                Engine::OnInputChange( *this, turn );
+                Engine::OnInputChange( *this );
                 return true;
             }
             else
@@ -2304,7 +2025,7 @@ public:
         {
             isInputModified_ = false;
 
-            Engine::OnInputChange( *this, turn );
+            Engine::OnInputChange( *this );
             return true;
         }
 
@@ -2392,7 +2113,7 @@ public:
     {
         this->value_ = op_.Evaluate();
 
-        Engine::OnNodeCreate( *this );
+
         op_.template Attach<D>( *this );
     }
 
@@ -2402,14 +2123,10 @@ public:
         {
             op_.template Detach<D>( *this );
         }
-        Engine::OnNodeDestroy( *this );
     }
 
-    void Tick( void* turnPtr ) override
+    void Tick( void* ) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
-
         bool changed = false;
 
         {
@@ -2424,11 +2141,7 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this, turn );
-        }
-        else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
     }
 
@@ -2460,7 +2173,6 @@ public:
         , outer_( outer )
         , inner_( inner )
     {
-        Engine::OnNodeCreate( *this );
         Engine::OnNodeAttach( *this, *outer_ );
         Engine::OnNodeAttach( *this, *inner_ );
     }
@@ -2469,14 +2181,10 @@ public:
     {
         Engine::OnNodeDetach( *this, *inner_ );
         Engine::OnNodeDetach( *this, *outer_ );
-        Engine::OnNodeDestroy( *this );
     }
 
-    void Tick( void* turnPtr ) override
+    void Tick( void* ) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
-
         auto newInner = GetNodePtr( outer_->ValueRef() );
 
         if( newInner != inner_ )
@@ -2485,8 +2193,8 @@ public:
             auto oldInner = inner_;
             inner_ = newInner;
 
-            Engine::OnDynamicNodeDetach( *this, *oldInner, turn );
-            Engine::OnDynamicNodeAttach( *this, *newInner, turn );
+            Engine::OnDynamicNodeDetach( *this, *oldInner );
+            Engine::OnDynamicNodeAttach( *this, *newInner );
 
             return;
         }
@@ -2494,12 +2202,10 @@ public:
         if( !Equals( this->value_, inner_->ValueRef() ) )
         {
             this->value_ = inner_->ValueRef();
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -2544,18 +2250,6 @@ protected:
 };
 
 } // namespace impl
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Forward declarations
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename S>
-class Signal;
-
-template <typename D, typename S>
-class VarSignal;
-
-template <typename D, typename S, typename TOp>
-class TempSignal;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SignalPack - Wraps several nodes in a tuple. Create with comma operator.
@@ -3338,12 +3032,6 @@ bool Equals( const Signal<D, L>& lhs, const Signal<D, R>& rhs )
         } ) )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Forward declarations
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename S>
-class SignalNode;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// EventStreamNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D, typename E>
@@ -3358,16 +3046,14 @@ public:
 
     void SetCurrentTurn( const TurnT& turn, bool forceUpdate = false, bool noClear = false )
     {
-        [&] {
-            if( curTurnId_ != turn.Id() || forceUpdate )
+        if( curTurnId_ != turn.Id() || forceUpdate )
+        {
+            curTurnId_ = turn.Id();
+            if( !noClear )
             {
-                curTurnId_ = turn.Id();
-                if( !noClear )
-                {
-                    events_.clear();
-                }
+                events_.clear();
             }
-        }();
+        }
     }
 
     DataT& Events()
@@ -3398,14 +3084,10 @@ class EventSourceNode
 public:
     EventSourceNode()
         : EventSourceNode::EventStreamNode{}
-    {
-        Engine::OnNodeCreate( *this );
-    }
+    {}
 
     ~EventSourceNode() override
-    {
-        Engine::OnNodeDestroy( *this );
-    }
+    {}
 
     void Tick( void* ) override
     {
@@ -3434,7 +3116,7 @@ public:
 
             this->SetCurrentTurn( turn, true, true );
             changedFlag_ = true;
-            Engine::OnInputChange( *this, turn );
+            Engine::OnInputChange( *this );
             return true;
         }
         else
@@ -3680,7 +3362,7 @@ public:
         : EventOpNode::EventStreamNode()
         , op_( std::forward<TArgs>( args )... )
     {
-        Engine::OnNodeCreate( *this );
+
         op_.template Attach<D>( *this );
     }
 
@@ -3690,7 +3372,6 @@ public:
         {
             op_.template Detach<D>( *this );
         }
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -3704,12 +3385,10 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
     TOp StealOp()
@@ -3756,7 +3435,7 @@ public:
         , outer_( outer )
         , inner_( inner )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *outer_ );
         Engine::OnNodeAttach( *this, *inner_ );
     }
@@ -3765,7 +3444,6 @@ public:
     {
         Engine::OnNodeDetach( *this, *outer_ );
         Engine::OnNodeDetach( *this, *inner_ );
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -3786,8 +3464,8 @@ public:
             auto oldInner = inner_;
             inner_ = newInner;
 
-            Engine::OnDynamicNodeDetach( *this, *oldInner, turn );
-            Engine::OnDynamicNodeAttach( *this, *newInner, turn );
+            Engine::OnDynamicNodeDetach( *this, *oldInner );
+            Engine::OnDynamicNodeAttach( *this, *newInner );
 
             return;
         }
@@ -3797,12 +3475,10 @@ public:
 
         if( this->events_.size() > 0 )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -3828,7 +3504,7 @@ public:
         , func_( std::forward<F>( func ) )
         , deps_( deps... )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *source );
         REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
     }
@@ -3841,8 +3517,6 @@ public:
                    SyncedEventTransformNode,
                    std::shared_ptr<SignalNode<D, TDepValues>>...>( *this ),
             deps_ );
-
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -3870,12 +3544,10 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -3905,7 +3577,7 @@ public:
         , filter_( std::forward<F>( filter ) )
         , deps_( deps... )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *source );
         REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
     }
@@ -3918,8 +3590,6 @@ public:
             DetachFunctor<D, SyncedEventFilterNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
                 *this ),
             deps_ );
-
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -3950,12 +3620,10 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -3982,14 +3650,13 @@ public:
         , source_( source )
         , func_( std::forward<F>( func ) )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *source );
     }
 
     ~EventProcessingNode()
     {
         Engine::OnNodeDetach( *this, *source_ );
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -4003,12 +3670,10 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -4035,7 +3700,7 @@ public:
         , func_( std::forward<F>( func ) )
         , deps_( deps... )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *source );
         REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
     }
@@ -4048,8 +3713,6 @@ public:
                    SyncedEventProcessingNode,
                    std::shared_ptr<SignalNode<D, TDepValues>>...>( *this ),
             deps_ );
-
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -4076,12 +3739,10 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -4107,7 +3768,7 @@ public:
         : EventJoinNode::EventStreamNode()
         , slots_( sources... )
     {
-        Engine::OnNodeCreate( *this );
+
         REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *sources ) );
     }
 
@@ -4118,8 +3779,6 @@ public:
                 REACT_EXPAND_PACK( Engine::OnNodeDetach( *this, *slots.Source ) );
             },
             slots_ );
-
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -4172,12 +3831,10 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -4236,26 +3893,6 @@ protected:
 };
 
 } // namespace impl
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Forward declarations
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename E>
-class Events;
-
-template <typename D, typename E>
-class EventSource;
-
-template <typename D, typename E, typename TOp>
-class TempEvents;
-
-enum class Token;
-
-template <typename D, typename S>
-class Signal;
-
-template <typename D, typename... TValues>
-class SignalPack;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// MakeEventSource
@@ -5023,21 +4660,17 @@ public:
         , events_( events )
         , func_( std::forward<F>( func ) )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *events );
     }
 
     ~IterateNode()
     {
         Engine::OnNodeDetach( *this, *events_ );
-        Engine::OnNodeDestroy( *this );
     }
 
-    void Tick( void* turnPtr ) override
+    void Tick( void* ) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
-
         bool changed = false;
 
         {
@@ -5052,12 +4685,10 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -5081,25 +4712,21 @@ public:
         , func_( std::forward<F>( func ) )
         , events_( events )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *events );
     }
 
     ~IterateByRefNode()
     {
         Engine::OnNodeDetach( *this, *events_ );
-        Engine::OnNodeDestroy( *this );
     }
 
-    void Tick( void* turnPtr ) override
+    void Tick( void* ) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
-
         func_( EventRange<E>( events_->Events() ), this->value_ );
 
         // Always assume change
-        Engine::OnNodePulse( *this, turn );
+        Engine::OnNodePulse( *this );
     }
 
 protected:
@@ -5127,7 +4754,7 @@ public:
         , func_( std::forward<F>( func ) )
         , deps_( deps... )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *events );
         REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
     }
@@ -5139,8 +4766,6 @@ public:
         apply( DetachFunctor<D, SyncedIterateNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
                    *this ),
             deps_ );
-
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -5170,12 +4795,10 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -5206,7 +4829,7 @@ public:
         , func_( std::forward<F>( func ) )
         , deps_( deps... )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *events );
         REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
     }
@@ -5219,8 +4842,6 @@ public:
             DetachFunctor<D, SyncedIterateByRefNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
                 *this ),
             deps_ );
-
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -5245,12 +4866,10 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -5276,21 +4895,17 @@ public:
         : HoldNode::SignalNode( std::forward<T>( init ) )
         , events_( events )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *events_ );
     }
 
     ~HoldNode()
     {
         Engine::OnNodeDetach( *this, *events_ );
-        Engine::OnNodeDestroy( *this );
     }
 
-    void Tick( void* turnPtr ) override
+    void Tick( void* ) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
-
         bool changed = false;
 
         if( !events_->Events().empty() )
@@ -5306,12 +4921,10 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -5333,7 +4946,7 @@ public:
         , target_( target )
         , trigger_( trigger )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *target_ );
         Engine::OnNodeAttach( *this, *trigger_ );
     }
@@ -5342,7 +4955,6 @@ public:
     {
         Engine::OnNodeDetach( *this, *target_ );
         Engine::OnNodeDetach( *this, *trigger_ );
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -5367,12 +4979,10 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -5393,14 +5003,13 @@ public:
         : MonitorNode::EventStreamNode()
         , target_( target )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *target_ );
     }
 
     ~MonitorNode()
     {
         Engine::OnNodeDetach( *this, *target_ );
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -5414,12 +5023,10 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -5441,7 +5048,7 @@ public:
         , target_( target )
         , trigger_( trigger )
     {
-        Engine::OnNodeCreate( *this );
+
         Engine::OnNodeAttach( *this, *target_ );
         Engine::OnNodeAttach( *this, *trigger_ );
     }
@@ -5450,7 +5057,6 @@ public:
     {
         Engine::OnNodeDetach( *this, *target_ );
         Engine::OnNodeDetach( *this, *trigger_ );
-        Engine::OnNodeDestroy( *this );
     }
 
     void Tick( void* turnPtr ) override
@@ -5468,12 +5074,10 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this, turn );
+            Engine::OnNodePulse( *this );
         }
         else
-        {
-            Engine::OnNodeIdlePulse( *this, turn );
-        }
+        {}
     }
 
 private:
@@ -5482,26 +5086,6 @@ private:
 };
 
 } // namespace impl
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Forward declarations
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename S>
-class Signal;
-
-template <typename D, typename S>
-class VarSignal;
-
-template <typename D, typename E>
-class Events;
-
-template <typename D, typename E>
-class EventSource;
-
-enum class Token;
-
-template <typename D, typename... TValues>
-class SignalPack;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Hold - Hold the most recent event in a signal
@@ -5678,55 +5262,11 @@ auto ChangedTo( const Signal<D, S>& target, V&& value ) -> Events<D, Token>
 
 namespace impl
 {
-namespace toposort
-{
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// SeqTurn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-inline SeqTurn::SeqTurn( TurnIdT id )
-    : TurnBase( id )
-{}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EngineBase
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode, typename TTurn>
-void EngineBase<TNode, TTurn>::OnNodeAttach( TNode& node, TNode& parent )
-{
-    parent.Successors.Add( node );
-
-    if( node.Level <= parent.Level )
-    {
-        node.Level = parent.Level + 1;
-    }
-}
-
-template <typename TNode, typename TTurn>
-void EngineBase<TNode, TTurn>::OnNodeDetach( TNode& node, TNode& parent )
-{
-    parent.Successors.Remove( node );
-}
-
-template <typename TNode, typename TTurn>
-void EngineBase<TNode, TTurn>::OnInputChange( TNode& node, TTurn& turn )
-{
-    processChildren( node, turn );
-}
-
-template <typename TNode, typename TTurn>
-void EngineBase<TNode, TTurn>::OnNodePulse( TNode& node, TTurn& turn )
-{
-    processChildren( node, turn );
-}
-
-// Explicit instantiation
-template class EngineBase<SeqNode, SeqTurn>;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SeqEngineBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-inline void SeqEngineBase::Propagate( SeqTurn& turn )
+inline void ToposortEngine::Propagate( Turn& turn )
 {
     while( scheduledNodes_.FetchNext() )
     {
@@ -5746,23 +5286,7 @@ inline void SeqEngineBase::Propagate( SeqTurn& turn )
     }
 }
 
-inline void SeqEngineBase::OnDynamicNodeAttach( SeqNode& node, SeqNode& parent, SeqTurn& turn )
-{
-    this->OnNodeAttach( node, parent );
-
-    invalidateSuccessors( node );
-
-    // Re-schedule this node
-    node.Queued = true;
-    scheduledNodes_.Push( &node );
-}
-
-inline void SeqEngineBase::OnDynamicNodeDetach( SeqNode& node, SeqNode& parent, SeqTurn& turn )
-{
-    this->OnNodeDetach( node, parent );
-}
-
-inline void SeqEngineBase::processChildren( SeqNode& node, SeqTurn& turn )
+inline void ToposortEngine::processChildren( ReactiveNode& node )
 {
     // Add children to queue
     for( auto* succ : node.Successors )
@@ -5775,17 +5299,5 @@ inline void SeqEngineBase::processChildren( SeqNode& node, SeqTurn& turn )
     }
 }
 
-inline void SeqEngineBase::invalidateSuccessors( SeqNode& node )
-{
-    for( auto* succ : node.Successors )
-    {
-        if( succ->NewLevel <= node.Level )
-        {
-            succ->NewLevel = node.Level + 1;
-        }
-    }
-}
-
-} // namespace toposort
 } // namespace impl
 } // namespace react

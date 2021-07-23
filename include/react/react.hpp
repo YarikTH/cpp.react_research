@@ -7,7 +7,6 @@
 #pragma once
 
 #include <algorithm>
-#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -20,33 +19,10 @@
 #include <utility>
 #include <vector>
 
-// Assert with message
-#define REACT_ASSERT( condition, ... )                                                             \
-    for( ; !( condition ); assert( condition ) )                                                   \
-    printf( __VA_ARGS__ )
-#define REACT_ERROR( ... ) REACT_ASSERT( false, __VA_ARGS__ )
-
-// Thread local storage
-#if _WIN32 || _WIN64
-// MSVC
-#    define REACT_TLS __declspec( thread )
-#elif __GNUC__
-// GCC
-#    define REACT_TLS __thread
-#else
-// Standard C++11
-#    define REACT_TLS thread_local
-#endif
-
 namespace react
 {
 namespace impl
 {
-
-// Type aliases
-using uint = unsigned int;
-using uchar = unsigned char;
-using std::size_t;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Unpack tuple - see
@@ -90,45 +66,6 @@ inline auto apply( F&& f, T&& t )
         std::forward<F>( f ), std::forward<T>( t ) );
 }
 
-template <size_t N>
-struct ApplyMemberFn
-{
-    template <typename O, typename F, typename T, typename... A>
-    static inline auto apply( O obj, F f, T&& t, A&&... a )
-        -> decltype( ApplyMemberFn<N - 1>::apply( obj,
-            f,
-            std::forward<T>( t ),
-            std::get<N - 1>( std::forward<T>( t ) ),
-            std::forward<A>( a )... ) )
-    {
-        return ApplyMemberFn<N - 1>::apply( obj,
-            f,
-            std::forward<T>( t ),
-            std::get<N - 1>( std::forward<T>( t ) ),
-            std::forward<A>( a )... );
-    }
-};
-
-template <>
-struct ApplyMemberFn<0>
-{
-    template <typename O, typename F, typename T, typename... A>
-    static inline auto apply( O obj, F f, T&&, A&&... a )
-        -> decltype( ( obj->*f )( std::forward<A>( a )... ) )
-    {
-        return ( obj->*f )( std::forward<A>( a )... );
-    }
-};
-
-template <typename O, typename F, typename T>
-inline auto applyMemberFn( O obj, F f, T&& t )
-    -> decltype( ApplyMemberFn<std::tuple_size<typename std::decay<T>::type>::value>::apply(
-        obj, f, std::forward<T>( t ) ) )
-{
-    return ApplyMemberFn<std::tuple_size<typename std::decay<T>::type>::value>::apply(
-        obj, f, std::forward<T>( t ) );
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Helper to enable calling a function on each element of an argument pack.
 /// We can't do f(args) ...; because ... expands with a comma.
@@ -161,54 +98,6 @@ struct DisableIfSame
     : std::enable_if<
           !std::is_same<typename std::decay<T>::type, typename std::decay<U>::type>::value>
 {};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// AddDummyArgWrapper
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TArg, typename F, typename TRet, typename... TDepValues>
-struct AddDummyArgWrapper
-{
-    AddDummyArgWrapper( const AddDummyArgWrapper& other ) = default;
-
-    AddDummyArgWrapper( AddDummyArgWrapper&& other ) noexcept
-        : MyFunc( std::move( other.MyFunc ) )
-    {}
-
-    template <typename FIn, class = typename DisableIfSame<FIn, AddDummyArgWrapper>::type>
-    explicit AddDummyArgWrapper( FIn&& func )
-        : MyFunc( std::forward<FIn>( func ) )
-    {}
-
-    TRet operator()( TArg, TDepValues&... args )
-    {
-        return MyFunc( args... );
-    }
-
-    F MyFunc;
-};
-
-template <typename TArg, typename F, typename... TDepValues>
-struct AddDummyArgWrapper<TArg, F, void, TDepValues...>
-{
-public:
-    AddDummyArgWrapper( const AddDummyArgWrapper& other ) = default;
-
-    AddDummyArgWrapper( AddDummyArgWrapper&& other ) noexcept
-        : MyFunc( std::move( other.MyFunc ) )
-    {}
-
-    template <typename FIn, class = typename DisableIfSame<FIn, AddDummyArgWrapper>::type>
-    explicit AddDummyArgWrapper( FIn&& func )
-        : MyFunc( std::forward<FIn>( func ) )
-    {}
-
-    void operator()( TArg, TDepValues&... args )
-    {
-        MyFunc( args... );
-    }
-
-    F MyFunc;
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// AddDefaultReturnValueWrapper
@@ -437,7 +326,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-using TurnIdT = uint;
+using TurnIdT = unsigned;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Turn
@@ -897,7 +786,7 @@ public:
         return *this;
     }
 
-    bool IsValid() const
+    virtual bool IsValid() const
     {
         return ptr_ != nullptr;
     }
@@ -962,18 +851,6 @@ template <typename D>
 class InputManager;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ThreadLocalInputState
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename = void>
-struct ThreadLocalInputState
-{
-    static REACT_TLS bool IsTransactionActive;
-};
-
-template <typename T>
-REACT_TLS bool ThreadLocalInputState<T>::IsTransactionActive( false );
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// DetachedObserversManager
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class DetachedObserversManager
@@ -1010,8 +887,7 @@ public:
     using TurnT = typename D::TurnT;
     using Engine = typename D::Engine;
 
-    InputManager()
-    {}
+    InputManager() = default;
 
     template <typename F>
     void DoTransaction( F&& func )
@@ -1019,13 +895,13 @@ public:
         bool shouldPropagate = false;
 
         // Phase 1 - Input admission
-        ThreadLocalInputState<>::IsTransactionActive = true;
+        isTransactionActive_ = true;
 
         TurnT turn( nextTurnId() );
 
         func();
 
-        ThreadLocalInputState<>::IsTransactionActive = false;
+        isTransactionActive_ = false;
 
         // Phase 2 - Apply input node changes
         for( auto* p : changedInputs_ )
@@ -1049,7 +925,7 @@ public:
     template <typename R, typename V>
     void AddInput( R& r, V&& v )
     {
-        if( ThreadLocalInputState<>::IsTransactionActive )
+        if( isTransactionActive_ )
         {
             addTransactionInput( r, std::forward<V>( v ) );
         }
@@ -1062,7 +938,7 @@ public:
     template <typename R, typename F>
     void ModifyInput( R& r, const F& func )
     {
-        if( ThreadLocalInputState<>::IsTransactionActive )
+        if( isTransactionActive_ )
         {
             modifyTransactionInput( r, func );
         }
@@ -1080,14 +956,7 @@ public:
 private:
     TurnIdT nextTurnId()
     {
-        auto curId = nextTurnId_.fetch_add( 1, std::memory_order_relaxed );
-
-        if( curId == ( std::numeric_limits<uint>::max )() )
-        {
-            nextTurnId_.fetch_sub( ( std::numeric_limits<int>::max )() );
-        }
-
-        return curId;
+        return nextTurnId_++;
     }
 
     // Create a turn with a single input
@@ -1143,7 +1012,9 @@ private:
 
     DetachedObserversManager detachedObserversManager_;
 
-    std::atomic<TurnIdT> nextTurnId_{ 0 };
+    TurnIdT nextTurnId_{ 0 };
+
+    bool isTransactionActive_ = false;
 
     std::vector<IInputNode*> changedInputs_;
 };
@@ -1391,8 +1262,7 @@ public:
         Engine::OnNodeAttach( *this, *subject );
     }
 
-    ~SignalObserverNode()
-    {}
+    ~SignalObserverNode() = default;
 
     void Tick( void* ) override
     {
@@ -1452,8 +1322,7 @@ public:
         Engine::OnNodeAttach( *this, *subject );
     }
 
-    ~EventObserverNode()
-    {}
+    ~EventObserverNode() = default;
 
     void Tick( void* ) override
     {
@@ -1517,8 +1386,7 @@ public:
         REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
     }
 
-    ~SyncedObserverNode()
-    {}
+    ~SyncedObserverNode() = default;
 
     void Tick( void* turnPtr ) override
     {
@@ -1969,7 +1837,7 @@ public:
 
     void Tick( void* ) override
     {
-        REACT_ASSERT( false, "Ticked VarNode\n" );
+        assert( !"Ticked VarNode" );
     }
 
     template <typename V>
@@ -2147,7 +2015,7 @@ public:
 
     TOp StealOp()
     {
-        REACT_ASSERT( wasOpStolen_ == false, "Op was already stolen." );
+        assert( !wasOpStolen_ && "Op was already stolen." );
         wasOpStolen_ = true;
         op_.template Detach<D>( *this );
         return std::move( op_ );
@@ -2204,8 +2072,6 @@ public:
             this->value_ = inner_->ValueRef();
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -3065,7 +2931,7 @@ protected:
     DataT events_;
 
 private:
-    uint curTurnId_{ ( std::numeric_limits<uint>::max )() };
+    unsigned curTurnId_{ ( std::numeric_limits<unsigned>::max )() };
 };
 
 template <typename D, typename E>
@@ -3091,7 +2957,7 @@ public:
 
     void Tick( void* ) override
     {
-        REACT_ASSERT( false, "Ticked EventSourceNode\n" );
+        assert( !"Ticked EventSourceNode" );
     }
 
     template <typename V>
@@ -3387,13 +3253,11 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
     TOp StealOp()
     {
-        REACT_ASSERT( wasOpStolen_ == false, "Op was already stolen." );
+        assert( !wasOpStolen_ && "Op was already stolen." );
         wasOpStolen_ = true;
         op_.template Detach<D>( *this );
         return std::move( op_ );
@@ -3477,8 +3341,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -3546,8 +3408,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -3622,8 +3482,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -3672,8 +3530,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -3741,8 +3597,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -3833,8 +3687,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -4687,8 +4539,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -4797,8 +4647,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -4868,8 +4716,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -4923,8 +4769,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -4981,8 +4825,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -5003,7 +4845,6 @@ public:
         : MonitorNode::EventStreamNode()
         , target_( target )
     {
-
         Engine::OnNodeAttach( *this, *target_ );
     }
 
@@ -5025,8 +4866,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:
@@ -5048,7 +4887,6 @@ public:
         , target_( target )
         , trigger_( trigger )
     {
-
         Engine::OnNodeAttach( *this, *target_ );
         Engine::OnNodeAttach( *this, *trigger_ );
     }
@@ -5067,7 +4905,7 @@ public:
         this->SetCurrentTurn( turn, true );
         trigger_->SetCurrentTurn( turn );
 
-        for( uint i = 0; i < trigger_->Events().size(); i++ )
+        for( size_t i = 0, ie = trigger_->Events().size(); i < ie; ++i )
         {
             this->events_.push_back( target_->ValueRef() );
         }
@@ -5076,8 +4914,6 @@ public:
         {
             Engine::OnNodePulse( *this );
         }
-        else
-        {}
     }
 
 private:

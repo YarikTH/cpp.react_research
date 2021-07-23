@@ -1832,8 +1832,7 @@ public:
         , newValue_( value )
     {}
 
-    ~VarNode() override
-    {}
+    ~VarNode() override = default;
 
     void Tick( void* ) override
     {
@@ -2847,7 +2846,7 @@ public:
     // Copy assignment
     TempSignal& operator=( const TempSignal& ) = default;
 
-    // Move assignemnt
+    // Move assignment
     TempSignal& operator=( TempSignal&& other ) noexcept
     {
         TempSignal::Signal::operator=( std::move( other ) );
@@ -2954,8 +2953,7 @@ public:
         : EventSourceNode::EventStreamNode{}
     {}
 
-    ~EventSourceNode() override
-    {}
+    ~EventSourceNode() override = default;
 
     void Tick( void* ) override
     {
@@ -4261,7 +4259,7 @@ public:
         : EventSource::Events( std::move( nodePtr ) )
     {}
 
-    // Copy assignemnt
+    // Copy assignment
     EventSource& operator=( const EventSource& ) = default;
 
     // Move assignment

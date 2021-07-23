@@ -21,7 +21,7 @@ target_compile_features(CppReact INTERFACE cxx_std_11)
 set(Boost_USE_STATIC_LIBS OFF)
 find_package(Boost REQUIRED COMPONENTS coroutine)
 
-target_link_libraries(CppReact INTERFACE tbb_static Boost::coroutine)
+target_link_libraries(CppReact INTERFACE Boost::coroutine)
 
 ### examples/ 
 option(build_examples "Build examples?" ON)

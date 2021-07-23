@@ -71,22 +71,19 @@ inline auto apply( F&& f, T&& t )
 
 #endif
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Helper to enable calling a function on each element of an argument pack.
 /// We can't do f(args) ...; because ... expands with a comma.
 /// But we can do nop_func(f(args) ...);
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename... TArgs>
-inline void pass( TArgs&&... )
+template <typename... args_t>
+inline void pass( args_t&&... /*unused*/ )
 {}
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Identity (workaround to enable enable decltype()::X)
-///////////////////////////////////////////////////////////////////////////////////////////////////
+/// type_identity (workaround to enable enable decltype()::X)
+/// See https://en.cppreference.com/w/cpp/types/type_identity
 template <typename T>
-struct Identity
+struct type_identity
 {
-    using Type = T;
+    using type = T;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,45 +101,46 @@ struct DisableIfSame
           !std::is_same<typename std::decay<T>::type, typename std::decay<U>::type>::value>
 {};
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// AddDefaultReturnValueWrapper
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename F, typename TRet, TRet return_value>
-struct AddDefaultReturnValueWrapper
+template <typename T1, typename T2>
+using is_same_decay = std::is_same<typename std::decay<T1>::type, typename std::decay<T2>::type>;
+
+/// Special wrapper to add specific return type to the void function
+template <typename F, typename ret_t, ret_t return_value>
+struct add_default_return_value_wrapper
 {
-    AddDefaultReturnValueWrapper( const AddDefaultReturnValueWrapper& ) = default;
+    add_default_return_value_wrapper( const add_default_return_value_wrapper& ) = default;
 
-    AddDefaultReturnValueWrapper( AddDefaultReturnValueWrapper&& other ) noexcept
-        : MyFunc( std::move( other.MyFunc ) )
+    add_default_return_value_wrapper( add_default_return_value_wrapper&& other ) noexcept
+        : m_func( std::move( other.m_func ) )
     {}
 
-    template <typename FIn, class = typename DisableIfSame<FIn, AddDefaultReturnValueWrapper>::type>
-    explicit AddDefaultReturnValueWrapper( FIn&& func )
-        : MyFunc( std::forward<FIn>( func ) )
+    template <typename in_f,
+        class = typename std::enable_if<
+            !is_same_decay<in_f, add_default_return_value_wrapper>::value>::type>
+    explicit add_default_return_value_wrapper( in_f&& func )
+        : m_func( std::forward<in_f>( func ) )
     {}
 
-    template <typename... TArgs>
-    TRet operator()( TArgs&&... args )
+    template <typename... args_t>
+    ret_t operator()( args_t&&... args )
     {
-        MyFunc( std::forward<TArgs>( args )... );
+        m_func( std::forward<args_t>( args )... );
         return return_value;
     }
 
-    F MyFunc;
+    F m_func;
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IsCallableWith
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename F, typename TRet, typename... TArgs>
-class IsCallableWith
+template <typename F, typename ret_t, typename... args_t>
+class is_callable_with
 {
 private:
     using NoT = char[1];
     using YesT = char[2];
 
     template <typename U,
-        class = decltype( static_cast<TRet>( ( std::declval<U>() )( std::declval<TArgs>()... ) ) )>
+        class = decltype(
+            static_cast<ret_t>( ( std::declval<U>() )( std::declval<args_t>()... ) ) )>
     static YesT& check( void* );
 
     template <typename U>
@@ -159,397 +157,334 @@ public:
 // Use comma operator to replace potential void return value with 0
 #define REACT_EXPAND_PACK( ... ) ::react::detail::pass( ( __VA_ARGS__, 0 )... )
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// TopoQueue - Sequential
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T, typename TLevelFunc>
-class TopoQueue
+class reactive_node;
+
+class topological_queue
 {
-private:
-    struct Entry;
-
 public:
-    // Store the level as part of the entry for cheap comparisons
-    using QueueDataT = std::vector<Entry>;
-    using NextDataT = std::vector<T>;
+    using value_type = reactive_node*;
 
-    TopoQueue() = default;
-    TopoQueue( const TopoQueue& ) = default;
+    topological_queue() = default;
 
-    template <typename FIn>
-    TopoQueue( FIn&& levelFunc )
-        : levelFunc_( std::forward<FIn>( levelFunc ) )
-    {}
-
-    void Push( const T& value )
+    void push( const value_type& value, const int level )
     {
-        queueData_.emplace_back( value, levelFunc_( value ) );
+        m_queue_data.emplace_back( value, level );
     }
 
-    bool FetchNext()
+    bool fetch_next()
     {
         // Throw away previous values
-        nextData_.clear();
+        m_next_data.clear();
 
         // Find min level of nodes in queue data
-        minLevel_ = ( std::numeric_limits<int>::max )();
-        for( const auto& e : queueData_ )
+        auto minimal_level = std::numeric_limits<int>::max();
+        for( const auto& e : m_queue_data )
         {
-            if( minLevel_ > e.Level )
+            if( minimal_level > e.second )
             {
-                minLevel_ = e.Level;
+                minimal_level = e.second;
             }
         }
 
         // Swap entries with min level to the end
-        auto p
-            = std::partition( queueData_.begin(), queueData_.end(), LevelCompFunctor{ minLevel_ } );
+        auto p = std::partition( m_queue_data.begin(),
+            m_queue_data.end(),
+            [minimal_level]( const entry& e ) { return e.second != minimal_level; } );
 
         // Reserve once to avoid multiple re-allocations
-        nextData_.reserve( std::distance( p, queueData_.end() ) );
+        const auto to_reserve = static_cast<size_t>( std::distance( p, m_queue_data.end() ) );
+        m_next_data.reserve( to_reserve );
 
         // Move min level values to next data
-        for( auto it = p; it != queueData_.end(); ++it )
+        for( auto it = p, ite = m_queue_data.end(); it != ite; ++it )
         {
-            nextData_.push_back( std::move( it->Value ) );
+            m_next_data.push_back( it->first );
         }
 
         // Truncate moved entries
-        queueData_.resize( std::distance( queueData_.begin(), p ) );
+        const auto to_resize = static_cast<size_t>( std::distance( m_queue_data.begin(), p ) );
+        m_queue_data.resize( to_resize );
 
-        return !nextData_.empty();
+        return !m_next_data.empty();
     }
 
-    const NextDataT& NextValues() const
+    const std::vector<value_type>& next_values() const
     {
-        return nextData_;
+        return m_next_data;
     }
 
 private:
-    struct Entry
-    {
-        Entry() = default;
-        Entry( const Entry& ) = default;
+    using entry = std::pair<value_type, int>;
 
-        Entry( const T& value, int level )
-            : Value( value )
-            , Level( level )
-        {}
-
-        T Value{};
-        int Level{};
-    };
-
-    struct LevelCompFunctor
-    {
-        explicit LevelCompFunctor( int level )
-            : Level( level )
-        {}
-
-        bool operator()( const Entry& e ) const
-        {
-            return e.Level != Level;
-        }
-
-        const int Level;
-    };
-
-    NextDataT nextData_;
-    QueueDataT queueData_;
-
-    TLevelFunc levelFunc_;
-
-    int minLevel_ = ( std::numeric_limits<int>::max )();
+    std::vector<value_type> m_next_data;
+    std::vector<entry> m_queue_data;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// NodeVector
+/// node_vector
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode>
-class NodeVector
+template <typename node_type>
+class node_vector
 {
 private:
-    typedef std::vector<TNode*> DataT;
+    using data_type = std::vector<node_type*>;
 
 public:
-    void Add( TNode& node )
+    void add( node_type& node )
     {
-        data_.push_back( &node );
+        m_data.push_back( &node );
     }
 
-    void Remove( const TNode& node )
+    void remove( const node_type& node )
     {
-        data_.erase( std::find( data_.begin(), data_.end(), &node ) );
+        m_data.erase( std::find( m_data.begin(), m_data.end(), &node ) );
     }
 
-    typedef typename DataT::iterator iterator;
-    typedef typename DataT::const_iterator const_iterator;
+    typedef typename data_type::iterator iterator;
+    typedef typename data_type::const_iterator const_iterator;
 
     iterator begin()
     {
-        return data_.begin();
+        return m_data.begin();
     }
 
     iterator end()
     {
-        return data_.end();
+        return m_data.end();
     }
 
     const_iterator begin() const
     {
-        return data_.begin();
+        return m_data.begin();
     }
 
     const_iterator end() const
     {
-        return data_.end();
+        return m_data.end();
     }
 
 private:
-    DataT data_;
+    data_type m_data;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ReactiveNode
+/// reactive_node
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class ReactiveNode
+class reactive_node
 {
 public:
-    int Level{ 0 };
-    int NewLevel{ 0 };
-    bool Queued{ false };
+    int level{ 0 };
+    int new_level{ 0 };
+    bool queued{ false };
 
-    NodeVector<ReactiveNode> Successors;
+    node_vector<reactive_node> successors;
 
-    virtual ~ReactiveNode() = default;
+    virtual ~reactive_node() = default;
 
     // Note: Could get rid of this ugly ptr by adding a template parameter to the interface
     // But that would mean all engine nodes need that template parameter too - so rather cast
-    virtual void Tick( void* turnPtr ) = 0;
+    virtual void tick( void* turn_ptr ) = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-using TurnIdT = unsigned;
+using turn_id_t = unsigned;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Turn
+/// turn
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class Turn
+class turn
 {
 public:
-    inline Turn( TurnIdT id )
+    inline turn( turn_id_t id )
         : id_( id )
     {}
 
-    inline TurnIdT Id() const
+    inline turn_id_t Id() const
     {
         return id_;
     }
 
 private:
-    TurnIdT id_;
+    turn_id_t id_;
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Functors
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-struct GetLevelFunctor
-{
-    int operator()( const T* x ) const
-    {
-        return x->Level;
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ToposortEngine
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class ToposortEngine
+class topological_sort_engine
 {
 public:
-    using NodeT = ReactiveNode;
-    using TurnT = Turn;
+    using NodeT = reactive_node;
+    using TurnT = turn;
 
-    using TopoQueueT = TopoQueue<ReactiveNode*, GetLevelFunctor<ReactiveNode>>;
+    void propagate( turn& turn );
 
-    void Propagate( Turn& turn );
-
-    static void OnNodeAttach( ReactiveNode& node, ReactiveNode& parent )
+    static void on_node_attach( reactive_node& node, reactive_node& parent )
     {
-        parent.Successors.Add( node );
+        parent.successors.add( node );
 
-        if( node.Level <= parent.Level )
+        if( node.level <= parent.level )
         {
-            node.Level = parent.Level + 1;
+            node.level = parent.level + 1;
         }
     }
 
-    static void OnNodeDetach( ReactiveNode& node, ReactiveNode& parent )
+    static void on_node_detach( reactive_node& node, reactive_node& parent )
     {
-        parent.Successors.Remove( node );
+        parent.successors.remove( node );
     }
 
-    void OnInputChange( ReactiveNode& node )
+    void on_input_change( reactive_node& node )
     {
-        processChildren( node );
+        process_children( node );
     }
 
-    void OnNodePulse( ReactiveNode& node )
+    void on_node_pulse( reactive_node& node )
     {
-        processChildren( node );
+        process_children( node );
     }
 
-    void OnDynamicNodeAttach( ReactiveNode& node, ReactiveNode& parent )
+    void on_dynamic_node_attach( reactive_node& node, reactive_node& parent )
     {
-        OnNodeAttach( node, parent );
+        on_node_attach( node, parent );
 
-        invalidateSuccessors( node );
+        invalidate_successors( node );
 
         // Re-schedule this node
-        node.Queued = true;
-        scheduledNodes_.Push( &node );
+        node.queued = true;
+        m_scheduled_nodes.push( &node, node.level );
     }
 
-    static void OnDynamicNodeDetach( ReactiveNode& node, ReactiveNode& parent )
+    static void on_dynamic_node_detach( reactive_node& node, reactive_node& parent )
     {
-        OnNodeDetach( node, parent );
+        on_node_detach( node, parent );
     }
 
 private:
-    static void invalidateSuccessors( ReactiveNode& node )
+    static void invalidate_successors( reactive_node& node )
     {
-        for( auto* succ : node.Successors )
+        for( auto* successor : node.successors )
         {
-            if( succ->NewLevel <= node.Level )
+            if( successor->new_level <= node.level )
             {
-                succ->NewLevel = node.Level + 1;
+                successor->new_level = node.level + 1;
             }
         }
     }
 
-    void processChildren( ReactiveNode& node );
+    void process_children( reactive_node& node );
 
-    TopoQueueT scheduledNodes_;
+    topological_queue m_scheduled_nodes;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// EngineInterface - Static wrapper for IReactiveEngine
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D, typename TEngine>
-struct EngineInterface
+struct engine_interface
 {
     using NodeT = typename TEngine::NodeT;
     using TurnT = typename TEngine::TurnT;
 
-    static TEngine& Instance()
+    static TEngine& instance()
     {
         static TEngine engine;
         return engine;
     }
 
-    static void OnInputChange( NodeT& node )
+    static void on_input_change( NodeT& node )
     {
-        Instance().OnInputChange( node );
+        instance().on_input_change( node );
     }
 
-    static void Propagate( TurnT& turn )
+    static void propagate( TurnT& turn )
     {
-        Instance().Propagate( turn );
+        instance().propagate( turn );
     }
 
-    static void OnNodeDestroy( NodeT& node )
+    static void on_node_destroy( NodeT& node )
     {
-        Instance().OnNodeDestroy( node );
+        instance().on_node_destroy( node );
     }
 
-    static void OnNodeAttach( NodeT& node, NodeT& parent )
+    static void on_node_attach( NodeT& node, NodeT& parent )
     {
-        Instance().OnNodeAttach( node, parent );
+        instance().on_node_attach( node, parent );
     }
 
-    static void OnNodeDetach( NodeT& node, NodeT& parent )
+    static void on_node_detach( NodeT& node, NodeT& parent )
     {
-        Instance().OnNodeDetach( node, parent );
+        instance().on_node_detach( node, parent );
     }
 
-    static void OnNodePulse( NodeT& node )
+    static void on_node_pulse( NodeT& node )
     {
-        Instance().OnNodePulse( node );
+        instance().on_node_pulse( node );
     }
 
-    static void OnDynamicNodeAttach( NodeT& node, NodeT& parent )
+    static void on_dynamic_node_attach( NodeT& node, NodeT& parent )
     {
-        Instance().OnDynamicNodeAttach( node, parent );
+        instance().on_dynamic_node_attach( node, parent );
     }
 
-    static void OnDynamicNodeDetach( NodeT& node, NodeT& parent )
+    static void on_dynamic_node_detach( NodeT& node, NodeT& parent )
     {
-        Instance().OnDynamicNodeDetach( node, parent );
+        instance().on_dynamic_node_detach( node, parent );
     }
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IInputNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-struct IInputNode
+struct input_node_interface
 {
-    virtual ~IInputNode() = default;
+    virtual ~input_node_interface() = default;
 
-    virtual bool ApplyInput( void* turnPtr ) = 0;
+    virtual bool apply_input( void* turn_ptr ) = 0;
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IObserver
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class IObserver
+class observer_interface
 {
 public:
-    virtual ~IObserver() = default;
+    virtual ~observer_interface() = default;
 
-    virtual void UnregisterSelf() = 0;
+    virtual void unregister_self() = 0;
 
 private:
-    virtual void detachObserver() = 0;
+    virtual void detach_observer() = 0;
 
     template <typename D>
-    friend class Observable;
+    friend class observable;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Observable
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D>
-class Observable
+class observable
 {
 public:
-    Observable() = default;
+    observable() = default;
 
-    ~Observable()
+    ~observable()
     {
         for( const auto& p : observers_ )
         {
             if( p != nullptr )
             {
-                p->detachObserver();
+                p->detach_observer();
             }
         }
     }
 
-    void RegisterObserver( std::unique_ptr<IObserver>&& obsPtr )
+    void RegisterObserver( std::unique_ptr<observer_interface>&& obsPtr )
     {
         observers_.push_back( std::move( obsPtr ) );
     }
 
-    void UnregisterObserver( IObserver* rawObsPtr )
+    void UnregisterObserver( observer_interface* rawObsPtr )
     {
         for( auto it = observers_.begin(); it != observers_.end(); ++it )
         {
             if( it->get() == rawObsPtr )
             {
-                it->get()->detachObserver();
+                it->get()->detach_observer();
                 observers_.erase( it );
                 break;
             }
@@ -557,7 +492,7 @@ public:
     }
 
 private:
-    std::vector<std::unique_ptr<IObserver>> observers_;
+    std::vector<std::unique_ptr<observer_interface>> observers_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -584,7 +519,7 @@ public:
 template <typename D>
 class ObservableNode
     : public NodeBase<D>
-    , public Observable<D>
+    , public observable<D>
 {
 public:
     ObservableNode() = default;
@@ -614,7 +549,7 @@ struct AttachFunctor
     template <typename T>
     void attach( const std::shared_ptr<T>& depPtr ) const
     {
-        D::Engine::OnNodeAttach( MyNode, *depPtr );
+        D::Engine::on_node_attach( MyNode, *depPtr );
     }
 
     TNode& MyNode;
@@ -641,7 +576,7 @@ struct DetachFunctor
     template <typename T>
     void detach( const std::shared_ptr<T>& depPtr ) const
     {
-        D::Engine::OnNodeDetach( MyNode, *depPtr );
+        D::Engine::on_node_detach( MyNode, *depPtr );
     }
 
     TNode& MyNode;
@@ -848,9 +783,9 @@ const std::shared_ptr<TNode>& GetNodePtr( const ReactiveBase<TNode>& node )
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Forward declarations
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-struct IInputNode;
+struct input_node_interface;
 
-class IObserver;
+class observer_interface;
 
 template <typename D>
 class InputManager;
@@ -860,10 +795,10 @@ class InputManager;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class DetachedObserversManager
 {
-    using ObsVectT = std::vector<IObserver*>;
+    using ObsVectT = std::vector<observer_interface*>;
 
 public:
-    void QueueObserverForDetach( IObserver& obs )
+    void QueueObserverForDetach( observer_interface& obs )
     {
         detachedObservers_.push_back( &obs );
     }
@@ -873,7 +808,7 @@ public:
     {
         for( auto* o : detachedObservers_ )
         {
-            o->UnregisterSelf();
+            o->unregister_self();
         }
         detachedObservers_.clear();
     }
@@ -911,17 +846,17 @@ public:
         // Phase 2 - Apply input node changes
         for( auto* p : changedInputs_ )
         {
-            if( p->ApplyInput( &turn ) )
+            if( p->apply_input( &turn ) )
             {
                 shouldPropagate = true;
             }
         }
         changedInputs_.clear();
 
-        // Phase 3 - Propagate changes
+        // Phase 3 - propagate changes
         if( shouldPropagate )
         {
-            Engine::Propagate( turn );
+            Engine::propagate( turn );
         }
 
         finalizeSyncTransaction();
@@ -953,13 +888,13 @@ public:
         }
     }
 
-    void QueueObserverForDetach( IObserver& obs )
+    void QueueObserverForDetach( observer_interface& obs )
     {
         detachedObserversManager_.QueueObserverForDetach( obs );
     }
 
 private:
-    TurnIdT nextTurnId()
+    turn_id_t nextTurnId()
     {
         return nextTurnId_++;
     }
@@ -971,9 +906,9 @@ private:
         TurnT turn( nextTurnId() );
         r.AddInput( std::forward<V>( v ) );
 
-        if( r.ApplyInput( &turn ) )
+        if( r.apply_input( &turn ) )
         {
-            Engine::Propagate( turn );
+            Engine::propagate( turn );
         }
 
         finalizeSyncTransaction();
@@ -988,9 +923,9 @@ private:
 
 
         // Return value, will always be true
-        r.ApplyInput( &turn );
+        r.apply_input( &turn );
 
-        Engine::Propagate( turn );
+        Engine::propagate( turn );
 
         finalizeSyncTransaction();
     }
@@ -1017,11 +952,11 @@ private:
 
     DetachedObserversManager detachedObserversManager_;
 
-    TurnIdT nextTurnId_{ 0 };
+    turn_id_t nextTurnId_{ 0 };
 
     bool isTransactionActive_ = false;
 
-    std::vector<IInputNode*> changedInputs_;
+    std::vector<input_node_interface*> changedInputs_;
 };
 
 template <typename D>
@@ -1094,11 +1029,11 @@ template <typename D>
 class DomainBase
 {
 public:
-    using TurnT = typename ToposortEngine::TurnT;
+    using TurnT = typename topological_sort_engine::TurnT;
 
     DomainBase() = delete;
 
-    using Engine = ::react::detail::EngineInterface<D, ToposortEngine>;
+    using Engine = ::react::detail::engine_interface<D, topological_sort_engine>;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     /// Aliases for reactives of this domain
@@ -1129,7 +1064,7 @@ class DomainInitializer
 public:
     DomainInitializer()
     {
-        D::Engine::Instance();
+        D::Engine::instance();
         DomainSpecificInputManager<D>::Instance();
     }
 };
@@ -1164,7 +1099,7 @@ void DoTransaction( F&& func )
     currently implemented as meyer singletons. From what I understand, these are thread-safe
     in C++11, but not all compilers implement that yet. That's why a static initializer has
     been added to make sure singleton creation happens before any multi-threaded access.
-    This implemenation is obviously inconsequential.
+    This implementation is obviously inconsequential.
  */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1206,7 +1141,7 @@ enum class ObserverAction
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// AddObserverRangeWrapper
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename E, typename F, typename... TArgs>
+template <typename E, typename F, typename... args_t>
 struct AddObserverRangeWrapper
 {
     AddObserverRangeWrapper( const AddObserverRangeWrapper& other ) = default;
@@ -1220,7 +1155,7 @@ struct AddObserverRangeWrapper
         : MyFunc( std::forward<FIn>( func ) )
     {}
 
-    ObserverAction operator()( EventRange<E> range, const TArgs&... args )
+    ObserverAction operator()( EventRange<E> range, const args_t&... args )
     {
         for( const auto& e : range )
         {
@@ -1242,7 +1177,7 @@ struct AddObserverRangeWrapper
 template <typename D>
 class ObserverNode
     : public NodeBase<D>
-    , public IObserver
+    , public observer_interface
 {
 public:
     ObserverNode() = default;
@@ -1264,12 +1199,12 @@ public:
         , func_( std::forward<F>( func ) )
     {
 
-        Engine::OnNodeAttach( *this, *subject );
+        Engine::on_node_attach( *this, *subject );
     }
 
     ~SignalObserverNode() = default;
 
-    void Tick( void* ) override
+    void tick( void* ) override
     {
         bool shouldDetach = false;
 
@@ -1287,7 +1222,7 @@ public:
         }
     }
 
-    void UnregisterSelf() override
+    void unregister_self() override
     {
         if( auto p = subject_.lock() )
         {
@@ -1296,11 +1231,11 @@ public:
     }
 
 private:
-    void detachObserver() override
+    void detach_observer() override
     {
         if( auto p = subject_.lock() )
         {
-            Engine::OnNodeDetach( *this, *p );
+            Engine::on_node_detach( *this, *p );
             subject_.reset();
         }
     }
@@ -1324,12 +1259,12 @@ public:
         , subject_( subject )
         , func_( std::forward<F>( func ) )
     {
-        Engine::OnNodeAttach( *this, *subject );
+        Engine::on_node_attach( *this, *subject );
     }
 
     ~EventObserverNode() = default;
 
-    void Tick( void* ) override
+    void tick( void* ) override
     {
         bool shouldDetach = false;
 
@@ -1344,7 +1279,7 @@ public:
         }
     }
 
-    void UnregisterSelf() override
+    void unregister_self() override
     {
         if( auto p = subject_.lock() )
         {
@@ -1357,11 +1292,11 @@ private:
 
     TFunc func_;
 
-    virtual void detachObserver()
+    virtual void detach_observer()
     {
         if( auto p = subject_.lock() )
         {
-            Engine::OnNodeDetach( *this, *p );
+            Engine::on_node_detach( *this, *p );
             subject_.reset();
         }
     }
@@ -1386,17 +1321,17 @@ public:
         , deps_( deps... )
     {
 
-        Engine::OnNodeAttach( *this, *subject );
+        Engine::on_node_attach( *this, *subject );
 
-        REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
+        REACT_EXPAND_PACK( Engine::on_node_attach( *this, *deps ) );
     }
 
     ~SyncedObserverNode() = default;
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         bool shouldDetach = false;
 
@@ -1423,7 +1358,7 @@ public:
         }
     }
 
-    void UnregisterSelf() override
+    void unregister_self() override
     {
         if( auto p = subject_.lock() )
         {
@@ -1439,11 +1374,11 @@ private:
     TFunc func_;
     DepHolderT deps_;
 
-    virtual void detachObserver()
+    virtual void detach_observer()
     {
         if( auto p = subject_.lock() )
         {
-            Engine::OnNodeDetach( *this, *p );
+            Engine::on_node_detach( *this, *p );
 
             apply(
                 DetachFunctor<D, SyncedObserverNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
@@ -1577,14 +1512,14 @@ private:
 template <typename D, typename FIn, typename S>
 auto Observe( const Signal<D, S>& subject, FIn&& func ) -> Observer<D>
 {
-    using ::react::detail::AddDefaultReturnValueWrapper;
-    using ::react::detail::IObserver;
+    using ::react::detail::add_default_return_value_wrapper;
+    using ::react::detail::observer_interface;
     using ::react::detail::ObserverNode;
     using ::react::detail::SignalObserverNode;
 
     using F = typename std::decay<FIn>::type;
     using R = typename std::result_of<FIn( S )>::type;
-    using WrapperT = AddDefaultReturnValueWrapper<F, ObserverAction, ObserverAction::next>;
+    using WrapperT = add_default_return_value_wrapper<F, ObserverAction, ObserverAction::next>;
 
     // If return value of passed function is void, add ObserverAction::next as
     // default return value.
@@ -1608,27 +1543,27 @@ auto Observe( const Signal<D, S>& subject, FIn&& func ) -> Observer<D>
 template <typename D, typename FIn, typename E>
 auto Observe( const Events<D, E>& subject, FIn&& func ) -> Observer<D>
 {
-    using ::react::detail::AddDefaultReturnValueWrapper;
+    using ::react::detail::add_default_return_value_wrapper;
     using ::react::detail::AddObserverRangeWrapper;
     using ::react::detail::EventObserverNode;
     using ::react::detail::EventRange;
-    using ::react::detail::IObserver;
-    using ::react::detail::IsCallableWith;
+    using ::react::detail::is_callable_with;
+    using ::react::detail::observer_interface;
     using ::react::detail::ObserverNode;
 
     using F = typename std::decay<FIn>::type;
 
-    using WrapperT =
-        typename std::conditional<IsCallableWith<F, ObserverAction, EventRange<E>>::value,
-            F,
-            typename std::conditional<IsCallableWith<F, ObserverAction, E>::value,
-                AddObserverRangeWrapper<E, F>,
-                typename std::conditional<IsCallableWith<F, void, EventRange<E>>::value,
-                    AddDefaultReturnValueWrapper<F, ObserverAction, ObserverAction::next>,
-                    typename std::conditional<IsCallableWith<F, void, E>::value,
-                        AddObserverRangeWrapper<E,
-                            AddDefaultReturnValueWrapper<F, ObserverAction, ObserverAction::next>>,
-                        void>::type>::type>::type>::type;
+    using WrapperT = typename std::conditional<
+        is_callable_with<F, ObserverAction, EventRange<E>>::value,
+        F,
+        typename std::conditional<is_callable_with<F, ObserverAction, E>::value,
+            AddObserverRangeWrapper<E, F>,
+            typename std::conditional<is_callable_with<F, void, EventRange<E>>::value,
+                add_default_return_value_wrapper<F, ObserverAction, ObserverAction::next>,
+                typename std::conditional<is_callable_with<F, void, E>::value,
+                    AddObserverRangeWrapper<E,
+                        add_default_return_value_wrapper<F, ObserverAction, ObserverAction::next>>,
+                    void>::type>::type>::type>::type;
 
     static_assert( !std::is_same<WrapperT, void>::value,
         "Observe: Passed function does not match any of the supported signatures." );
@@ -1652,26 +1587,27 @@ template <typename D, typename FIn, typename E, typename... TDepValues>
 auto Observe( const Events<D, E>& subject, const SignalPack<D, TDepValues...>& depPack, FIn&& func )
     -> Observer<D>
 {
-    using ::react::detail::AddDefaultReturnValueWrapper;
+    using ::react::detail::add_default_return_value_wrapper;
     using ::react::detail::AddObserverRangeWrapper;
     using ::react::detail::EventRange;
-    using ::react::detail::IObserver;
-    using ::react::detail::IsCallableWith;
+    using ::react::detail::is_callable_with;
+    using ::react::detail::observer_interface;
     using ::react::detail::ObserverNode;
     using ::react::detail::SyncedObserverNode;
 
     using F = typename std::decay<FIn>::type;
 
     using WrapperT = typename std::conditional<
-        IsCallableWith<F, ObserverAction, EventRange<E>, TDepValues...>::value,
+        is_callable_with<F, ObserverAction, EventRange<E>, TDepValues...>::value,
         F,
-        typename std::conditional<IsCallableWith<F, ObserverAction, E, TDepValues...>::value,
+        typename std::conditional<is_callable_with<F, ObserverAction, E, TDepValues...>::value,
             AddObserverRangeWrapper<E, F, TDepValues...>,
-            typename std::conditional<IsCallableWith<F, void, EventRange<E>, TDepValues...>::value,
-                AddDefaultReturnValueWrapper<F, ObserverAction, ObserverAction::next>,
-                typename std::conditional<IsCallableWith<F, void, E, TDepValues...>::value,
+            typename std::conditional<
+                is_callable_with<F, void, EventRange<E>, TDepValues...>::value,
+                add_default_return_value_wrapper<F, ObserverAction, ObserverAction::next>,
+                typename std::conditional<is_callable_with<F, void, E, TDepValues...>::value,
                     AddObserverRangeWrapper<E,
-                        AddDefaultReturnValueWrapper<F, ObserverAction, ObserverAction::next>,
+                        add_default_return_value_wrapper<F, ObserverAction, ObserverAction::next>,
                         TDepValues...>,
                     void>::type>::type>::type>::type;
 
@@ -1826,7 +1762,7 @@ using SignalNodePtrT = std::shared_ptr<SignalNode<D, S>>;
 template <typename D, typename S>
 class VarNode
     : public SignalNode<D, S>
-    , public IInputNode
+    , public input_node_interface
 {
     using Engine = typename VarNode::Engine;
 
@@ -1839,7 +1775,7 @@ public:
 
     ~VarNode() override = default;
 
-    void Tick( void* ) override
+    void tick( void* ) override
     {
         assert( !"Ticked VarNode" );
     }
@@ -1876,7 +1812,7 @@ public:
         }
     }
 
-    bool ApplyInput( void* ) override
+    bool apply_input( void* ) override
     {
         if( isInputAdded_ )
         {
@@ -1885,7 +1821,7 @@ public:
             if( !Equals( this->value_, newValue_ ) )
             {
                 this->value_ = std::move( newValue_ );
-                Engine::OnInputChange( *this );
+                Engine::on_input_change( *this );
                 return true;
             }
             else
@@ -1897,7 +1833,7 @@ public:
         {
             isInputModified_ = false;
 
-            Engine::OnInputChange( *this );
+            Engine::on_input_change( *this );
             return true;
         }
 
@@ -1978,10 +1914,10 @@ class SignalOpNode : public SignalNode<D, S>
     using Engine = typename SignalOpNode::Engine;
 
 public:
-    template <typename... TArgs>
-    SignalOpNode( TArgs&&... args )
+    template <typename... args_t>
+    SignalOpNode( args_t&&... args )
         : SignalOpNode::SignalNode()
-        , op_( std::forward<TArgs>( args )... )
+        , op_( std::forward<args_t>( args )... )
     {
         this->value_ = op_.Evaluate();
 
@@ -1997,7 +1933,7 @@ public:
         }
     }
 
-    void Tick( void* ) override
+    void tick( void* ) override
     {
         bool changed = false;
 
@@ -2013,7 +1949,7 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -2045,17 +1981,17 @@ public:
         , outer_( outer )
         , inner_( inner )
     {
-        Engine::OnNodeAttach( *this, *outer_ );
-        Engine::OnNodeAttach( *this, *inner_ );
+        Engine::on_node_attach( *this, *outer_ );
+        Engine::on_node_attach( *this, *inner_ );
     }
 
     ~FlattenNode()
     {
-        Engine::OnNodeDetach( *this, *inner_ );
-        Engine::OnNodeDetach( *this, *outer_ );
+        Engine::on_node_detach( *this, *inner_ );
+        Engine::on_node_detach( *this, *outer_ );
     }
 
-    void Tick( void* ) override
+    void tick( void* ) override
     {
         auto newInner = GetNodePtr( outer_->ValueRef() );
 
@@ -2065,8 +2001,8 @@ public:
             auto oldInner = inner_;
             inner_ = newInner;
 
-            Engine::OnDynamicNodeDetach( *this, *oldInner );
-            Engine::OnDynamicNodeAttach( *this, *newInner );
+            Engine::on_dynamic_node_detach( *this, *oldInner );
+            Engine::on_dynamic_node_attach( *this, *newInner );
 
             return;
         }
@@ -2074,7 +2010,7 @@ public:
         if( !Equals( this->value_, inner_->ValueRef() ) )
         {
             this->value_ = inner_->ValueRef();
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -2887,8 +2823,8 @@ bool Equals( const Signal<D, L>& lhs, const Signal<D, R>& rhs )
 
 #define REACTIVE_REF( obj, name )                                                                  \
     Flatten( MakeSignal( obj,                                                                      \
-        []( const REACT_MSVC_NO_TYPENAME ::react::detail::Identity<decltype( obj )>::Type::ValueT& \
-                r ) {                                                                              \
+        []( const REACT_MSVC_NO_TYPENAME ::react::detail::type_identity<decltype(                  \
+                obj )>::type::ValueT& r ) {                                                        \
             using T = decltype( r.name );                                                          \
             using S = REACT_MSVC_NO_TYPENAME ::react::DecayInput<T>::Type;                         \
             return static_cast<S>( r.name );                                                       \
@@ -2896,7 +2832,8 @@ bool Equals( const Signal<D, L>& lhs, const Signal<D, R>& rhs )
 
 #define REACTIVE_PTR( obj, name )                                                                  \
     Flatten( MakeSignal( obj,                                                                      \
-        []( REACT_MSVC_NO_TYPENAME ::react::detail::Identity<decltype( obj )>::Type::ValueT r ) {  \
+        []( REACT_MSVC_NO_TYPENAME ::react::detail::type_identity<decltype( obj )>::type::ValueT   \
+                r ) {                                                                              \
             assert( r != nullptr );                                                                \
             using T = decltype( r->name );                                                         \
             using S = REACT_MSVC_NO_TYPENAME ::react::DecayInput<T>::Type;                         \
@@ -2949,7 +2886,7 @@ using EventStreamNodePtrT = std::shared_ptr<EventStreamNode<D, E>>;
 template <typename D, typename E>
 class EventSourceNode
     : public EventStreamNode<D, E>
-    , public IInputNode
+    , public input_node_interface
 {
     using Engine = typename EventSourceNode::Engine;
 
@@ -2960,7 +2897,7 @@ public:
 
     ~EventSourceNode() override = default;
 
-    void Tick( void* ) override
+    void tick( void* ) override
     {
         assert( !"Ticked EventSourceNode" );
     }
@@ -2978,16 +2915,16 @@ public:
         this->events_.push_back( std::forward<V>( v ) );
     }
 
-    bool ApplyInput( void* turnPtr ) override
+    bool apply_input( void* turn_ptr ) override
     {
         if( this->events_.size() > 0 && !changedFlag_ )
         {
             using TurnT = typename D::Engine::TurnT;
-            TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+            TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
             this->SetCurrentTurn( turn, true, true );
             changedFlag_ = true;
-            Engine::OnInputChange( *this );
+            Engine::on_input_change( *this );
             return true;
         }
         else
@@ -3228,10 +3165,10 @@ class EventOpNode : public EventStreamNode<D, E>
     using Engine = typename EventOpNode::Engine;
 
 public:
-    template <typename... TArgs>
-    EventOpNode( TArgs&&... args )
+    template <typename... args_t>
+    EventOpNode( args_t&&... args )
         : EventOpNode::EventStreamNode()
-        , op_( std::forward<TArgs>( args )... )
+        , op_( std::forward<args_t>( args )... )
     {
 
         op_.template Attach<D>( *this );
@@ -3245,10 +3182,10 @@ public:
         }
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         this->SetCurrentTurn( turn, true );
 
@@ -3256,7 +3193,7 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -3305,20 +3242,20 @@ public:
         , inner_( inner )
     {
 
-        Engine::OnNodeAttach( *this, *outer_ );
-        Engine::OnNodeAttach( *this, *inner_ );
+        Engine::on_node_attach( *this, *outer_ );
+        Engine::on_node_attach( *this, *inner_ );
     }
 
     ~EventFlattenNode()
     {
-        Engine::OnNodeDetach( *this, *outer_ );
-        Engine::OnNodeDetach( *this, *inner_ );
+        Engine::on_node_detach( *this, *outer_ );
+        Engine::on_node_detach( *this, *inner_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         typedef typename D::Engine::TurnT TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         this->SetCurrentTurn( turn, true );
         inner_->SetCurrentTurn( turn );
@@ -3333,8 +3270,8 @@ public:
             auto oldInner = inner_;
             inner_ = newInner;
 
-            Engine::OnDynamicNodeDetach( *this, *oldInner );
-            Engine::OnDynamicNodeAttach( *this, *newInner );
+            Engine::on_dynamic_node_detach( *this, *oldInner );
+            Engine::on_dynamic_node_attach( *this, *newInner );
 
             return;
         }
@@ -3344,7 +3281,7 @@ public:
 
         if( this->events_.size() > 0 )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -3372,13 +3309,13 @@ public:
         , deps_( deps... )
     {
 
-        Engine::OnNodeAttach( *this, *source );
-        REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
+        Engine::on_node_attach( *this, *source );
+        REACT_EXPAND_PACK( Engine::on_node_attach( *this, *deps ) );
     }
 
     ~SyncedEventTransformNode()
     {
-        Engine::OnNodeDetach( *this, *source_ );
+        Engine::on_node_detach( *this, *source_ );
 
         apply( DetachFunctor<D,
                    SyncedEventTransformNode,
@@ -3386,10 +3323,10 @@ public:
             deps_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         this->SetCurrentTurn( turn, true );
         // Update of this node could be triggered from deps,
@@ -3411,7 +3348,7 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -3443,13 +3380,13 @@ public:
         , deps_( deps... )
     {
 
-        Engine::OnNodeAttach( *this, *source );
-        REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
+        Engine::on_node_attach( *this, *source );
+        REACT_EXPAND_PACK( Engine::on_node_attach( *this, *deps ) );
     }
 
     ~SyncedEventFilterNode()
     {
-        Engine::OnNodeDetach( *this, *source_ );
+        Engine::on_node_detach( *this, *source_ );
 
         apply(
             DetachFunctor<D, SyncedEventFilterNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
@@ -3457,10 +3394,10 @@ public:
             deps_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         this->SetCurrentTurn( turn, true );
         // Update of this node could be triggered from deps,
@@ -3485,7 +3422,7 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -3514,18 +3451,18 @@ public:
         , func_( std::forward<F>( func ) )
     {
 
-        Engine::OnNodeAttach( *this, *source );
+        Engine::on_node_attach( *this, *source );
     }
 
     ~EventProcessingNode()
     {
-        Engine::OnNodeDetach( *this, *source_ );
+        Engine::on_node_detach( *this, *source_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         this->SetCurrentTurn( turn, true );
 
@@ -3533,7 +3470,7 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -3562,13 +3499,13 @@ public:
         , deps_( deps... )
     {
 
-        Engine::OnNodeAttach( *this, *source );
-        REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
+        Engine::on_node_attach( *this, *source );
+        REACT_EXPAND_PACK( Engine::on_node_attach( *this, *deps ) );
     }
 
     ~SyncedEventProcessingNode()
     {
-        Engine::OnNodeDetach( *this, *source_ );
+        Engine::on_node_detach( *this, *source_ );
 
         apply( DetachFunctor<D,
                    SyncedEventProcessingNode,
@@ -3576,10 +3513,10 @@ public:
             deps_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         this->SetCurrentTurn( turn, true );
         // Update of this node could be triggered from deps,
@@ -3600,7 +3537,7 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -3628,21 +3565,21 @@ public:
         , slots_( sources... )
     {
 
-        REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *sources ) );
+        REACT_EXPAND_PACK( Engine::on_node_attach( *this, *sources ) );
     }
 
     ~EventJoinNode()
     {
         apply(
             [this]( Slot<TValues>&... slots ) {
-                REACT_EXPAND_PACK( Engine::OnNodeDetach( *this, *slots.Source ) );
+                REACT_EXPAND_PACK( Engine::on_node_detach( *this, *slots.Source ) );
             },
             slots_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         this->SetCurrentTurn( turn, true );
 
@@ -3690,7 +3627,7 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -3767,16 +3704,17 @@ auto MakeEventSource() -> EventSource<D, E>
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D,
     typename TArg1,
-    typename... TArgs,
+    typename... args_t,
     typename E = TArg1,
     typename TOp = ::react::detail::EventMergeOp<E,
         ::react::detail::EventStreamNodePtrT<D, TArg1>,
-        ::react::detail::EventStreamNodePtrT<D, TArgs>...>>
-auto Merge( const Events<D, TArg1>& arg1, const Events<D, TArgs>&... args ) -> TempEvents<D, E, TOp>
+        ::react::detail::EventStreamNodePtrT<D, args_t>...>>
+auto Merge( const Events<D, TArg1>& arg1, const Events<D, args_t>&... args )
+    -> TempEvents<D, E, TOp>
 {
     using ::react::detail::EventOpNode;
 
-    static_assert( sizeof...( TArgs ) > 0, "Merge: 2+ arguments are required." );
+    static_assert( sizeof...( args_t ) > 0, "Merge: 2+ arguments are required." );
 
     return TempEvents<D, E, TOp>(
         std::make_shared<EventOpNode<D, E, TOp>>( GetNodePtr( arg1 ), GetNodePtr( args )... ) );
@@ -4053,15 +3991,15 @@ auto Flatten( const Signal<D, Events<D, TInnerValue>>& outer ) -> Events<D, TInn
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Join
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename... TArgs>
-auto Join( const Events<D, TArgs>&... args ) -> Events<D, std::tuple<TArgs...>>
+template <typename D, typename... args_t>
+auto Join( const Events<D, args_t>&... args ) -> Events<D, std::tuple<args_t...>>
 {
     using ::react::detail::EventJoinNode;
 
-    static_assert( sizeof...( TArgs ) > 1, "Join: 2+ arguments are required." );
+    static_assert( sizeof...( args_t ) > 1, "Join: 2+ arguments are required." );
 
-    return Events<D, std::tuple<TArgs...>>(
-        std::make_shared<EventJoinNode<D, TArgs...>>( GetNodePtr( args )... ) );
+    return Events<D, std::tuple<args_t...>>(
+        std::make_shared<EventJoinNode<D, args_t...>>( GetNodePtr( args )... ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4141,11 +4079,11 @@ public:
         return ::react::Tokenize( *this );
     }
 
-    template <typename... TArgs>
-    auto Merge( TArgs&&... args ) const
-        -> decltype( ::react::Merge( std::declval<Events>(), std::forward<TArgs>( args )... ) )
+    template <typename... args_t>
+    auto Merge( args_t&&... args ) const
+        -> decltype( ::react::Merge( std::declval<Events>(), std::forward<args_t>( args )... ) )
     {
-        return ::react::Merge( *this, std::forward<TArgs>( args )... );
+        return ::react::Merge( *this, std::forward<args_t>( args )... );
     }
 
     template <typename F>
@@ -4215,11 +4153,11 @@ public:
         return ::react::Tokenize( *this );
     }
 
-    template <typename... TArgs>
-    auto Merge( TArgs&&... args )
-        -> decltype( ::react::Merge( std::declval<Events>(), std::forward<TArgs>( args )... ) )
+    template <typename... args_t>
+    auto Merge( args_t&&... args )
+        -> decltype( ::react::Merge( std::declval<Events>(), std::forward<args_t>( args )... ) )
     {
-        return ::react::Merge( *this, std::forward<TArgs>( args )... );
+        return ::react::Merge( *this, std::forward<args_t>( args )... );
     }
 
     template <typename F>
@@ -4419,11 +4357,11 @@ public:
         return std::move( reinterpret_cast<NodeT*>( this->ptr_.get() )->StealOp() );
     }
 
-    template <typename... TArgs>
-    auto Merge( TArgs&&... args )
-        -> decltype( ::react::Merge( std::declval<TempEvents>(), std::forward<TArgs>( args )... ) )
+    template <typename... args_t>
+    auto Merge( args_t&&... args )
+        -> decltype( ::react::Merge( std::declval<TempEvents>(), std::forward<args_t>( args )... ) )
     {
-        return ::react::Merge( *this, std::forward<TArgs>( args )... );
+        return ::react::Merge( *this, std::forward<args_t>( args )... );
     }
 
     template <typename F>
@@ -4453,7 +4391,7 @@ bool Equals( const Events<D, L>& lhs, const Events<D, R>& rhs )
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// AddIterateRangeWrapper
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename E, typename S, typename F, typename... TArgs>
+template <typename E, typename S, typename F, typename... args_t>
 struct AddIterateRangeWrapper
 {
     AddIterateRangeWrapper( const AddIterateRangeWrapper& other ) = default;
@@ -4467,7 +4405,7 @@ struct AddIterateRangeWrapper
         : MyFunc( std::forward<FIn>( func ) )
     {}
 
-    S operator()( EventRange<E> range, S value, const TArgs&... args )
+    S operator()( EventRange<E> range, S value, const args_t&... args )
     {
         for( const auto& e : range )
         {
@@ -4480,7 +4418,7 @@ struct AddIterateRangeWrapper
     F MyFunc;
 };
 
-template <typename E, typename S, typename F, typename... TArgs>
+template <typename E, typename S, typename F, typename... args_t>
 struct AddIterateByRefRangeWrapper
 {
     AddIterateByRefRangeWrapper( const AddIterateByRefRangeWrapper& other ) = default;
@@ -4494,7 +4432,7 @@ struct AddIterateByRefRangeWrapper
         : MyFunc( std::forward<FIn>( func ) )
     {}
 
-    void operator()( EventRange<E> range, S& valueRef, const TArgs&... args )
+    void operator()( EventRange<E> range, S& valueRef, const args_t&... args )
     {
         for( const auto& e : range )
         {
@@ -4521,15 +4459,15 @@ public:
         , func_( std::forward<F>( func ) )
     {
 
-        Engine::OnNodeAttach( *this, *events );
+        Engine::on_node_attach( *this, *events );
     }
 
     ~IterateNode()
     {
-        Engine::OnNodeDetach( *this, *events_ );
+        Engine::on_node_detach( *this, *events_ );
     }
 
-    void Tick( void* ) override
+    void tick( void* ) override
     {
         bool changed = false;
 
@@ -4545,7 +4483,7 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -4571,20 +4509,20 @@ public:
         , events_( events )
     {
 
-        Engine::OnNodeAttach( *this, *events );
+        Engine::on_node_attach( *this, *events );
     }
 
     ~IterateByRefNode()
     {
-        Engine::OnNodeDetach( *this, *events_ );
+        Engine::on_node_detach( *this, *events_ );
     }
 
-    void Tick( void* ) override
+    void tick( void* ) override
     {
         func_( EventRange<E>( events_->Events() ), this->value_ );
 
         // Always assume change
-        Engine::OnNodePulse( *this );
+        Engine::on_node_pulse( *this );
     }
 
 protected:
@@ -4613,23 +4551,23 @@ public:
         , deps_( deps... )
     {
 
-        Engine::OnNodeAttach( *this, *events );
-        REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
+        Engine::on_node_attach( *this, *events );
+        REACT_EXPAND_PACK( Engine::on_node_attach( *this, *deps ) );
     }
 
     ~SyncedIterateNode()
     {
-        Engine::OnNodeDetach( *this, *events_ );
+        Engine::on_node_detach( *this, *events_ );
 
         apply( DetachFunctor<D, SyncedIterateNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
                    *this ),
             deps_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         events_->SetCurrentTurn( turn );
 
@@ -4653,7 +4591,7 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -4686,13 +4624,13 @@ public:
         , deps_( deps... )
     {
 
-        Engine::OnNodeAttach( *this, *events );
-        REACT_EXPAND_PACK( Engine::OnNodeAttach( *this, *deps ) );
+        Engine::on_node_attach( *this, *events );
+        REACT_EXPAND_PACK( Engine::on_node_attach( *this, *deps ) );
     }
 
     ~SyncedIterateByRefNode()
     {
-        Engine::OnNodeDetach( *this, *events_ );
+        Engine::on_node_detach( *this, *events_ );
 
         apply(
             DetachFunctor<D, SyncedIterateByRefNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
@@ -4700,10 +4638,10 @@ public:
             deps_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         events_->SetCurrentTurn( turn );
 
@@ -4722,7 +4660,7 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -4750,15 +4688,15 @@ public:
         , events_( events )
     {
 
-        Engine::OnNodeAttach( *this, *events_ );
+        Engine::on_node_attach( *this, *events_ );
     }
 
     ~HoldNode()
     {
-        Engine::OnNodeDetach( *this, *events_ );
+        Engine::on_node_detach( *this, *events_ );
     }
 
-    void Tick( void* ) override
+    void tick( void* ) override
     {
         bool changed = false;
 
@@ -4775,7 +4713,7 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -4799,20 +4737,20 @@ public:
         , trigger_( trigger )
     {
 
-        Engine::OnNodeAttach( *this, *target_ );
-        Engine::OnNodeAttach( *this, *trigger_ );
+        Engine::on_node_attach( *this, *target_ );
+        Engine::on_node_attach( *this, *trigger_ );
     }
 
     ~SnapshotNode()
     {
-        Engine::OnNodeDetach( *this, *target_ );
-        Engine::OnNodeDetach( *this, *trigger_ );
+        Engine::on_node_detach( *this, *target_ );
+        Engine::on_node_detach( *this, *trigger_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         trigger_->SetCurrentTurn( turn );
 
@@ -4831,7 +4769,7 @@ public:
 
         if( changed )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -4853,18 +4791,18 @@ public:
         : MonitorNode::EventStreamNode()
         , target_( target )
     {
-        Engine::OnNodeAttach( *this, *target_ );
+        Engine::on_node_attach( *this, *target_ );
     }
 
     ~MonitorNode()
     {
-        Engine::OnNodeDetach( *this, *target_ );
+        Engine::on_node_detach( *this, *target_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         this->SetCurrentTurn( turn, true );
 
@@ -4872,7 +4810,7 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -4895,20 +4833,20 @@ public:
         , target_( target )
         , trigger_( trigger )
     {
-        Engine::OnNodeAttach( *this, *target_ );
-        Engine::OnNodeAttach( *this, *trigger_ );
+        Engine::on_node_attach( *this, *target_ );
+        Engine::on_node_attach( *this, *trigger_ );
     }
 
     ~PulseNode()
     {
-        Engine::OnNodeDetach( *this, *target_ );
-        Engine::OnNodeDetach( *this, *trigger_ );
+        Engine::on_node_detach( *this, *target_ );
+        Engine::on_node_detach( *this, *trigger_ );
     }
 
-    void Tick( void* turnPtr ) override
+    void tick( void* turn_ptr ) override
     {
         typedef typename D::Engine::TurnT TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>( turnPtr );
+        TurnT& turn = *reinterpret_cast<TurnT*>( turn_ptr );
 
         this->SetCurrentTurn( turn, true );
         trigger_->SetCurrentTurn( turn );
@@ -4920,7 +4858,7 @@ public:
 
         if( !this->events_.empty() )
         {
-            Engine::OnNodePulse( *this );
+            Engine::on_node_pulse( *this );
         }
     }
 
@@ -4967,19 +4905,19 @@ auto Iterate( const Events<D, E>& events, V&& init, FIn&& func ) -> Signal<D, S>
     using ::react::detail::AddIterateByRefRangeWrapper;
     using ::react::detail::AddIterateRangeWrapper;
     using ::react::detail::EventRange;
-    using ::react::detail::IsCallableWith;
+    using ::react::detail::is_callable_with;
     using ::react::detail::IterateByRefNode;
     using ::react::detail::IterateNode;
 
     using F = typename std::decay<FIn>::type;
 
-    using NodeT = typename std::conditional<IsCallableWith<F, S, EventRange<E>, S>::value,
+    using NodeT = typename std::conditional<is_callable_with<F, S, EventRange<E>, S>::value,
         IterateNode<D, S, E, F>,
-        typename std::conditional<IsCallableWith<F, S, E, S>::value,
+        typename std::conditional<is_callable_with<F, S, E, S>::value,
             IterateNode<D, S, E, AddIterateRangeWrapper<E, S, F>>,
-            typename std::conditional<IsCallableWith<F, void, EventRange<E>, S&>::value,
+            typename std::conditional<is_callable_with<F, void, EventRange<E>, S&>::value,
                 IterateByRefNode<D, S, E, F>,
-                typename std::conditional<IsCallableWith<F, void, E, S&>::value,
+                typename std::conditional<is_callable_with<F, void, E, S&>::value,
                     IterateByRefNode<D, S, E, AddIterateByRefRangeWrapper<E, S, F>>,
                     void>::type>::type>::type>::type;
 
@@ -5006,31 +4944,31 @@ auto Iterate(
     using ::react::detail::AddIterateByRefRangeWrapper;
     using ::react::detail::AddIterateRangeWrapper;
     using ::react::detail::EventRange;
-    using ::react::detail::IsCallableWith;
+    using ::react::detail::is_callable_with;
     using ::react::detail::SyncedIterateByRefNode;
     using ::react::detail::SyncedIterateNode;
 
     using F = typename std::decay<FIn>::type;
 
-    using NodeT =
-        typename std::conditional<IsCallableWith<F, S, EventRange<E>, S, TDepValues...>::value,
-            SyncedIterateNode<D, S, E, F, TDepValues...>,
-            typename std::conditional<IsCallableWith<F, S, E, S, TDepValues...>::value,
-                SyncedIterateNode<D,
-                    S,
-                    E,
-                    AddIterateRangeWrapper<E, S, F, TDepValues...>,
-                    TDepValues...>,
-                typename std::conditional<
-                    IsCallableWith<F, void, EventRange<E>, S&, TDepValues...>::value,
-                    SyncedIterateByRefNode<D, S, E, F, TDepValues...>,
-                    typename std::conditional<IsCallableWith<F, void, E, S&, TDepValues...>::value,
-                        SyncedIterateByRefNode<D,
-                            S,
-                            E,
-                            AddIterateByRefRangeWrapper<E, S, F, TDepValues...>,
-                            TDepValues...>,
-                        void>::type>::type>::type>::type;
+    using NodeT = typename std::conditional<
+        is_callable_with<F, S, EventRange<E>, S, TDepValues...>::value,
+        SyncedIterateNode<D, S, E, F, TDepValues...>,
+        typename std::conditional<is_callable_with<F, S, E, S, TDepValues...>::value,
+            SyncedIterateNode<D,
+                S,
+                E,
+                AddIterateRangeWrapper<E, S, F, TDepValues...>,
+                TDepValues...>,
+            typename std::conditional<
+                is_callable_with<F, void, EventRange<E>, S&, TDepValues...>::value,
+                SyncedIterateByRefNode<D, S, E, F, TDepValues...>,
+                typename std::conditional<is_callable_with<F, void, E, S&, TDepValues...>::value,
+                    SyncedIterateByRefNode<D,
+                        S,
+                        E,
+                        AddIterateByRefRangeWrapper<E, S, F, TDepValues...>,
+                        TDepValues...>,
+                    void>::type>::type>::type>::type;
 
     static_assert( !std::is_same<NodeT, void>::value,
         "Iterate: Passed function does not match any of the supported signatures." );
@@ -5110,35 +5048,35 @@ namespace detail
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SeqEngineBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-inline void ToposortEngine::Propagate( Turn& turn )
+inline void topological_sort_engine::propagate( turn& turn )
 {
-    while( scheduledNodes_.FetchNext() )
+    while( m_scheduled_nodes.fetch_next() )
     {
-        for( auto* curNode : scheduledNodes_.NextValues() )
+        for( auto* curNode : m_scheduled_nodes.next_values() )
         {
-            if( curNode->Level < curNode->NewLevel )
+            if( curNode->level < curNode->new_level )
             {
-                curNode->Level = curNode->NewLevel;
-                invalidateSuccessors( *curNode );
-                scheduledNodes_.Push( curNode );
+                curNode->level = curNode->new_level;
+                invalidate_successors( *curNode );
+                m_scheduled_nodes.push( curNode, curNode->level );
                 continue;
             }
 
-            curNode->Queued = false;
-            curNode->Tick( &turn );
+            curNode->queued = false;
+            curNode->tick( &turn );
         }
     }
 }
 
-inline void ToposortEngine::processChildren( ReactiveNode& node )
+inline void topological_sort_engine::process_children( reactive_node& node )
 {
     // Add children to queue
-    for( auto* succ : node.Successors )
+    for( auto* successor : node.successors )
     {
-        if( !succ->Queued )
+        if( !successor->queued )
         {
-            succ->Queued = true;
-            scheduledNodes_.Push( succ );
+            successor->queued = true;
+            m_scheduled_nodes.push( successor, successor->level );
         }
     }
 }

@@ -21,7 +21,7 @@
 
 namespace react
 {
-namespace impl
+namespace detail
 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,7 +152,7 @@ public:
 
 // Expand args by wrapping them in a dummy function
 // Use comma operator to replace potential void return value with 0
-#define REACT_EXPAND_PACK( ... ) ::react::impl::pass( ( __VA_ARGS__, 0 )... )
+#define REACT_EXPAND_PACK( ... ) ::react::detail::pass( ( __VA_ARGS__, 0 )... )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// TopoQueue - Sequential
@@ -1041,7 +1041,7 @@ class SignalNode;
 template <typename D, typename E>
 class EventStreamNode;
 
-} // namespace impl
+} // namespace detail
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Forward declarations
@@ -1075,7 +1075,7 @@ class TempEvents;
 template <typename D, typename... TValues>
 class SignalPack;
 
-namespace impl
+namespace detail
 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1093,7 +1093,7 @@ public:
 
     DomainBase() = delete;
 
-    using Engine = ::react::impl::EngineInterface<D, ToposortEngine>;
+    using Engine = ::react::detail::EngineInterface<D, ToposortEngine>;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     /// Aliases for reactives of this domain
@@ -1129,7 +1129,7 @@ public:
     }
 };
 
-} // namespace impl
+} // namespace detail
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Common types & constants
@@ -1141,7 +1141,7 @@ public:
 template <typename D, typename F>
 void DoTransaction( F&& func )
 {
-    using ::react::impl::DomainSpecificInputManager;
+    using ::react::detail::DomainSpecificInputManager;
     DomainSpecificInputManager<D>::Instance().DoTransaction( std::forward<F>( func ) );
 }
 
@@ -1149,9 +1149,9 @@ void DoTransaction( F&& func )
 /// Domain definition macro
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define REACTIVE_DOMAIN( name )                                                                    \
-    struct name : public ::react::impl::DomainBase<name>                                           \
+    struct name : public ::react::detail::DomainBase<name>                                         \
     {};                                                                                            \
-    static ::react::impl::DomainInitializer<name> name##_initializer_;
+    static ::react::detail::DomainInitializer<name> name##_initializer_;
 
 /*
     A brief reminder why the domain initializer is here:
@@ -1186,7 +1186,7 @@ void DoTransaction( F&& func )
 #    pragma warning( disable : 4503 )
 #endif
 
-namespace impl
+namespace detail
 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1450,12 +1450,12 @@ private:
     }
 };
 
-} // namespace impl
+} // namespace detail
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Forward declarations
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-using ::react::impl::ObserverAction;
+using ::react::detail::ObserverAction;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Observer
@@ -1464,8 +1464,8 @@ template <typename D>
 class Observer
 {
 private:
-    using SubjectPtrT = std::shared_ptr<::react::impl::ObservableNode<D>>;
-    using NodeT = ::react::impl::ObserverNode<D>;
+    using SubjectPtrT = std::shared_ptr<::react::detail::ObservableNode<D>>;
+    using NodeT = ::react::detail::ObserverNode<D>;
 
 public:
     // Default ctor
@@ -1572,10 +1572,10 @@ private:
 template <typename D, typename FIn, typename S>
 auto Observe( const Signal<D, S>& subject, FIn&& func ) -> Observer<D>
 {
-    using ::react::impl::AddDefaultReturnValueWrapper;
-    using ::react::impl::IObserver;
-    using ::react::impl::ObserverNode;
-    using ::react::impl::SignalObserverNode;
+    using ::react::detail::AddDefaultReturnValueWrapper;
+    using ::react::detail::IObserver;
+    using ::react::detail::ObserverNode;
+    using ::react::detail::SignalObserverNode;
 
     using F = typename std::decay<FIn>::type;
     using R = typename std::result_of<FIn( S )>::type;
@@ -1603,13 +1603,13 @@ auto Observe( const Signal<D, S>& subject, FIn&& func ) -> Observer<D>
 template <typename D, typename FIn, typename E>
 auto Observe( const Events<D, E>& subject, FIn&& func ) -> Observer<D>
 {
-    using ::react::impl::AddDefaultReturnValueWrapper;
-    using ::react::impl::AddObserverRangeWrapper;
-    using ::react::impl::EventObserverNode;
-    using ::react::impl::EventRange;
-    using ::react::impl::IObserver;
-    using ::react::impl::IsCallableWith;
-    using ::react::impl::ObserverNode;
+    using ::react::detail::AddDefaultReturnValueWrapper;
+    using ::react::detail::AddObserverRangeWrapper;
+    using ::react::detail::EventObserverNode;
+    using ::react::detail::EventRange;
+    using ::react::detail::IObserver;
+    using ::react::detail::IsCallableWith;
+    using ::react::detail::ObserverNode;
 
     using F = typename std::decay<FIn>::type;
 
@@ -1647,13 +1647,13 @@ template <typename D, typename FIn, typename E, typename... TDepValues>
 auto Observe( const Events<D, E>& subject, const SignalPack<D, TDepValues...>& depPack, FIn&& func )
     -> Observer<D>
 {
-    using ::react::impl::AddDefaultReturnValueWrapper;
-    using ::react::impl::AddObserverRangeWrapper;
-    using ::react::impl::EventRange;
-    using ::react::impl::IObserver;
-    using ::react::impl::IsCallableWith;
-    using ::react::impl::ObserverNode;
-    using ::react::impl::SyncedObserverNode;
+    using ::react::detail::AddDefaultReturnValueWrapper;
+    using ::react::detail::AddObserverRangeWrapper;
+    using ::react::detail::EventRange;
+    using ::react::detail::IObserver;
+    using ::react::detail::IsCallableWith;
+    using ::react::detail::ObserverNode;
+    using ::react::detail::SyncedObserverNode;
 
     using F = typename std::decay<FIn>::type;
 
@@ -1694,8 +1694,8 @@ auto Observe( const Events<D, E>& subject, const SignalPack<D, TDepValues...>& d
 
     const auto& subjectPtr = GetNodePtr( subject );
 
-    std::unique_ptr<ObserverNode<D>> nodePtr(
-        ::react::impl::apply( NodeBuilder_( subject, std::forward<FIn>( func ) ), depPack.Data ) );
+    std::unique_ptr<ObserverNode<D>> nodePtr( ::react::detail::apply(
+        NodeBuilder_( subject, std::forward<FIn>( func ) ), depPack.Data ) );
 
     ObserverNode<D>* rawNodePtr = nodePtr.get();
 
@@ -1779,7 +1779,7 @@ struct DecayInput<EventSource<D, T>>
     using Type = Events<D, T>;
 };
 
-namespace impl
+namespace detail
 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2115,7 +2115,7 @@ protected:
     }
 };
 
-} // namespace impl
+} // namespace detail
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SignalPack - Wraps several nodes in a tuple. Create with comma operator.
@@ -2156,14 +2156,14 @@ template <typename D,
 auto MakeVar( V&& value ) -> VarSignal<D, S>
 {
     return VarSignal<D, S>(
-        std::make_shared<::react::impl::VarNode<D, S>>( std::forward<V>( value ) ) );
+        std::make_shared<::react::detail::VarNode<D, S>>( std::forward<V>( value ) ) );
 }
 
 template <typename D, typename S>
 auto MakeVar( std::reference_wrapper<S> value ) -> VarSignal<D, S&>
 {
     return VarSignal<D, S&>(
-        std::make_shared<::react::impl::VarNode<D, std::reference_wrapper<S>>>( value ) );
+        std::make_shared<::react::detail::VarNode<D, std::reference_wrapper<S>>>( value ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2177,7 +2177,7 @@ template <typename D,
 auto MakeVar( V&& value ) -> VarSignal<D, Signal<D, TInner>>
 {
     return VarSignal<D, Signal<D, TInner>>(
-        std::make_shared<::react::impl::VarNode<D, Signal<D, TInner>>>(
+        std::make_shared<::react::detail::VarNode<D, Signal<D, TInner>>>(
             std::forward<V>( value ) ) );
 }
 
@@ -2189,7 +2189,7 @@ template <typename D,
 auto MakeVar( V&& value ) -> VarSignal<D, Events<D, TInner>>
 {
     return VarSignal<D, Events<D, TInner>>(
-        std::make_shared<::react::impl::VarNode<D, Events<D, TInner>>>(
+        std::make_shared<::react::detail::VarNode<D, Events<D, TInner>>>(
             std::forward<V>( value ) ) );
 }
 
@@ -2202,10 +2202,10 @@ template <typename D,
     typename FIn,
     typename F = typename std::decay<FIn>::type,
     typename S = typename std::result_of<F( TValue )>::type,
-    typename TOp = ::react::impl::FunctionOp<S, F, ::react::impl::SignalNodePtrT<D, TValue>>>
+    typename TOp = ::react::detail::FunctionOp<S, F, ::react::detail::SignalNodePtrT<D, TValue>>>
 auto MakeSignal( const Signal<D, TValue>& arg, FIn&& func ) -> TempSignal<D, S, TOp>
 {
-    return TempSignal<D, S, TOp>( std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>(
+    return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(
         std::forward<FIn>( func ), GetNodePtr( arg ) ) );
 }
 
@@ -2215,10 +2215,11 @@ template <typename D,
     typename FIn,
     typename F = typename std::decay<FIn>::type,
     typename S = typename std::result_of<F( TValues... )>::type,
-    typename TOp = ::react::impl::FunctionOp<S, F, ::react::impl::SignalNodePtrT<D, TValues>...>>
+    typename TOp
+    = ::react::detail::FunctionOp<S, F, ::react::detail::SignalNodePtrT<D, TValues>...>>
 auto MakeSignal( const SignalPack<D, TValues...>& argPack, FIn&& func ) -> TempSignal<D, S, TOp>
 {
-    using ::react::impl::SignalOpNode;
+    using ::react::detail::SignalOpNode;
 
     struct NodeBuilder_
     {
@@ -2235,7 +2236,7 @@ auto MakeSignal( const SignalPack<D, TValues...>& argPack, FIn&& func ) -> TempS
         FIn MyFunc;
     };
 
-    return ::react::impl::apply( NodeBuilder_( std::forward<FIn>( func ) ), argPack.Data );
+    return ::react::detail::apply( NodeBuilder_( std::forward<FIn>( func ) ), argPack.Data );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2257,11 +2258,12 @@ auto MakeSignal( const SignalPack<D, TValues...>& argPack, FIn&& func ) -> TempS
         class = typename std::enable_if<IsSignal<TSignal>::value>::type,                           \
         typename F = name##OpFunctor<TVal>,                                                        \
         typename S = typename std::result_of<F( TVal )>::type,                                     \
-        typename TOp = ::react::impl::FunctionOp<S, F, ::react::impl::SignalNodePtrT<D, TVal>>>    \
+        typename TOp                                                                               \
+        = ::react::detail::FunctionOp<S, F, ::react::detail::SignalNodePtrT<D, TVal>>>             \
     auto operator op( const TSignal& arg )->TempSignal<D, S, TOp>                                  \
     {                                                                                              \
-        return TempSignal<D, S, TOp>(                                                              \
-            std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>( F(), GetNodePtr( arg ) ) );  \
+        return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(  \
+            F(), GetNodePtr( arg ) ) );                                                            \
     }                                                                                              \
                                                                                                    \
     template <typename D,                                                                          \
@@ -2269,11 +2271,11 @@ auto MakeSignal( const SignalPack<D, TValues...>& argPack, FIn&& func ) -> TempS
         typename TOpIn,                                                                            \
         typename F = name##OpFunctor<TVal>,                                                        \
         typename S = typename std::result_of<F( TVal )>::type,                                     \
-        typename TOp = ::react::impl::FunctionOp<S, F, TOpIn>>                                     \
+        typename TOp = ::react::detail::FunctionOp<S, F, TOpIn>>                                   \
     auto operator op( TempSignal<D, TVal, TOpIn>&& arg )->TempSignal<D, S, TOp>                    \
     {                                                                                              \
         return TempSignal<D, S, TOp>(                                                              \
-            std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>( F(), arg.StealOp() ) );      \
+            std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>( F(), arg.StealOp() ) );    \
     }
 
 REACT_DECLARE_OP( +, UnaryPlus )
@@ -2359,13 +2361,13 @@ REACT_DECLARE_OP( --, Decrement )
         class = typename std::enable_if<IsSignal<TRightSignal>::value>::type,                      \
         typename F = name##OpFunctor<TLeftVal, TRightVal>,                                         \
         typename S = typename std::result_of<F( TLeftVal, TRightVal )>::type,                      \
-        typename TOp = ::react::impl::FunctionOp<S,                                                \
+        typename TOp = ::react::detail::FunctionOp<S,                                              \
             F,                                                                                     \
-            ::react::impl::SignalNodePtrT<D, TLeftVal>,                                            \
-            ::react::impl::SignalNodePtrT<D, TRightVal>>>                                          \
+            ::react::detail::SignalNodePtrT<D, TLeftVal>,                                          \
+            ::react::detail::SignalNodePtrT<D, TRightVal>>>                                        \
     auto operator op( const TLeftSignal& lhs, const TRightSignal& rhs )->TempSignal<D, S, TOp>     \
     {                                                                                              \
-        return TempSignal<D, S, TOp>( std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>(    \
+        return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(  \
             F(), GetNodePtr( lhs ), GetNodePtr( rhs ) ) );                                         \
     }                                                                                              \
                                                                                                    \
@@ -2379,10 +2381,10 @@ REACT_DECLARE_OP( --, Decrement )
         typename F = name##OpLFunctor<TLeftVal, TRightVal>,                                        \
         typename S = typename std::result_of<F( TLeftVal )>::type,                                 \
         typename TOp                                                                               \
-        = ::react::impl::FunctionOp<S, F, ::react::impl::SignalNodePtrT<D, TLeftVal>>>             \
+        = ::react::detail::FunctionOp<S, F, ::react::detail::SignalNodePtrT<D, TLeftVal>>>         \
     auto operator op( const TLeftSignal& lhs, TRightValIn&& rhs )->TempSignal<D, S, TOp>           \
     {                                                                                              \
-        return TempSignal<D, S, TOp>( std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>(    \
+        return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(  \
             F( std::forward<TRightValIn>( rhs ) ), GetNodePtr( lhs ) ) );                          \
     }                                                                                              \
                                                                                                    \
@@ -2396,10 +2398,10 @@ REACT_DECLARE_OP( --, Decrement )
         typename F = name##OpRFunctor<TLeftVal, TRightVal>,                                        \
         typename S = typename std::result_of<F( TRightVal )>::type,                                \
         typename TOp                                                                               \
-        = ::react::impl::FunctionOp<S, F, ::react::impl::SignalNodePtrT<D, TRightVal>>>            \
+        = ::react::detail::FunctionOp<S, F, ::react::detail::SignalNodePtrT<D, TRightVal>>>        \
     auto operator op( TLeftValIn&& lhs, const TRightSignal& rhs )->TempSignal<D, S, TOp>           \
     {                                                                                              \
-        return TempSignal<D, S, TOp>( std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>(    \
+        return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(  \
             F( std::forward<TLeftValIn>( lhs ) ), GetNodePtr( rhs ) ) );                           \
     }                                                                                              \
     template <typename D,                                                                          \
@@ -2409,12 +2411,12 @@ REACT_DECLARE_OP( --, Decrement )
         typename TRightOp,                                                                         \
         typename F = name##OpFunctor<TLeftVal, TRightVal>,                                         \
         typename S = typename std::result_of<F( TLeftVal, TRightVal )>::type,                      \
-        typename TOp = ::react::impl::FunctionOp<S, F, TLeftOp, TRightOp>>                         \
+        typename TOp = ::react::detail::FunctionOp<S, F, TLeftOp, TRightOp>>                       \
     auto operator op(                                                                              \
         TempSignal<D, TLeftVal, TLeftOp>&& lhs, TempSignal<D, TRightVal, TRightOp>&& rhs )         \
         ->TempSignal<D, S, TOp>                                                                    \
     {                                                                                              \
-        return TempSignal<D, S, TOp>( std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>(    \
+        return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(  \
             F(), lhs.StealOp(), rhs.StealOp() ) );                                                 \
     }                                                                                              \
                                                                                                    \
@@ -2426,12 +2428,12 @@ REACT_DECLARE_OP( --, Decrement )
         class = typename std::enable_if<IsSignal<TRightSignal>::value>::type,                      \
         typename F = name##OpFunctor<TLeftVal, TRightVal>,                                         \
         typename S = typename std::result_of<F( TLeftVal, TRightVal )>::type,                      \
-        typename TOp                                                                               \
-        = ::react::impl::FunctionOp<S, F, TLeftOp, ::react::impl::SignalNodePtrT<D, TRightVal>>>   \
+        typename TOp = ::react::detail::                                                           \
+            FunctionOp<S, F, TLeftOp, ::react::detail::SignalNodePtrT<D, TRightVal>>>              \
     auto operator op( TempSignal<D, TLeftVal, TLeftOp>&& lhs, const TRightSignal& rhs )            \
         ->TempSignal<D, S, TOp>                                                                    \
     {                                                                                              \
-        return TempSignal<D, S, TOp>( std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>(    \
+        return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(  \
             F(), lhs.StealOp(), GetNodePtr( rhs ) ) );                                             \
     }                                                                                              \
                                                                                                    \
@@ -2443,12 +2445,12 @@ REACT_DECLARE_OP( --, Decrement )
         class = typename std::enable_if<IsSignal<TLeftSignal>::value>::type,                       \
         typename F = name##OpFunctor<TLeftVal, TRightVal>,                                         \
         typename S = typename std::result_of<F( TLeftVal, TRightVal )>::type,                      \
-        typename TOp                                                                               \
-        = ::react::impl::FunctionOp<S, F, ::react::impl::SignalNodePtrT<D, TLeftVal>, TRightOp>>   \
+        typename TOp = ::react::detail::                                                           \
+            FunctionOp<S, F, ::react::detail::SignalNodePtrT<D, TLeftVal>, TRightOp>>              \
     auto operator op( const TLeftSignal& lhs, TempSignal<D, TRightVal, TRightOp>&& rhs )           \
         ->TempSignal<D, S, TOp>                                                                    \
     {                                                                                              \
-        return TempSignal<D, S, TOp>( std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>(    \
+        return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(  \
             F(), GetNodePtr( lhs ), rhs.StealOp() ) );                                             \
     }                                                                                              \
                                                                                                    \
@@ -2460,11 +2462,11 @@ REACT_DECLARE_OP( --, Decrement )
         class = typename std::enable_if<!IsSignal<TRightVal>::value>::type,                        \
         typename F = name##OpLFunctor<TLeftVal, TRightVal>,                                        \
         typename S = typename std::result_of<F( TLeftVal )>::type,                                 \
-        typename TOp = ::react::impl::FunctionOp<S, F, TLeftOp>>                                   \
+        typename TOp = ::react::detail::FunctionOp<S, F, TLeftOp>>                                 \
     auto operator op( TempSignal<D, TLeftVal, TLeftOp>&& lhs, TRightValIn&& rhs )                  \
         ->TempSignal<D, S, TOp>                                                                    \
     {                                                                                              \
-        return TempSignal<D, S, TOp>( std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>(    \
+        return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(  \
             F( std::forward<TRightValIn>( rhs ) ), lhs.StealOp() ) );                              \
     }                                                                                              \
                                                                                                    \
@@ -2476,11 +2478,11 @@ REACT_DECLARE_OP( --, Decrement )
         class = typename std::enable_if<!IsSignal<TLeftVal>::value>::type,                         \
         typename F = name##OpRFunctor<TLeftVal, TRightVal>,                                        \
         typename S = typename std::result_of<F( TRightVal )>::type,                                \
-        typename TOp = ::react::impl::FunctionOp<S, F, TRightOp>>                                  \
+        typename TOp = ::react::detail::FunctionOp<S, F, TRightOp>>                                \
     auto operator op( TLeftValIn&& lhs, TempSignal<D, TRightVal, TRightOp>&& rhs )                 \
         ->TempSignal<D, S, TOp>                                                                    \
     {                                                                                              \
-        return TempSignal<D, S, TOp>( std::make_shared<::react::impl::SignalOpNode<D, S, TOp>>(    \
+        return TempSignal<D, S, TOp>( std::make_shared<::react::detail::SignalOpNode<D, S, TOp>>(  \
             F( std::forward<TLeftValIn>( lhs ) ), rhs.StealOp() ) );                               \
     }
 
@@ -2571,7 +2573,7 @@ template <typename D, typename TInnerValue>
 auto Flatten( const Signal<D, Signal<D, TInnerValue>>& outer ) -> Signal<D, TInnerValue>
 {
     return Signal<D, TInnerValue>(
-        std::make_shared<::react::impl::FlattenNode<D, Signal<D, TInnerValue>, TInnerValue>>(
+        std::make_shared<::react::detail::FlattenNode<D, Signal<D, TInnerValue>, TInnerValue>>(
             GetNodePtr( outer ), GetNodePtr( outer.Value() ) ) );
 }
 
@@ -2579,10 +2581,10 @@ auto Flatten( const Signal<D, Signal<D, TInnerValue>>& outer ) -> Signal<D, TInn
 /// Signal
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D, typename S>
-class Signal : public ::react::impl::SignalBase<D, S>
+class Signal : public ::react::detail::SignalBase<D, S>
 {
 private:
-    using NodeT = ::react::impl::SignalNode<D, S>;
+    using NodeT = ::react::detail::SignalNode<D, S>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -2644,10 +2646,10 @@ public:
 
 // Specialize for references
 template <typename D, typename S>
-class Signal<D, S&> : public ::react::impl::SignalBase<D, std::reference_wrapper<S>>
+class Signal<D, S&> : public ::react::detail::SignalBase<D, std::reference_wrapper<S>>
 {
 private:
-    using NodeT = ::react::impl::SignalNode<D, std::reference_wrapper<S>>;
+    using NodeT = ::react::detail::SignalNode<D, std::reference_wrapper<S>>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -2707,7 +2709,7 @@ template <typename D, typename S>
 class VarSignal : public Signal<D, S>
 {
 private:
-    using NodeT = ::react::impl::VarNode<D, S>;
+    using NodeT = ::react::detail::VarNode<D, S>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -2771,7 +2773,7 @@ template <typename D, typename S>
 class VarSignal<D, S&> : public Signal<D, std::reference_wrapper<S>>
 {
 private:
-    using NodeT = ::react::impl::VarNode<D, std::reference_wrapper<S>>;
+    using NodeT = ::react::detail::VarNode<D, std::reference_wrapper<S>>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -2822,7 +2824,7 @@ template <typename D, typename S, typename TOp>
 class TempSignal : public Signal<D, S>
 {
 private:
-    using NodeT = ::react::impl::SignalOpNode<D, S, TOp>;
+    using NodeT = ::react::detail::SignalOpNode<D, S, TOp>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -2858,7 +2860,7 @@ public:
     }
 };
 
-namespace impl
+namespace detail
 {
 
 template <typename D, typename L, typename R>
@@ -2881,7 +2883,7 @@ bool Equals( const Signal<D, L>& lhs, const Signal<D, R>& rhs )
 
 #define REACTIVE_REF( obj, name )                                                                  \
     Flatten( MakeSignal( obj,                                                                      \
-        []( const REACT_MSVC_NO_TYPENAME ::react::impl::Identity<decltype( obj )>::Type::ValueT&   \
+        []( const REACT_MSVC_NO_TYPENAME ::react::detail::Identity<decltype( obj )>::Type::ValueT& \
                 r ) {                                                                              \
             using T = decltype( r.name );                                                          \
             using S = REACT_MSVC_NO_TYPENAME ::react::DecayInput<T>::Type;                         \
@@ -2890,7 +2892,7 @@ bool Equals( const Signal<D, L>& lhs, const Signal<D, R>& rhs )
 
 #define REACTIVE_PTR( obj, name )                                                                  \
     Flatten( MakeSignal( obj,                                                                      \
-        []( REACT_MSVC_NO_TYPENAME ::react::impl::Identity<decltype( obj )>::Type::ValueT r ) {    \
+        []( REACT_MSVC_NO_TYPENAME ::react::detail::Identity<decltype( obj )>::Type::ValueT r ) {  \
             assert( r != nullptr );                                                                \
             using T = decltype( r->name );                                                         \
             using S = REACT_MSVC_NO_TYPENAME ::react::DecayInput<T>::Type;                         \
@@ -3744,7 +3746,7 @@ protected:
     }
 };
 
-} // namespace impl
+} // namespace detail
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// MakeEventSource
@@ -3752,7 +3754,7 @@ protected:
 template <typename D, typename E = Token>
 auto MakeEventSource() -> EventSource<D, E>
 {
-    using ::react::impl::EventSourceNode;
+    using ::react::detail::EventSourceNode;
 
     return EventSource<D, E>( std::make_shared<EventSourceNode<D, E>>() );
 }
@@ -3764,12 +3766,12 @@ template <typename D,
     typename TArg1,
     typename... TArgs,
     typename E = TArg1,
-    typename TOp = ::react::impl::EventMergeOp<E,
-        ::react::impl::EventStreamNodePtrT<D, TArg1>,
-        ::react::impl::EventStreamNodePtrT<D, TArgs>...>>
+    typename TOp = ::react::detail::EventMergeOp<E,
+        ::react::detail::EventStreamNodePtrT<D, TArg1>,
+        ::react::detail::EventStreamNodePtrT<D, TArgs>...>>
 auto Merge( const Events<D, TArg1>& arg1, const Events<D, TArgs>&... args ) -> TempEvents<D, E, TOp>
 {
-    using ::react::impl::EventOpNode;
+    using ::react::detail::EventOpNode;
 
     static_assert( sizeof...( TArgs ) > 0, "Merge: 2+ arguments are required." );
 
@@ -3783,14 +3785,14 @@ template <typename TLeftEvents,
     typename TLeftVal = typename TLeftEvents::ValueT,
     typename TRightVal = typename TRightEvents::ValueT,
     typename E = TLeftVal,
-    typename TOp = ::react::impl::EventMergeOp<E,
-        ::react::impl::EventStreamNodePtrT<D, TLeftVal>,
-        ::react::impl::EventStreamNodePtrT<D, TRightVal>>,
+    typename TOp = ::react::detail::EventMergeOp<E,
+        ::react::detail::EventStreamNodePtrT<D, TLeftVal>,
+        ::react::detail::EventStreamNodePtrT<D, TRightVal>>,
     class = typename std::enable_if<IsEvent<TLeftEvents>::value>::type,
     class = typename std::enable_if<IsEvent<TRightEvents>::value>::type>
 auto operator|( const TLeftEvents& lhs, const TRightEvents& rhs ) -> TempEvents<D, E, TOp>
 {
-    using ::react::impl::EventOpNode;
+    using ::react::detail::EventOpNode;
 
     return TempEvents<D, E, TOp>(
         std::make_shared<EventOpNode<D, E, TOp>>( GetNodePtr( lhs ), GetNodePtr( rhs ) ) );
@@ -3802,11 +3804,11 @@ template <typename D,
     typename TRightVal,
     typename TRightOp,
     typename E = TLeftVal,
-    typename TOp = ::react::impl::EventMergeOp<E, TLeftOp, TRightOp>>
+    typename TOp = ::react::detail::EventMergeOp<E, TLeftOp, TRightOp>>
 auto operator|( TempEvents<D, TLeftVal, TLeftOp>&& lhs, TempEvents<D, TRightVal, TRightOp>&& rhs )
     -> TempEvents<D, E, TOp>
 {
-    using ::react::impl::EventOpNode;
+    using ::react::detail::EventOpNode;
 
     return TempEvents<D, E, TOp>(
         std::make_shared<EventOpNode<D, E, TOp>>( lhs.StealOp(), rhs.StealOp() ) );
@@ -3819,12 +3821,12 @@ template <typename D,
     typename TRightVal = typename TRightEvents::ValueT,
     typename E = TLeftVal,
     typename TOp
-    = ::react::impl::EventMergeOp<E, TLeftOp, ::react::impl::EventStreamNodePtrT<D, TRightVal>>,
+    = ::react::detail::EventMergeOp<E, TLeftOp, ::react::detail::EventStreamNodePtrT<D, TRightVal>>,
     class = typename std::enable_if<IsEvent<TRightEvents>::value>::type>
 auto operator|( TempEvents<D, TLeftVal, TLeftOp>&& lhs, const TRightEvents& rhs )
     -> TempEvents<D, E, TOp>
 {
-    using ::react::impl::EventOpNode;
+    using ::react::detail::EventOpNode;
 
     return TempEvents<D, E, TOp>(
         std::make_shared<EventOpNode<D, E, TOp>>( lhs.StealOp(), GetNodePtr( rhs ) ) );
@@ -3836,13 +3838,13 @@ template <typename TLeftEvents,
     typename TRightOp,
     typename TLeftVal = typename TLeftEvents::ValueT,
     typename E = TLeftVal,
-    typename TOp
-    = ::react::impl::EventMergeOp<E, ::react::impl::EventStreamNodePtrT<D, TRightVal>, TRightOp>,
+    typename TOp = ::react::detail::
+        EventMergeOp<E, ::react::detail::EventStreamNodePtrT<D, TRightVal>, TRightOp>,
     class = typename std::enable_if<IsEvent<TLeftEvents>::value>::type>
 auto operator|( const TLeftEvents& lhs, TempEvents<D, TRightVal, TRightOp>&& rhs )
     -> TempEvents<D, E, TOp>
 {
-    using ::react::impl::EventOpNode;
+    using ::react::detail::EventOpNode;
 
     return TempEvents<D, E, TOp>(
         std::make_shared<EventOpNode<D, E, TOp>>( GetNodePtr( lhs ), rhs.StealOp() ) );
@@ -3855,10 +3857,10 @@ template <typename D,
     typename E,
     typename FIn,
     typename F = typename std::decay<FIn>::type,
-    typename TOp = ::react::impl::EventFilterOp<E, F, ::react::impl::EventStreamNodePtrT<D, E>>>
+    typename TOp = ::react::detail::EventFilterOp<E, F, ::react::detail::EventStreamNodePtrT<D, E>>>
 auto Filter( const Events<D, E>& src, FIn&& filter ) -> TempEvents<D, E, TOp>
 {
-    using ::react::impl::EventOpNode;
+    using ::react::detail::EventOpNode;
 
     return TempEvents<D, E, TOp>( std::make_shared<EventOpNode<D, E, TOp>>(
         std::forward<FIn>( filter ), GetNodePtr( src ) ) );
@@ -3869,10 +3871,10 @@ template <typename D,
     typename TOpIn,
     typename FIn,
     typename F = typename std::decay<FIn>::type,
-    typename TOpOut = ::react::impl::EventFilterOp<E, F, TOpIn>>
+    typename TOpOut = ::react::detail::EventFilterOp<E, F, TOpIn>>
 auto Filter( TempEvents<D, E, TOpIn>&& src, FIn&& filter ) -> TempEvents<D, E, TOpOut>
 {
-    using ::react::impl::EventOpNode;
+    using ::react::detail::EventOpNode;
 
     return TempEvents<D, E, TOpOut>(
         std::make_shared<EventOpNode<D, E, TOpOut>>( std::forward<FIn>( filter ), src.StealOp() ) );
@@ -3885,7 +3887,7 @@ template <typename D, typename E, typename FIn, typename... TDepValues>
 auto Filter( const Events<D, E>& source, const SignalPack<D, TDepValues...>& depPack, FIn&& func )
     -> Events<D, E>
 {
-    using ::react::impl::SyncedEventFilterNode;
+    using ::react::detail::SyncedEventFilterNode;
 
     using F = typename std::decay<FIn>::type;
 
@@ -3906,7 +3908,8 @@ auto Filter( const Events<D, E>& source, const SignalPack<D, TDepValues...>& dep
         FIn MyFunc;
     };
 
-    return ::react::impl::apply( NodeBuilder_( source, std::forward<FIn>( func ) ), depPack.Data );
+    return ::react::detail::apply(
+        NodeBuilder_( source, std::forward<FIn>( func ) ), depPack.Data );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3918,10 +3921,10 @@ template <typename D,
     typename F = typename std::decay<FIn>::type,
     typename TOut = typename std::result_of<F( TIn )>::type,
     typename TOp
-    = ::react::impl::EventTransformOp<TIn, F, ::react::impl::EventStreamNodePtrT<D, TIn>>>
+    = ::react::detail::EventTransformOp<TIn, F, ::react::detail::EventStreamNodePtrT<D, TIn>>>
 auto Transform( const Events<D, TIn>& src, FIn&& func ) -> TempEvents<D, TOut, TOp>
 {
-    using ::react::impl::EventOpNode;
+    using ::react::detail::EventOpNode;
 
     return TempEvents<D, TOut, TOp>( std::make_shared<EventOpNode<D, TOut, TOp>>(
         std::forward<FIn>( func ), GetNodePtr( src ) ) );
@@ -3933,10 +3936,10 @@ template <typename D,
     typename FIn,
     typename F = typename std::decay<FIn>::type,
     typename TOut = typename std::result_of<F( TIn )>::type,
-    typename TOpOut = ::react::impl::EventTransformOp<TIn, F, TOpIn>>
+    typename TOpOut = ::react::detail::EventTransformOp<TIn, F, TOpIn>>
 auto Transform( TempEvents<D, TIn, TOpIn>&& src, FIn&& func ) -> TempEvents<D, TOut, TOpOut>
 {
-    using ::react::impl::EventOpNode;
+    using ::react::detail::EventOpNode;
 
     return TempEvents<D, TOut, TOpOut>( std::make_shared<EventOpNode<D, TOut, TOpOut>>(
         std::forward<FIn>( func ), src.StealOp() ) );
@@ -3954,7 +3957,7 @@ auto Transform(
     const Events<D, TIn>& source, const SignalPack<D, TDepValues...>& depPack, FIn&& func )
     -> Events<D, TOut>
 {
-    using ::react::impl::SyncedEventTransformNode;
+    using ::react::detail::SyncedEventTransformNode;
 
     using F = typename std::decay<FIn>::type;
 
@@ -3976,14 +3979,15 @@ auto Transform(
         FIn MyFunc;
     };
 
-    return ::react::impl::apply( NodeBuilder_( source, std::forward<FIn>( func ) ), depPack.Data );
+    return ::react::detail::apply(
+        NodeBuilder_( source, std::forward<FIn>( func ) ), depPack.Data );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Process
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-using ::react::impl::EventEmitter;
-using ::react::impl::EventRange;
+using ::react::detail::EventEmitter;
+using ::react::detail::EventRange;
 
 template <typename TOut,
     typename D,
@@ -3992,7 +3996,7 @@ template <typename TOut,
     typename F = typename std::decay<FIn>::type>
 auto Process( const Events<D, TIn>& src, FIn&& func ) -> Events<D, TOut>
 {
-    using ::react::impl::EventProcessingNode;
+    using ::react::detail::EventProcessingNode;
 
     return Events<D, TOut>( std::make_shared<EventProcessingNode<D, TIn, TOut, F>>(
         GetNodePtr( src ), std::forward<FIn>( func ) ) );
@@ -4006,7 +4010,7 @@ auto Process(
     const Events<D, TIn>& source, const SignalPack<D, TDepValues...>& depPack, FIn&& func )
     -> Events<D, TOut>
 {
-    using ::react::impl::SyncedEventProcessingNode;
+    using ::react::detail::SyncedEventProcessingNode;
 
     using F = typename std::decay<FIn>::type;
 
@@ -4028,7 +4032,8 @@ auto Process(
         FIn MyFunc;
     };
 
-    return ::react::impl::apply( NodeBuilder_( source, std::forward<FIn>( func ) ), depPack.Data );
+    return ::react::detail::apply(
+        NodeBuilder_( source, std::forward<FIn>( func ) ), depPack.Data );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4038,7 +4043,7 @@ template <typename D, typename TInnerValue>
 auto Flatten( const Signal<D, Events<D, TInnerValue>>& outer ) -> Events<D, TInnerValue>
 {
     return Events<D, TInnerValue>(
-        std::make_shared<::react::impl::EventFlattenNode<D, Events<D, TInnerValue>, TInnerValue>>(
+        std::make_shared<::react::detail::EventFlattenNode<D, Events<D, TInnerValue>, TInnerValue>>(
             GetNodePtr( outer ), GetNodePtr( outer.Value() ) ) );
 }
 
@@ -4048,7 +4053,7 @@ auto Flatten( const Signal<D, Events<D, TInnerValue>>& outer ) -> Events<D, TInn
 template <typename D, typename... TArgs>
 auto Join( const Events<D, TArgs>&... args ) -> Events<D, std::tuple<TArgs...>>
 {
-    using ::react::impl::EventJoinNode;
+    using ::react::detail::EventJoinNode;
 
     static_assert( sizeof...( TArgs ) > 1, "Join: 2+ arguments are required." );
 
@@ -4083,10 +4088,10 @@ auto Tokenize( TEvents&& source ) -> decltype( Transform( source, Tokenizer{} ) 
 /// Events
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D, typename E = Token>
-class Events : public ::react::impl::EventStreamBase<D, E>
+class Events : public ::react::detail::EventStreamBase<D, E>
 {
 private:
-    using NodeT = ::react::impl::EventStreamNode<D, E>;
+    using NodeT = ::react::detail::EventStreamNode<D, E>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -4157,10 +4162,10 @@ public:
 
 // Specialize for references
 template <typename D, typename E>
-class Events<D, E&> : public ::react::impl::EventStreamBase<D, std::reference_wrapper<E>>
+class Events<D, E&> : public ::react::detail::EventStreamBase<D, std::reference_wrapper<E>>
 {
 private:
-    using NodeT = ::react::impl::EventStreamNode<D, std::reference_wrapper<E>>;
+    using NodeT = ::react::detail::EventStreamNode<D, std::reference_wrapper<E>>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -4236,7 +4241,7 @@ template <typename D, typename E = Token>
 class EventSource : public Events<D, E>
 {
 private:
-    using NodeT = ::react::impl::EventSourceNode<D, E>;
+    using NodeT = ::react::detail::EventSourceNode<D, E>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -4319,7 +4324,7 @@ template <typename D, typename E>
 class EventSource<D, E&> : public Events<D, std::reference_wrapper<E>>
 {
 private:
-    using NodeT = ::react::impl::EventSourceNode<D, std::reference_wrapper<E>>;
+    using NodeT = ::react::detail::EventSourceNode<D, std::reference_wrapper<E>>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -4376,7 +4381,7 @@ template <typename D, typename E, typename TOp>
 class TempEvents : public Events<D, E>
 {
 protected:
-    using NodeT = ::react::impl::EventOpNode<D, E, TOp>;
+    using NodeT = ::react::detail::EventOpNode<D, E, TOp>;
     using NodePtrT = std::shared_ptr<NodeT>;
 
 public:
@@ -4433,7 +4438,7 @@ public:
     }
 };
 
-namespace impl
+namespace detail
 {
 
 template <typename D, typename L, typename R>
@@ -4921,7 +4926,7 @@ private:
     const std::shared_ptr<EventStreamNode<D, E>> trigger_;
 };
 
-} // namespace impl
+} // namespace detail
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Hold - Hold the most recent event in a signal
@@ -4929,7 +4934,7 @@ private:
 template <typename D, typename V, typename T = typename std::decay<V>::type>
 auto Hold( const Events<D, T>& events, V&& init ) -> Signal<D, T>
 {
-    using ::react::impl::HoldNode;
+    using ::react::detail::HoldNode;
 
     return Signal<D, T>(
         std::make_shared<HoldNode<D, T>>( std::forward<V>( init ), GetNodePtr( events ) ) );
@@ -4941,7 +4946,7 @@ auto Hold( const Events<D, T>& events, V&& init ) -> Signal<D, T>
 template <typename D, typename S>
 auto Monitor( const Signal<D, S>& target ) -> Events<D, S>
 {
-    using ::react::impl::MonitorNode;
+    using ::react::detail::MonitorNode;
 
     return Events<D, S>( std::make_shared<MonitorNode<D, S>>( GetNodePtr( target ) ) );
 }
@@ -4956,12 +4961,12 @@ template <typename D,
     typename S = typename std::decay<V>::type>
 auto Iterate( const Events<D, E>& events, V&& init, FIn&& func ) -> Signal<D, S>
 {
-    using ::react::impl::AddIterateByRefRangeWrapper;
-    using ::react::impl::AddIterateRangeWrapper;
-    using ::react::impl::EventRange;
-    using ::react::impl::IsCallableWith;
-    using ::react::impl::IterateByRefNode;
-    using ::react::impl::IterateNode;
+    using ::react::detail::AddIterateByRefRangeWrapper;
+    using ::react::detail::AddIterateRangeWrapper;
+    using ::react::detail::EventRange;
+    using ::react::detail::IsCallableWith;
+    using ::react::detail::IterateByRefNode;
+    using ::react::detail::IterateNode;
 
     using F = typename std::decay<FIn>::type;
 
@@ -4995,12 +5000,12 @@ auto Iterate(
     const Events<D, E>& events, V&& init, const SignalPack<D, TDepValues...>& depPack, FIn&& func )
     -> Signal<D, S>
 {
-    using ::react::impl::AddIterateByRefRangeWrapper;
-    using ::react::impl::AddIterateRangeWrapper;
-    using ::react::impl::EventRange;
-    using ::react::impl::IsCallableWith;
-    using ::react::impl::SyncedIterateByRefNode;
-    using ::react::impl::SyncedIterateNode;
+    using ::react::detail::AddIterateByRefRangeWrapper;
+    using ::react::detail::AddIterateRangeWrapper;
+    using ::react::detail::EventRange;
+    using ::react::detail::IsCallableWith;
+    using ::react::detail::SyncedIterateByRefNode;
+    using ::react::detail::SyncedIterateNode;
 
     using F = typename std::decay<FIn>::type;
 
@@ -5050,7 +5055,7 @@ auto Iterate(
         FIn MyFunc;
     };
 
-    return ::react::impl::apply(
+    return ::react::detail::apply(
         NodeBuilder_( events, std::forward<V>( init ), std::forward<FIn>( func ) ), depPack.Data );
 }
 
@@ -5060,7 +5065,7 @@ auto Iterate(
 template <typename D, typename S, typename E>
 auto Snapshot( const Events<D, E>& trigger, const Signal<D, S>& target ) -> Signal<D, S>
 {
-    using ::react::impl::SnapshotNode;
+    using ::react::detail::SnapshotNode;
 
     return Signal<D, S>(
         std::make_shared<SnapshotNode<D, S, E>>( GetNodePtr( target ), GetNodePtr( trigger ) ) );
@@ -5072,7 +5077,7 @@ auto Snapshot( const Events<D, E>& trigger, const Signal<D, S>& target ) -> Sign
 template <typename D, typename S, typename E>
 auto Pulse( const Events<D, E>& trigger, const Signal<D, S>& target ) -> Events<D, S>
 {
-    using ::react::impl::PulseNode;
+    using ::react::detail::PulseNode;
 
     return Events<D, S>(
         std::make_shared<PulseNode<D, S, E>>( GetNodePtr( target ), GetNodePtr( trigger ) ) );
@@ -5096,7 +5101,7 @@ auto ChangedTo( const Signal<D, S>& target, V&& value ) -> Events<D, Token>
     return Monitor( target ).Filter( [=]( const S& v ) { return v == value; } ).Tokenize();
 }
 
-namespace impl
+namespace detail
 {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5135,5 +5140,5 @@ inline void ToposortEngine::processChildren( ReactiveNode& node )
     }
 }
 
-} // namespace impl
+} // namespace detail
 } // namespace react

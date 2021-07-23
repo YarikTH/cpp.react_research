@@ -23,7 +23,7 @@ using namespace std;
 template <typename T>
 struct Incrementer
 {
-    T operator()( Token, T v ) const
+    T operator()( token, T v ) const
     {
         return v + 1;
     }
@@ -32,7 +32,7 @@ struct Incrementer
 template <typename T>
 struct Decrementer
 {
-    T operator()( Token, T v ) const
+    T operator()( token, T v ) const
     {
         return v - 1;
     }
@@ -92,7 +92,7 @@ TYPED_TEST_P( OperationsTest, Iterate2 )
         ASSERT_EQ( v, 5050 );
     } );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         for( auto i = 1; i <= 100; i++ )
             numSrc << i;
     } );
@@ -263,7 +263,7 @@ TYPED_TEST_P( OperationsTest, IterateByRef2 )
 
     auto src = MakeEventSource<D>();
     auto x = Iterate(
-        src, std::vector<int>(), []( Token, std::vector<int>& v ) { v.push_back( 123 ); } );
+        src, std::vector<int>(), []( token, std::vector<int>& v ) { v.push_back( 123 ); } );
 
     // Push
     for( auto i = 0; i < 100; i++ )
@@ -293,7 +293,7 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
     auto src1 = MakeEventSource<D>();
     auto src2 = MakeEventSource<D, int>();
 
-    auto out1 = Transform( src1, With( sum, prod, diff ), []( Token, int sum, int prod, int diff ) {
+    auto out1 = Transform( src1, With( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
         return make_tuple( sum, prod, diff );
     } );
 
@@ -386,7 +386,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
     auto out1 = Iterate( src1,
         make_tuple( 0, 0 ),
         With( op1, op2 ),
-        []( Token, const tuple<int, int>& t, int op1, int op2 ) {
+        []( token, const tuple<int, int>& t, int op1, int op2 ) {
             return make_tuple( get<0>( t ) + op1, get<1>( t ) + op2 );
         } );
 
@@ -478,7 +478,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
     auto out1 = Iterate( src1,
         vector<int>{},
         With( op1, op2 ),
-        []( Token, vector<int>& v, int op1, int op2 ) -> void {
+        []( token, vector<int>& v, int op1, int op2 ) -> void {
             v.push_back( op1 );
             v.push_back( op2 );
         } );
@@ -587,7 +587,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
     auto out1 = Iterate( src1,
         make_tuple( 0, 0 ),
         With( op1, op2 ),
-        []( EventRange<Token> range, const tuple<int, int>& t, int op1, int op2 ) {
+        []( EventRange<token> range, const tuple<int, int>& t, int op1, int op2 ) {
             return make_tuple(
                 get<0>( t ) + ( op1 * range.Size() ), get<1>( t ) + ( op2 * range.Size() ) );
         } );
@@ -686,7 +686,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
     auto out1 = Iterate( src1,
         vector<int>{},
         With( op1, op2 ),
-        []( EventRange<Token> range, vector<int>& v, int op1, int op2 ) -> void {
+        []( EventRange<token> range, vector<int>& v, int op1, int op2 ) -> void {
             for( const auto& e : range )
             {
                 (void)e;
@@ -848,7 +848,7 @@ TYPED_TEST_P( OperationsTest, SyncedEventTransform1 )
 
     in1 << string( "Hello Worlt" ) << string( "Hello World" );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         in2 << string( "Hello Vorld" );
         first.Set( string( "Alice" ) );
         last.Set( string( "Anderson" ) );
@@ -893,7 +893,7 @@ TYPED_TEST_P( OperationsTest, SyncedEventProcess1 )
 
     Observe( processed, [&]( float s ) { results.push_back( s ); } );
 
-    DoTransaction<D>( [&] { in1 << 10 << 20; } );
+    do_transaction<D>( [&] { in1 << 10 << 20; } );
 
     in2 << 30;
 

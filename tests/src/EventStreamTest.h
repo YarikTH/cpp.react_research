@@ -98,7 +98,7 @@ TYPED_TEST_P( EventStreamTest, EventMerge1 )
 
     Observe( merged, [&]( int v ) { results.push_back( v ); } );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         a1 << 10;
         a2 << 20;
         a3 << 30;
@@ -131,7 +131,7 @@ TYPED_TEST_P( EventStreamTest, EventMerge2 )
     std::string s2( "two" );
     std::string s3( "three" );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         a1 << s1;
         a2 << s2;
         a3 << s3;
@@ -267,7 +267,7 @@ TYPED_TEST_P( EventStreamTest, EventProcess )
 
     Observe( processed, [&]( float s ) { results.push_back( s ); } );
 
-    DoTransaction<D>( [&] { in1 << 10 << 20; } );
+    do_transaction<D>( [&] { in1 << 10 << 20; } );
 
     in2 << 30;
 

@@ -216,7 +216,7 @@ TYPED_TEST_P( SignalTest, Signals3 )
 
     ASSERT_EQ( result(), 6 );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         a1 <<= 2;
         a2 <<= 2;
     } );
@@ -411,7 +411,7 @@ TYPED_TEST_P( SignalTest, Flatten2 )
     ASSERT_EQ( result(), 100 + 300 );
     ASSERT_EQ( observeCount, 2 );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         a0 <<= 5000;
         a1 <<= 6000;
     } );
@@ -449,7 +449,7 @@ TYPED_TEST_P( SignalTest, Flatten3 )
     ASSERT_EQ( result(), 10 + 30 );
     ASSERT_EQ( observeCount, 0 );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         inner1 <<= 1000;
         a0 <<= 200000;
         a1 <<= 50000;
@@ -459,7 +459,7 @@ TYPED_TEST_P( SignalTest, Flatten3 )
     ASSERT_EQ( result(), 50000 + 200000 );
     ASSERT_EQ( observeCount, 1 );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         a0 <<= 667;
         a1 <<= 776;
     } );
@@ -467,7 +467,7 @@ TYPED_TEST_P( SignalTest, Flatten3 )
     ASSERT_EQ( result(), 776 + 667 );
     ASSERT_EQ( observeCount, 2 );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         inner1 <<= 999;
         a0 <<= 888;
     } );
@@ -501,7 +501,7 @@ TYPED_TEST_P( SignalTest, Flatten4 )
 
     Observe( result, [&]( int v ) { results.push_back( v ); } );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         a3 <<= 400;
         outer <<= inner2;
     } );
@@ -579,7 +579,7 @@ TYPED_TEST_P( SignalTest, Modify2 )
         obsCount++;
     } );
 
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         v.Modify( []( vector<int>& v ) { v.push_back( 30 ); } );
 
         v.Modify( []( vector<int>& v ) { v.push_back( 50 ); } );
@@ -613,7 +613,7 @@ TYPED_TEST_P( SignalTest, Modify3 )
     } );
 
     // Also terrible
-    DoTransaction<D>( [&] {
+    do_transaction<D>( [&] {
         vect.Set( vector<int>{ 30, 50 } );
 
         vect.Modify( []( vector<int>& v ) { v.push_back( 70 ); } );

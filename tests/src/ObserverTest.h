@@ -114,7 +114,7 @@ TYPED_TEST_P( ObserverTest, ScopedObserverTest )
     auto in = MakeVar<D>( 1 );
 
     {
-        ScopedObserver<D> obs = Observe( in, [&]( int v ) { results.push_back( v ); } );
+        scoped_observer<D> obs = Observe( in, [&]( int v ) { results.push_back( v ); } );
 
         in <<= 2;
     }
@@ -142,7 +142,7 @@ TYPED_TEST_P( ObserverTest, SyncedObserveTest )
     auto src1 = MakeEventSource<D>();
     auto src2 = MakeEventSource<D, int>();
 
-    Observe( src1, With( sum, prod, diff ), []( Token, int sum, int prod, int diff ) {
+    Observe( src1, With( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
         ASSERT_EQ( sum, 33 );
         ASSERT_EQ( prod, 242 );
         ASSERT_EQ( diff, 11 );
@@ -173,9 +173,9 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver1 )
 
     int count = 0;
 
-    Observe( src, [&]( Token ) -> ObserverAction {
+    Observe( src, [&]( token ) -> observer_action {
         ++count;
-        return ObserverAction::stop_and_detach;
+        return observer_action::stop_and_detach;
     } );
 
     src.Emit();
@@ -204,9 +204,9 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver2 )
     int count = 0;
 
     Observe(
-        src, With( sum, prod, diff ), [&]( Token, int sum, int prod, int diff ) -> ObserverAction {
+        src, With( sum, prod, diff ), [&]( token, int sum, int prod, int diff ) -> observer_action {
             ++count;
-            return ObserverAction::stop_and_detach;
+            return observer_action::stop_and_detach;
         } );
 
     in1 <<= 22;

@@ -689,6 +689,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
         []( EventRange<Token> range, vector<int>& v, int op1, int op2 ) -> void {
             for( const auto& e : range )
             {
+                (void)e;
                 v.push_back( op1 );
                 v.push_back( op2 );
             }

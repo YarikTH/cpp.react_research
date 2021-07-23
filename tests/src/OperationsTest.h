@@ -151,7 +151,7 @@ TYPED_TEST_P( OperationsTest, Monitor1 )
     ASSERT_EQ( results.size(), 1 );
     ASSERT_EQ( results[0], 20 );
 
-    obs.Detach();
+    obs.detach();
 
     target <<= 100;
 
@@ -331,8 +331,8 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 
     {
@@ -362,8 +362,8 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 }
 
@@ -425,8 +425,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 
     {
@@ -454,8 +454,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 }
 
@@ -524,8 +524,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 
     {
@@ -563,8 +563,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 }
 
@@ -633,8 +633,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 
     {
@@ -662,8 +662,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 }
 
@@ -739,8 +739,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 
     {
@@ -778,8 +778,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
 
-        obs1.Detach();
-        obs2.Detach();
+        obs1.detach();
+        obs2.detach();
     }
 }
 

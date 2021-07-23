@@ -453,18 +453,20 @@ private:
     friend class observable;
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Observable
-///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D>
 class observable
 {
 public:
     observable() = default;
 
+    observable( const observable& ) = delete;
+    observable& operator=( const observable& ) = delete;
+    observable( observable&& ) noexcept = delete;
+    observable& operator=( observable&& ) noexcept = delete;
+
     ~observable()
     {
-        for( const auto& p : observers_ )
+        for( const auto& p : m_observers )
         {
             if( p != nullptr )
             {
@@ -473,69 +475,69 @@ public:
         }
     }
 
-    void RegisterObserver( std::unique_ptr<observer_interface>&& obsPtr )
+    void register_observer( std::unique_ptr<observer_interface>&& obs_ptr )
     {
-        observers_.push_back( std::move( obsPtr ) );
+        m_observers.push_back( std::move( obs_ptr ) );
     }
 
-    void UnregisterObserver( observer_interface* rawObsPtr )
+    void unregister_observer( observer_interface* raw_obs_ptr )
     {
-        for( auto it = observers_.begin(); it != observers_.end(); ++it )
+        for( auto it = m_observers.begin(); it != m_observers.end(); ++it )
         {
-            if( it->get() == rawObsPtr )
+            if( it->get() == raw_obs_ptr )
             {
                 it->get()->detach_observer();
-                observers_.erase( it );
+                m_observers.erase( it );
                 break;
             }
         }
     }
 
 private:
-    std::vector<std::unique_ptr<observer_interface>> observers_;
+    std::vector<std::unique_ptr<observer_interface>> m_observers;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// NodeBase
+/// node_base
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D>
-class NodeBase : public D::Engine::NodeT
+class node_base : public reactive_node
 {
 public:
     using DomainT = D;
     using Engine = typename D::Engine;
-    using NodeT = typename Engine::NodeT;
+    using NodeT = reactive_node;
     using TurnT = typename Engine::TurnT;
 
-    NodeBase() = default;
+    node_base() = default;
 
     // Nodes can't be copied
-    NodeBase( const NodeBase& ) = delete;
+    node_base( const node_base& ) = delete;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ObservableNode
+/// observable_node
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D>
-class ObservableNode
-    : public NodeBase<D>
+class observable_node
+    : public node_base<D>
     , public observable<D>
 {
 public:
-    ObservableNode() = default;
+    observable_node() = default;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Attach/detach helper functors
+/// attach/detach helper functors
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename D, typename TNode, typename... TDeps>
-struct AttachFunctor
+template <typename D, typename node_t, typename... deps_t>
+struct attach_functor
 {
-    AttachFunctor( TNode& node )
-        : MyNode( node )
+    explicit attach_functor( node_t& node )
+        : node( node )
     {}
 
-    void operator()( const TDeps&... deps ) const
+    void operator()( const deps_t&... deps ) const
     {
         REACT_EXPAND_PACK( attach( deps ) );
     }
@@ -543,26 +545,26 @@ struct AttachFunctor
     template <typename T>
     void attach( const T& op ) const
     {
-        op.template AttachRec<D, TNode>( *this );
+        op.template attach_rec<D, node_t>( *this );
     }
 
     template <typename T>
-    void attach( const std::shared_ptr<T>& depPtr ) const
+    void attach( const std::shared_ptr<T>& dep_ptr ) const
     {
-        D::Engine::on_node_attach( MyNode, *depPtr );
+        D::Engine::on_node_attach( node, *dep_ptr );
     }
 
-    TNode& MyNode;
+    node_t& node;
 };
 
-template <typename D, typename TNode, typename... TDeps>
-struct DetachFunctor
+template <typename D, typename node_t, typename... deps_t>
+struct detach_functor
 {
-    DetachFunctor( TNode& node )
-        : MyNode( node )
+    detach_functor( node_t& node )
+        : node( node )
     {}
 
-    void operator()( const TDeps&... deps ) const
+    void operator()( const deps_t&... deps ) const
     {
         REACT_EXPAND_PACK( detach( deps ) );
     }
@@ -570,66 +572,66 @@ struct DetachFunctor
     template <typename T>
     void detach( const T& op ) const
     {
-        op.template DetachRec<D, TNode>( *this );
+        op.template detach_rec<D, node_t>( *this );
     }
 
     template <typename T>
-    void detach( const std::shared_ptr<T>& depPtr ) const
+    void detach( const std::shared_ptr<T>& dep_ptr ) const
     {
-        D::Engine::on_node_detach( MyNode, *depPtr );
+        D::Engine::on_node_detach( node, *dep_ptr );
     }
 
-    TNode& MyNode;
+    node_t& node;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ReactiveOpBase
+/// reactive_op_base
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename... TDeps>
-class ReactiveOpBase
+template <typename... deps_t>
+class reactive_op_base
 {
 public:
-    using DepHolderT = std::tuple<TDeps...>;
+    using dep_holder_t = std::tuple<deps_t...>;
 
     template <typename... TDepsIn>
-    ReactiveOpBase( DontMove, TDepsIn&&... deps )
-        : deps_( std::forward<TDepsIn>( deps )... )
+    reactive_op_base( DontMove, TDepsIn&&... deps )
+        : m_deps( std::forward<TDepsIn>( deps )... )
     {}
 
-    ReactiveOpBase( ReactiveOpBase&& other ) noexcept
-        : deps_( std::move( other.deps_ ) )
+    reactive_op_base( reactive_op_base&& other ) noexcept
+        : m_deps( std::move( other.m_deps ) )
     {}
 
     // Can't be copied, only moved
-    ReactiveOpBase( const ReactiveOpBase& other ) = delete;
+    reactive_op_base( const reactive_op_base& other ) = delete;
 
-    template <typename D, typename TNode>
-    void Attach( TNode& node ) const
+    template <typename D, typename node_t>
+    void attach( node_t& node ) const
     {
-        apply( AttachFunctor<D, TNode, TDeps...>{ node }, deps_ );
+        apply( attach_functor<D, node_t, deps_t...>{ node }, m_deps );
     }
 
-    template <typename D, typename TNode>
-    void Detach( TNode& node ) const
+    template <typename D, typename node_t>
+    void detach( node_t& node ) const
     {
-        apply( DetachFunctor<D, TNode, TDeps...>{ node }, deps_ );
+        apply( detach_functor<D, node_t, deps_t...>{ node }, m_deps );
     }
 
-    template <typename D, typename TNode, typename TFunctor>
-    void AttachRec( const TFunctor& functor ) const
+    template <typename D, typename node_t, typename functor_t>
+    void attach_rec( const functor_t& functor ) const
     {
         // Same memory layout, different func
-        apply( reinterpret_cast<const AttachFunctor<D, TNode, TDeps...>&>( functor ), deps_ );
+        apply( reinterpret_cast<const attach_functor<D, node_t, deps_t...>&>( functor ), m_deps );
     }
 
-    template <typename D, typename TNode, typename TFunctor>
-    void DetachRec( const TFunctor& functor ) const
+    template <typename D, typename node_t, typename functor_t>
+    void detach_rec( const functor_t& functor ) const
     {
-        apply( reinterpret_cast<const DetachFunctor<D, TNode, TDeps...>&>( functor ), deps_ );
+        apply( reinterpret_cast<const detach_functor<D, node_t, deps_t...>&>( functor ), m_deps );
     }
 
 protected:
-    DepHolderT deps_;
+    dep_holder_t m_deps;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -694,11 +696,11 @@ bool Equals( const std::reference_wrapper<L>& lhs, const std::reference_wrapper<
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// ReactiveBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode>
+template <typename node_t>
 class ReactiveBase
 {
 public:
-    using DomainT = typename TNode::DomainT;
+    using DomainT = typename node_t::DomainT;
 
     // Default ctor
     ReactiveBase() = default;
@@ -712,7 +714,7 @@ public:
     {}
 
     // Explicit node ctor
-    explicit ReactiveBase( std::shared_ptr<TNode>&& ptr )
+    explicit ReactiveBase( std::shared_ptr<node_t>&& ptr )
         : ptr_( std::move( ptr ) )
     {}
 
@@ -732,7 +734,7 @@ public:
     }
 
 protected:
-    std::shared_ptr<TNode> ptr_;
+    std::shared_ptr<node_t> ptr_;
 
     template <typename TNode_>
     friend const std::shared_ptr<TNode_>& GetNodePtr( const ReactiveBase<TNode_>& node );
@@ -741,8 +743,8 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// CopyableReactive
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode>
-class CopyableReactive : public ReactiveBase<TNode>
+template <typename node_t>
+class CopyableReactive : public ReactiveBase<node_t>
 {
 public:
     CopyableReactive() = default;
@@ -753,7 +755,7 @@ public:
         : CopyableReactive::ReactiveBase( std::move( other ) )
     {}
 
-    explicit CopyableReactive( std::shared_ptr<TNode>&& ptr )
+    explicit CopyableReactive( std::shared_ptr<node_t>&& ptr )
         : CopyableReactive::ReactiveBase( std::move( ptr ) )
     {}
 
@@ -774,8 +776,8 @@ public:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// GetNodePtr
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode>
-const std::shared_ptr<TNode>& GetNodePtr( const ReactiveBase<TNode>& node )
+template <typename node_t>
+const std::shared_ptr<node_t>& GetNodePtr( const ReactiveBase<node_t>& node )
 {
     return node.ptr_;
 }
@@ -1176,7 +1178,7 @@ struct AddObserverRangeWrapper
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D>
 class ObserverNode
-    : public NodeBase<D>
+    : public node_base<D>
     , public observer_interface
 {
 public:
@@ -1226,7 +1228,7 @@ public:
     {
         if( auto p = subject_.lock() )
         {
-            p->UnregisterObserver( this );
+            p->unregister_observer( this );
         }
     }
 
@@ -1283,7 +1285,7 @@ public:
     {
         if( auto p = subject_.lock() )
         {
-            p->UnregisterObserver( this );
+            p->unregister_observer( this );
         }
     }
 
@@ -1362,17 +1364,17 @@ public:
     {
         if( auto p = subject_.lock() )
         {
-            p->UnregisterObserver( this );
+            p->unregister_observer( this );
         }
     }
 
 private:
-    using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
+    using dep_holder_t = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
 
     std::weak_ptr<EventStreamNode<D, E>> subject_;
 
     TFunc func_;
-    DepHolderT deps_;
+    dep_holder_t deps_;
 
     virtual void detach_observer()
     {
@@ -1380,9 +1382,9 @@ private:
         {
             Engine::on_node_detach( *this, *p );
 
-            apply(
-                DetachFunctor<D, SyncedObserverNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
-                    *this ),
+            apply( detach_functor<D,
+                       SyncedObserverNode,
+                       std::shared_ptr<SignalNode<D, TDepValues>>...>( *this ),
                 deps_ );
 
             subject_.reset();
@@ -1404,7 +1406,7 @@ template <typename D>
 class Observer
 {
 private:
-    using SubjectPtrT = std::shared_ptr<::react::detail::ObservableNode<D>>;
+    using SubjectPtrT = std::shared_ptr<::react::detail::observable_node<D>>;
     using NodeT = ::react::detail::ObserverNode<D>;
 
 public:
@@ -1445,10 +1447,10 @@ public:
     Observer( const Observer& ) = delete;
     Observer& operator=( const Observer& ) = delete;
 
-    void Detach()
+    void detach()
     {
         assert( IsValid() );
-        subjectPtr_->UnregisterObserver( nodePtr_ );
+        subjectPtr_->unregister_observer( nodePtr_ );
     }
 
     bool IsValid() const
@@ -1494,7 +1496,7 @@ public:
 
     ~ScopedObserver()
     {
-        obs_.Detach();
+        obs_.detach();
     }
 
     bool IsValid() const
@@ -1532,7 +1534,7 @@ auto Observe( const Signal<D, S>& subject, FIn&& func ) -> Observer<D>
     std::unique_ptr<ObserverNode<D>> nodePtr( new NodeT( subjectPtr, std::forward<FIn>( func ) ) );
     ObserverNode<D>* rawNodePtr = nodePtr.get();
 
-    subjectPtr->RegisterObserver( std::move( nodePtr ) );
+    subjectPtr->register_observer( std::move( nodePtr ) );
 
     return Observer<D>( rawNodePtr, subjectPtr );
 }
@@ -1575,7 +1577,7 @@ auto Observe( const Events<D, E>& subject, FIn&& func ) -> Observer<D>
     std::unique_ptr<ObserverNode<D>> nodePtr( new NodeT( subjectPtr, std::forward<FIn>( func ) ) );
     ObserverNode<D>* rawNodePtr = nodePtr.get();
 
-    subjectPtr->RegisterObserver( std::move( nodePtr ) );
+    subjectPtr->register_observer( std::move( nodePtr ) );
 
     return Observer<D>( rawNodePtr, subjectPtr );
 }
@@ -1640,7 +1642,7 @@ auto Observe( const Events<D, E>& subject, const SignalPack<D, TDepValues...>& d
 
     ObserverNode<D>* rawNodePtr = nodePtr.get();
 
-    subjectPtr->RegisterObserver( std::move( nodePtr ) );
+    subjectPtr->register_observer( std::move( nodePtr ) );
 
     return Observer<D>( rawNodePtr, subjectPtr );
 }
@@ -1733,14 +1735,14 @@ bool Equals( const L& lhs, const R& rhs );
 /// SignalNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D, typename S>
-class SignalNode : public ObservableNode<D>
+class SignalNode : public observable_node<D>
 {
 public:
     SignalNode() = default;
 
     template <typename T>
     explicit SignalNode( T&& value )
-        : SignalNode::ObservableNode()
+        : SignalNode::observable_node()
         , value_( std::forward<T>( value ) )
     {}
 
@@ -1852,24 +1854,24 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// FunctionOp
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename S, typename F, typename... TDeps>
-class FunctionOp : public ReactiveOpBase<TDeps...>
+template <typename S, typename F, typename... deps_t>
+class FunctionOp : public reactive_op_base<deps_t...>
 {
 public:
     template <typename FIn, typename... TDepsIn>
     FunctionOp( FIn&& func, TDepsIn&&... deps )
-        : FunctionOp::ReactiveOpBase( DontMove(), std::forward<TDepsIn>( deps )... )
+        : FunctionOp::reactive_op_base( DontMove(), std::forward<TDepsIn>( deps )... )
         , func_( std::forward<FIn>( func ) )
     {}
 
     FunctionOp( FunctionOp&& other ) noexcept
-        : FunctionOp::ReactiveOpBase( std::move( other ) )
+        : FunctionOp::reactive_op_base( std::move( other ) )
         , func_( std::move( other.func_ ) )
     {}
 
     S Evaluate()
     {
-        return apply( EvalFunctor( func_ ), this->deps_ );
+        return apply( EvalFunctor( func_ ), this->m_deps );
     }
 
 private:
@@ -1893,9 +1895,9 @@ private:
         }
 
         template <typename T>
-        static auto eval( const std::shared_ptr<T>& depPtr ) -> decltype( depPtr->ValueRef() )
+        static auto eval( const std::shared_ptr<T>& dep_ptr ) -> decltype( dep_ptr->ValueRef() )
         {
-            return depPtr->ValueRef();
+            return dep_ptr->ValueRef();
         }
 
         F& MyFunc;
@@ -1922,14 +1924,14 @@ public:
         this->value_ = op_.Evaluate();
 
 
-        op_.template Attach<D>( *this );
+        op_.template attach<D>( *this );
     }
 
     ~SignalOpNode()
     {
         if( !wasOpStolen_ )
         {
-            op_.template Detach<D>( *this );
+            op_.template detach<D>( *this );
         }
     }
 
@@ -1957,7 +1959,7 @@ public:
     {
         assert( !wasOpStolen_ && "Op was already stolen." );
         wasOpStolen_ = true;
-        op_.template Detach<D>( *this );
+        op_.template detach<D>( *this );
         return std::move( op_ );
     }
 
@@ -2844,7 +2846,7 @@ bool Equals( const Signal<D, L>& lhs, const Signal<D, R>& rhs )
 /// EventStreamNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D, typename E>
-class EventStreamNode : public ObservableNode<D>
+class EventStreamNode : public observable_node<D>
 {
 public:
     using DataT = std::vector<E>;
@@ -2940,29 +2942,30 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// EventMergeOp
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename E, typename... TDeps>
-class EventMergeOp : public ReactiveOpBase<TDeps...>
+template <typename E, typename... deps_t>
+class EventMergeOp : public reactive_op_base<deps_t...>
 {
 public:
     template <typename... TDepsIn>
     EventMergeOp( TDepsIn&&... deps )
-        : EventMergeOp::ReactiveOpBase( DontMove(), std::forward<TDepsIn>( deps )... )
+        : EventMergeOp::reactive_op_base( DontMove(), std::forward<TDepsIn>( deps )... )
     {}
 
     EventMergeOp( EventMergeOp&& other ) noexcept
-        : EventMergeOp::ReactiveOpBase( std::move( other ) )
+        : EventMergeOp::reactive_op_base( std::move( other ) )
     {}
 
     template <typename TTurn, typename TCollector>
     void Collect( const TTurn& turn, const TCollector& collector ) const
     {
-        apply( CollectFunctor<TTurn, TCollector>( turn, collector ), this->deps_ );
+        apply( CollectFunctor<TTurn, TCollector>( turn, collector ), this->m_deps );
     }
 
-    template <typename TTurn, typename TCollector, typename TFunctor>
-    void CollectRec( const TFunctor& functor ) const
+    template <typename TTurn, typename TCollector, typename functor_t>
+    void CollectRec( const functor_t& functor ) const
     {
-        apply( reinterpret_cast<const CollectFunctor<TTurn, TCollector>&>( functor ), this->deps_ );
+        apply(
+            reinterpret_cast<const CollectFunctor<TTurn, TCollector>&>( functor ), this->m_deps );
     }
 
 private:
@@ -2974,7 +2977,7 @@ private:
             , MyCollector( collector )
         {}
 
-        void operator()( const TDeps&... deps ) const
+        void operator()( const deps_t&... deps ) const
         {
             REACT_EXPAND_PACK( collect( deps ) );
         }
@@ -2986,11 +2989,11 @@ private:
         }
 
         template <typename T>
-        void collect( const std::shared_ptr<T>& depPtr ) const
+        void collect( const std::shared_ptr<T>& dep_ptr ) const
         {
-            depPtr->SetCurrentTurn( MyTurn );
+            dep_ptr->SetCurrentTurn( MyTurn );
 
-            for( const auto& v : depPtr->Events() )
+            for( const auto& v : dep_ptr->Events() )
             {
                 MyCollector( v );
             }
@@ -3005,17 +3008,17 @@ private:
 /// EventFilterOp
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E, typename TFilter, typename TDep>
-class EventFilterOp : public ReactiveOpBase<TDep>
+class EventFilterOp : public reactive_op_base<TDep>
 {
 public:
     template <typename TFilterIn, typename TDepIn>
     EventFilterOp( TFilterIn&& filter, TDepIn&& dep )
-        : EventFilterOp::ReactiveOpBase{ DontMove(), std::forward<TDepIn>( dep ) }
+        : EventFilterOp::reactive_op_base{ DontMove(), std::forward<TDepIn>( dep ) }
         , filter_( std::forward<TFilterIn>( filter ) )
     {}
 
     EventFilterOp( EventFilterOp&& other ) noexcept
-        : EventFilterOp::ReactiveOpBase{ std::move( other ) }
+        : EventFilterOp::reactive_op_base{ std::move( other ) }
         , filter_( std::move( other.filter_ ) )
     {}
 
@@ -3025,8 +3028,8 @@ public:
         collectImpl( turn, FilteredEventCollector<TCollector>{ filter_, collector }, getDep() );
     }
 
-    template <typename TTurn, typename TCollector, typename TFunctor>
-    void CollectRec( const TFunctor& functor ) const
+    template <typename TTurn, typename TCollector, typename functor_t>
+    void CollectRec( const functor_t& functor ) const
     {
         // Can't recycle functor because MyFunc needs replacing
         Collect<TTurn, TCollector>( functor.MyTurn, functor.MyCollector );
@@ -3035,7 +3038,7 @@ public:
 private:
     const TDep& getDep() const
     {
-        return std::get<0>( this->deps_ );
+        return std::get<0>( this->m_deps );
     }
 
     template <typename TCollector>
@@ -3067,11 +3070,11 @@ private:
 
     template <typename TTurn, typename TCollector, typename T>
     static void collectImpl(
-        const TTurn& turn, const TCollector& collector, const std::shared_ptr<T>& depPtr )
+        const TTurn& turn, const TCollector& collector, const std::shared_ptr<T>& dep_ptr )
     {
-        depPtr->SetCurrentTurn( turn );
+        dep_ptr->SetCurrentTurn( turn );
 
-        for( const auto& v : depPtr->Events() )
+        for( const auto& v : dep_ptr->Events() )
         {
             collector( v );
         }
@@ -3085,17 +3088,17 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Todo: Refactor code duplication
 template <typename E, typename TFunc, typename TDep>
-class EventTransformOp : public ReactiveOpBase<TDep>
+class EventTransformOp : public reactive_op_base<TDep>
 {
 public:
     template <typename TFuncIn, typename TDepIn>
     EventTransformOp( TFuncIn&& func, TDepIn&& dep )
-        : EventTransformOp::ReactiveOpBase( DontMove(), std::forward<TDepIn>( dep ) )
+        : EventTransformOp::reactive_op_base( DontMove(), std::forward<TDepIn>( dep ) )
         , func_( std::forward<TFuncIn>( func ) )
     {}
 
     EventTransformOp( EventTransformOp&& other ) noexcept
-        : EventTransformOp::ReactiveOpBase( std::move( other ) )
+        : EventTransformOp::reactive_op_base( std::move( other ) )
         , func_( std::move( other.func_ ) )
     {}
 
@@ -3105,8 +3108,8 @@ public:
         collectImpl( turn, TransformEventCollector<TCollector>( func_, collector ), getDep() );
     }
 
-    template <typename TTurn, typename TCollector, typename TFunctor>
-    void CollectRec( const TFunctor& functor ) const
+    template <typename TTurn, typename TCollector, typename functor_t>
+    void CollectRec( const functor_t& functor ) const
     {
         // Can't recycle functor because MyFunc needs replacing
         Collect<TTurn, TCollector>( functor.MyTurn, functor.MyCollector );
@@ -3115,7 +3118,7 @@ public:
 private:
     const TDep& getDep() const
     {
-        return std::get<0>( this->deps_ );
+        return std::get<0>( this->m_deps );
     }
 
     template <typename TTarget>
@@ -3143,11 +3146,11 @@ private:
 
     template <typename TTurn, typename TCollector, typename T>
     static void collectImpl(
-        const TTurn& turn, const TCollector& collector, const std::shared_ptr<T>& depPtr )
+        const TTurn& turn, const TCollector& collector, const std::shared_ptr<T>& dep_ptr )
     {
-        depPtr->SetCurrentTurn( turn );
+        dep_ptr->SetCurrentTurn( turn );
 
-        for( const auto& v : depPtr->Events() )
+        for( const auto& v : dep_ptr->Events() )
         {
             collector( v );
         }
@@ -3171,14 +3174,14 @@ public:
         , op_( std::forward<args_t>( args )... )
     {
 
-        op_.template Attach<D>( *this );
+        op_.template attach<D>( *this );
     }
 
     ~EventOpNode()
     {
         if( !wasOpStolen_ )
         {
-            op_.template Detach<D>( *this );
+            op_.template detach<D>( *this );
         }
     }
 
@@ -3201,7 +3204,7 @@ public:
     {
         assert( !wasOpStolen_ && "Op was already stolen." );
         wasOpStolen_ = true;
-        op_.template Detach<D>( *this );
+        op_.template detach<D>( *this );
         return std::move( op_ );
     }
 
@@ -3317,7 +3320,7 @@ public:
     {
         Engine::on_node_detach( *this, *source_ );
 
-        apply( DetachFunctor<D,
+        apply( detach_functor<D,
                    SyncedEventTransformNode,
                    std::shared_ptr<SignalNode<D, TDepValues>>...>( *this ),
             deps_ );
@@ -3353,12 +3356,12 @@ public:
     }
 
 private:
-    using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
+    using dep_holder_t = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
 
     std::shared_ptr<EventStreamNode<D, TIn>> source_;
 
     TFunc func_;
-    DepHolderT deps_;
+    dep_holder_t deps_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3389,7 +3392,7 @@ public:
         Engine::on_node_detach( *this, *source_ );
 
         apply(
-            DetachFunctor<D, SyncedEventFilterNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
+            detach_functor<D, SyncedEventFilterNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
                 *this ),
             deps_ );
     }
@@ -3427,12 +3430,12 @@ public:
     }
 
 private:
-    using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
+    using dep_holder_t = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
 
     std::shared_ptr<EventStreamNode<D, E>> source_;
 
     TFunc filter_;
-    DepHolderT deps_;
+    dep_holder_t deps_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3507,7 +3510,7 @@ public:
     {
         Engine::on_node_detach( *this, *source_ );
 
-        apply( DetachFunctor<D,
+        apply( detach_functor<D,
                    SyncedEventProcessingNode,
                    std::shared_ptr<SignalNode<D, TDepValues>>...>( *this ),
             deps_ );
@@ -3542,12 +3545,12 @@ public:
     }
 
 private:
-    using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
+    using dep_holder_t = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
 
     std::shared_ptr<EventStreamNode<D, TIn>> source_;
 
     TFunc func_;
-    DepHolderT deps_;
+    dep_holder_t deps_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4559,7 +4562,7 @@ public:
     {
         Engine::on_node_detach( *this, *events_ );
 
-        apply( DetachFunctor<D, SyncedIterateNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
+        apply( detach_functor<D, SyncedIterateNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
                    *this ),
             deps_ );
     }
@@ -4596,12 +4599,12 @@ public:
     }
 
 private:
-    using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
+    using dep_holder_t = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
 
     std::shared_ptr<EventStreamNode<D, E>> events_;
 
     TFunc func_;
-    DepHolderT deps_;
+    dep_holder_t deps_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4632,9 +4635,9 @@ public:
     {
         Engine::on_node_detach( *this, *events_ );
 
-        apply(
-            DetachFunctor<D, SyncedIterateByRefNode, std::shared_ptr<SignalNode<D, TDepValues>>...>(
-                *this ),
+        apply( detach_functor<D,
+                   SyncedIterateByRefNode,
+                   std::shared_ptr<SignalNode<D, TDepValues>>...>( *this ),
             deps_ );
     }
 
@@ -4665,12 +4668,12 @@ public:
     }
 
 private:
-    using DepHolderT = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
+    using dep_holder_t = std::tuple<std::shared_ptr<SignalNode<D, TDepValues>>...>;
 
     std::shared_ptr<EventStreamNode<D, E>> events_;
 
     TFunc func_;
-    DepHolderT deps_;
+    dep_holder_t deps_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

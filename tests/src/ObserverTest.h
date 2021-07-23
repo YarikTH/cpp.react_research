@@ -30,11 +30,11 @@ public:
 TYPED_TEST_CASE_P( ObserverTest );
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Detach test
+/// detach test
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-TYPED_TEST_P( ObserverTest, Detach )
+TYPED_TEST_P( ObserverTest, detach )
 {
-    using D = typename Detach::MyDomain;
+    using D = typename detach::MyDomain;
 
     auto a1 = MakeVar<D>( 1 );
     auto a2 = MakeVar<D>( 1 );
@@ -87,15 +87,15 @@ TYPED_TEST_P( ObserverTest, Detach )
     ASSERT_EQ( observeCount3, 1 );
 
     phase = 1;
-    obs1.Detach();
+    obs1.detach();
     a1 <<= 3;
     ASSERT_EQ( observeCount1, 1 );
     ASSERT_EQ( observeCount2, 2 );
     ASSERT_EQ( observeCount3, 2 );
 
     phase = 2;
-    obs2.Detach();
-    obs3.Detach();
+    obs2.detach();
+    obs3.detach();
     a1 <<= 4;
     ASSERT_EQ( observeCount1, 1 );
     ASSERT_EQ( observeCount2, 2 );
@@ -220,7 +220,7 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver2 )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 REGISTER_TYPED_TEST_CASE_P( ObserverTest,
-    Detach,
+    detach,
     ScopedObserverTest,
     SyncedObserveTest,
     DetachThisObserver1,

@@ -43,9 +43,9 @@ TYPED_TEST_P( EventStreamTest, EventSources )
     std::queue<int> results1;
     std::queue<int> results2;
 
-    Observe( es1, [&]( int v ) { results1.push( v ); } );
+    observe( es1, [&]( int v ) { results1.push( v ); } );
 
-    Observe( es2, [&]( int v ) { results2.push( v ); } );
+    observe( es2, [&]( int v ) { results2.push( v ); } );
 
     es1 << 10 << 20 << 30;
     es2 << 40 << 50 << 60;
@@ -96,7 +96,7 @@ TYPED_TEST_P( EventStreamTest, EventMerge1 )
 
     std::vector<int> results;
 
-    Observe( merged, [&]( int v ) { results.push_back( v ); } );
+    observe( merged, [&]( int v ) { results.push_back( v ); } );
 
     do_transaction<D>( [&] {
         a1 << 10;
@@ -125,7 +125,7 @@ TYPED_TEST_P( EventStreamTest, EventMerge2 )
 
     std::vector<std::string> results;
 
-    Observe( merged, [&]( std::string s ) { results.push_back( s ); } );
+    observe( merged, [&]( std::string s ) { results.push_back( s ); } );
 
     std::string s1( "one" );
     std::string s2( "two" );
@@ -160,7 +160,7 @@ TYPED_TEST_P( EventStreamTest, EventMerge3 )
 
     std::queue<int> results;
 
-    Observe( merged, [&]( int s ) { results.push( s ); } );
+    observe( merged, [&]( int s ) { results.push( s ); } );
 
     a1 << 10;
     a2 << 20;
@@ -197,7 +197,7 @@ TYPED_TEST_P( EventStreamTest, EventFilter )
     auto filtered = Filter( in, []( const string& s ) { return s == "Hello World"; } );
 
 
-    Observe( filtered, [&]( const string& s ) { results.push( s ); } );
+    observe( filtered, [&]( const string& s ) { results.push( s ); } );
 
     in << string( "Hello Worlt" ) << string( "Hello World" ) << string( "Hello Vorld" );
 
@@ -229,7 +229,7 @@ TYPED_TEST_P( EventStreamTest, EventTransform )
         return s;
     } );
 
-    Observe( transformed, [&]( const string& s ) { results.push_back( s ); } );
+    observe( transformed, [&]( const string& s ) { results.push_back( s ); } );
 
     in1 << string( "Hello Worlt" ) << string( "Hello World" );
     in2 << string( "Hello Vorld" );
@@ -255,17 +255,18 @@ TYPED_TEST_P( EventStreamTest, EventProcess )
     auto merged = Merge( in1, in2 );
     int callCount = 0;
 
-    auto processed = Process<float>( merged, [&]( EventRange<int> range, EventEmitter<float> out ) {
-        for( const auto& e : range )
-        {
-            *out = 0.1f * e;
-            *out = 1.5f * e;
-        }
+    auto processed
+        = Process<float>( merged, [&]( event_range<int> range, event_emitter<float> out ) {
+              for( const auto& e : range )
+              {
+                  *out = 0.1f * e;
+                  *out = 1.5f * e;
+              }
 
-        callCount++;
-    } );
+              callCount++;
+          } );
 
-    Observe( processed, [&]( float s ) { results.push_back( s ); } );
+    observe( processed, [&]( float s ) { results.push_back( s ); } );
 
     do_transaction<D>( [&] { in1 << 10 << 20; } );
 

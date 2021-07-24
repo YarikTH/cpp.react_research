@@ -36,8 +36,8 @@ TYPED_TEST_P( ObserverTest, detach )
 {
     using D = typename detach::MyDomain;
 
-    auto a1 = MakeVar<D>( 1 );
-    auto a2 = MakeVar<D>( 1 );
+    auto a1 = make_var<D>( 1 );
+    auto a2 = make_var<D>( 1 );
 
     auto result = a1 + a2;
 
@@ -47,7 +47,7 @@ TYPED_TEST_P( ObserverTest, detach )
 
     int phase;
 
-    auto obs1 = Observe( result, [&]( int v ) {
+    auto obs1 = observe( result, [&]( int v ) {
         observeCount1++;
 
         if( phase == 0 )
@@ -58,7 +58,7 @@ TYPED_TEST_P( ObserverTest, detach )
             ASSERT_TRUE( false );
     } );
 
-    auto obs2 = Observe( result, [&]( int v ) {
+    auto obs2 = observe( result, [&]( int v ) {
         observeCount2++;
 
         if( phase == 0 )
@@ -69,7 +69,7 @@ TYPED_TEST_P( ObserverTest, detach )
             ASSERT_TRUE( false );
     } );
 
-    auto obs3 = Observe( result, [&]( int v ) {
+    auto obs3 = observe( result, [&]( int v ) {
         observeCount3++;
 
         if( phase == 0 )
@@ -111,10 +111,10 @@ TYPED_TEST_P( ObserverTest, ScopedObserverTest )
 
     std::vector<int> results;
 
-    auto in = MakeVar<D>( 1 );
+    auto in = make_var<D>( 1 );
 
     {
-        scoped_observer<D> obs = Observe( in, [&]( int v ) { results.push_back( v ); } );
+        scoped_observer<D> obs = observe( in, [&]( int v ) { results.push_back( v ); } );
 
         in <<= 2;
     }
@@ -126,14 +126,14 @@ TYPED_TEST_P( ObserverTest, ScopedObserverTest )
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Synced Observe test
+/// Synced observe test
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 TYPED_TEST_P( ObserverTest, SyncedObserveTest )
 {
     using D = typename SyncedObserveTest::MyDomain;
 
-    auto in1 = MakeVar<D>( 1 );
-    auto in2 = MakeVar<D>( 1 );
+    auto in1 = make_var<D>( 1 );
+    auto in2 = make_var<D>( 1 );
 
     auto sum = in1 + in2;
     auto prod = in1 * in2;
@@ -142,13 +142,13 @@ TYPED_TEST_P( ObserverTest, SyncedObserveTest )
     auto src1 = MakeEventSource<D>();
     auto src2 = MakeEventSource<D, int>();
 
-    Observe( src1, With( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
+    observe( src1, with( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
         ASSERT_EQ( sum, 33 );
         ASSERT_EQ( prod, 242 );
         ASSERT_EQ( diff, 11 );
     } );
 
-    Observe( src2, With( sum, prod, diff ), []( int e, int sum, int prod, int diff ) {
+    observe( src2, with( sum, prod, diff ), []( int e, int sum, int prod, int diff ) {
         ASSERT_EQ( e, 42 );
         ASSERT_EQ( sum, 33 );
         ASSERT_EQ( prod, 242 );
@@ -173,7 +173,7 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver1 )
 
     int count = 0;
 
-    Observe( src, [&]( token ) -> observer_action {
+    observe( src, [&]( token ) -> observer_action {
         ++count;
         return observer_action::stop_and_detach;
     } );
@@ -192,8 +192,8 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver2 )
 {
     using D = typename DetachThisObserver2::MyDomain;
 
-    auto in1 = MakeVar<D>( 1 );
-    auto in2 = MakeVar<D>( 1 );
+    auto in1 = make_var<D>( 1 );
+    auto in2 = make_var<D>( 1 );
 
     auto sum = in1 + in2;
     auto prod = in1 * in2;
@@ -203,8 +203,8 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver2 )
 
     int count = 0;
 
-    Observe(
-        src, With( sum, prod, diff ), [&]( token, int sum, int prod, int diff ) -> observer_action {
+    observe(
+        src, with( sum, prod, diff ), [&]( token, int sum, int prod, int diff ) -> observer_action {
             ++count;
             return observer_action::stop_and_detach;
         } );

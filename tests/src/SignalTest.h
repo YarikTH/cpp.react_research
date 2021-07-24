@@ -37,10 +37,10 @@ TYPED_TEST_P( SignalTest, MakeVars )
 {
     using D = typename MakeVars::MyDomain;
 
-    auto v1 = MakeVar<D>( 1 );
-    auto v2 = MakeVar<D>( 2 );
-    auto v3 = MakeVar<D>( 3 );
-    auto v4 = MakeVar<D>( 4 );
+    auto v1 = make_var<D>( 1 );
+    auto v2 = make_var<D>( 2 );
+    auto v3 = make_var<D>( 3 );
+    auto v4 = make_var<D>( 4 );
 
     ASSERT_EQ( v1(), 1 );
     ASSERT_EQ( v2(), 2 );
@@ -65,14 +65,14 @@ TYPED_TEST_P( SignalTest, Signals1 )
 {
     using D = typename Signals1::MyDomain;
 
-    auto v1 = MakeVar<D>( 1 );
-    auto v2 = MakeVar<D>( 2 );
-    auto v3 = MakeVar<D>( 3 );
-    auto v4 = MakeVar<D>( 4 );
+    auto v1 = make_var<D>( 1 );
+    auto v2 = make_var<D>( 2 );
+    auto v3 = make_var<D>( 3 );
+    auto v4 = make_var<D>( 4 );
 
-    auto s1 = MakeSignal( With( v1, v2 ), []( int a, int b ) { return a + b; } );
+    auto s1 = make_signal( with( v1, v2 ), []( int a, int b ) { return a + b; } );
 
-    auto s2 = MakeSignal( With( v3, v4 ), []( int a, int b ) { return a + b; } );
+    auto s2 = make_signal( with( v3, v4 ), []( int a, int b ) { return a + b; } );
 
     auto s3 = s1 + s2;
 
@@ -91,16 +91,16 @@ TYPED_TEST_P( SignalTest, Signals1 )
 
     bool b = false;
 
-    b = IsSignal<decltype( v1 )>::value;
+    b = is_signal<decltype( v1 )>::value;
     ASSERT_TRUE( b );
 
-    b = IsSignal<decltype( s1 )>::value;
+    b = is_signal<decltype( s1 )>::value;
     ASSERT_TRUE( b );
 
-    b = IsSignal<decltype( s2 )>::value;
+    b = is_signal<decltype( s2 )>::value;
     ASSERT_TRUE( b );
 
-    b = IsSignal<decltype( 10 )>::value;
+    b = is_signal<decltype( 10 )>::value;
     ASSERT_FALSE( b );
 }
 
@@ -111,8 +111,8 @@ TYPED_TEST_P( SignalTest, Signals2 )
 {
     using D = typename Signals2::MyDomain;
 
-    auto a1 = MakeVar<D>( 1 );
-    auto a2 = MakeVar<D>( 1 );
+    auto a1 = make_var<D>( 1 );
+    auto a2 = make_var<D>( 1 );
 
     auto b1 = a1 + 0;
     auto b2 = a1 + a2;
@@ -125,7 +125,7 @@ TYPED_TEST_P( SignalTest, Signals2 )
 
     int observeCount = 0;
 
-    Observe( result, [&observeCount]( int v ) {
+    observe( result, [&observeCount]( int v ) {
         observeCount++;
         if( observeCount == 1 )
             ASSERT_EQ( v, 9 );
@@ -185,8 +185,8 @@ TYPED_TEST_P( SignalTest, Signals3 )
 {
     using D = typename Signals3::MyDomain;
 
-    auto a1 = MakeVar<D>( 1 );
-    auto a2 = MakeVar<D>( 1 );
+    auto a1 = make_var<D>( 1 );
+    auto a2 = make_var<D>( 1 );
 
     auto b1 = a1 + 0;
     auto b2 = a1 + a2;
@@ -199,7 +199,7 @@ TYPED_TEST_P( SignalTest, Signals3 )
 
     int observeCount = 0;
 
-    Observe( result, [&observeCount]( int v ) {
+    observe( result, [&observeCount]( int v ) {
         observeCount++;
         ASSERT_EQ( v, 12 );
     } );
@@ -243,8 +243,8 @@ TYPED_TEST_P( SignalTest, Signals4 )
 {
     using D = typename Signals4::MyDomain;
 
-    auto a1 = MakeVar<D>( 1 );
-    auto a2 = MakeVar<D>( 1 );
+    auto a1 = make_var<D>( 1 );
+    auto a2 = make_var<D>( 1 );
 
     auto b1 = a1 + a2;
     auto b2 = b1 + a2;
@@ -271,9 +271,9 @@ TYPED_TEST_P( SignalTest, FunctionBind1 )
 {
     using D = typename FunctionBind1::MyDomain;
 
-    auto v1 = MakeVar<D>( 2 );
-    auto v2 = MakeVar<D>( 30 );
-    auto v3 = MakeVar<D>( 10 );
+    auto v1 = make_var<D>( 2 );
+    auto v2 = make_var<D>( 30 );
+    auto v3 = make_var<D>( 10 );
 
     auto signal = ( v1, v2, v3 )->*[=]( int a, int b, int c ) -> int { return a * b * c; };
 
@@ -302,8 +302,8 @@ TYPED_TEST_P( SignalTest, FunctionBind2 )
 {
     using D = typename FunctionBind2::MyDomain;
 
-    auto a = MakeVar<D>( 1 );
-    auto b = MakeVar<D>( 1 );
+    auto a = make_var<D>( 1 );
+    auto b = make_var<D>( 1 );
 
     auto c = ( ( a + b ), ( a + 100 ) )->*&myfunc;
     auto d = c->*&myfunc2;
@@ -330,18 +330,18 @@ TYPED_TEST_P( SignalTest, Flatten1 )
 {
     using D = typename Flatten1::MyDomain;
 
-    auto inner1 = MakeVar<D>( 123 );
-    auto inner2 = MakeVar<D>( 789 );
+    auto inner1 = make_var<D>( 123 );
+    auto inner2 = make_var<D>( 789 );
 
-    auto outer = MakeVar<D>( inner1 );
+    auto outer = make_var<D>( inner1 );
 
     auto flattened = Flatten( outer );
 
     std::queue<int> results;
 
-    Observe( flattened, [&]( int v ) { results.push( v ); } );
+    observe( flattened, [&]( int v ) { results.push( v ); } );
 
-    ASSERT_TRUE( outer().Equals( inner1 ) );
+    ASSERT_TRUE( outer().equals( inner1 ) );
     ASSERT_EQ( flattened(), 123 );
 
     inner1 <<= 456;
@@ -354,7 +354,7 @@ TYPED_TEST_P( SignalTest, Flatten1 )
 
     outer <<= inner2;
 
-    ASSERT_TRUE( outer().Equals( inner2 ) );
+    ASSERT_TRUE( outer().equals( inner2 ) );
     ASSERT_EQ( flattened(), 789 );
 
     ASSERT_EQ( results.front(), 789 );
@@ -369,11 +369,11 @@ TYPED_TEST_P( SignalTest, Flatten2 )
 {
     using D = typename Flatten2::MyDomain;
 
-    auto a0 = MakeVar<D>( 100 );
+    auto a0 = make_var<D>( 100 );
 
-    auto inner1 = MakeVar<D>( 200 );
+    auto inner1 = make_var<D>( 200 );
 
-    auto a1 = MakeVar<D>( 300 );
+    auto a1 = make_var<D>( 300 );
     auto a2 = a1 + 0;
     auto a3 = a2 + 0;
     auto a4 = a3 + 0;
@@ -384,7 +384,7 @@ TYPED_TEST_P( SignalTest, Flatten2 )
     ASSERT_EQ( inner1(), 200 );
     ASSERT_EQ( inner2(), 300 );
 
-    auto outer = MakeVar<D>( inner1 );
+    auto outer = make_var<D>( inner1 );
 
     auto flattened = Flatten( outer );
 
@@ -392,7 +392,7 @@ TYPED_TEST_P( SignalTest, Flatten2 )
 
     int observeCount = 0;
 
-    Observe( flattened, [&observeCount]( int v ) { observeCount++; } );
+    observe( flattened, [&observeCount]( int v ) { observeCount++; } );
 
     auto o1 = a0 + flattened;
     auto o2 = o1 + 0;
@@ -427,22 +427,22 @@ TYPED_TEST_P( SignalTest, Flatten3 )
 {
     using D = typename Flatten3::MyDomain;
 
-    auto inner1 = MakeVar<D>( 10 );
+    auto inner1 = make_var<D>( 10 );
 
-    auto a1 = MakeVar<D>( 20 );
+    auto a1 = make_var<D>( 20 );
     auto a2 = a1 + 0;
     auto a3 = a2 + 0;
     auto inner2 = a3 + 0;
 
-    auto outer = MakeVar<D>( inner1 );
+    auto outer = make_var<D>( inner1 );
 
-    auto a0 = MakeVar<D>( 30 );
+    auto a0 = make_var<D>( 30 );
 
     auto flattened = Flatten( outer );
 
     int observeCount = 0;
 
-    Observe( flattened, [&observeCount]( int v ) { observeCount++; } );
+    observe( flattened, [&observeCount]( int v ) { observeCount++; } );
 
     auto result = flattened + a0;
 
@@ -485,21 +485,21 @@ TYPED_TEST_P( SignalTest, Flatten4 )
 
     std::vector<int> results;
 
-    auto a1 = MakeVar<D>( 100 );
+    auto a1 = make_var<D>( 100 );
     auto inner1 = a1 + 0;
 
-    auto a2 = MakeVar<D>( 200 );
+    auto a2 = make_var<D>( 200 );
     auto inner2 = a2;
 
-    auto a3 = MakeVar<D>( 200 );
+    auto a3 = make_var<D>( 200 );
 
-    auto outer = MakeVar<D>( inner1 );
+    auto outer = make_var<D>( inner1 );
 
     auto flattened = Flatten( outer );
 
     auto result = flattened + a3;
 
-    Observe( result, [&]( int v ) { results.push_back( v ); } );
+    observe( result, [&]( int v ) { results.push_back( v ); } );
 
     do_transaction<D>( [&] {
         a3 <<= 400;
@@ -518,12 +518,12 @@ TYPED_TEST_P( SignalTest, Member1 )
 {
     using D = typename Member1::MyDomain;
 
-    auto outer = MakeVar<D>( 10 );
-    auto inner = MakeVar<D>( outer );
+    auto outer = make_var<D>( 10 );
+    auto inner = make_var<D>( outer );
 
     auto flattened = inner.Flatten();
 
-    Observe( flattened, []( int v ) { ASSERT_EQ( v, 30 ); } );
+    observe( flattened, []( int v ) { ASSERT_EQ( v, 30 ); } );
 
     outer <<= 30;
 }
@@ -537,11 +537,11 @@ TYPED_TEST_P( SignalTest, Modify1 )
 
     using std::vector;
 
-    auto v = MakeVar<D>( vector<int>{} );
+    auto v = make_var<D>( vector<int>{} );
 
     int obsCount = 0;
 
-    Observe( v, [&]( const vector<int>& v ) {
+    observe( v, [&]( const vector<int>& v ) {
         ASSERT_EQ( v[0], 30 );
         ASSERT_EQ( v[1], 50 );
         ASSERT_EQ( v[2], 70 );
@@ -567,11 +567,11 @@ TYPED_TEST_P( SignalTest, Modify2 )
 
     using std::vector;
 
-    auto v = MakeVar<D>( vector<int>{} );
+    auto v = make_var<D>( vector<int>{} );
 
     int obsCount = 0;
 
-    Observe( v, [&]( const vector<int>& v ) {
+    observe( v, [&]( const vector<int>& v ) {
         ASSERT_EQ( v[0], 30 );
         ASSERT_EQ( v[1], 50 );
         ASSERT_EQ( v[2], 70 );
@@ -600,11 +600,11 @@ TYPED_TEST_P( SignalTest, Modify3 )
 
     using std::vector;
 
-    auto vect = MakeVar<D>( vector<int>{} );
+    auto vect = make_var<D>( vector<int>{} );
 
     int obsCount = 0;
 
-    Observe( vect, [&]( const vector<int>& v ) {
+    observe( vect, [&]( const vector<int>& v ) {
         ASSERT_EQ( v[0], 30 );
         ASSERT_EQ( v[1], 50 );
         ASSERT_EQ( v[2], 70 );

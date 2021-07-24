@@ -87,7 +87,7 @@ TYPED_TEST_P( OperationsTest, Iterate2 )
 
     int c = 0;
 
-    Observe( numFold, [&]( int v ) {
+    observe( numFold, [&]( int v ) {
         c++;
         ASSERT_EQ( v, 5050 );
     } );
@@ -134,13 +134,13 @@ TYPED_TEST_P( OperationsTest, Monitor1 )
 {
     using D = typename Monitor1::MyDomain;
 
-    auto target = MakeVar<D>( 10 );
+    auto target = make_var<D>( 10 );
 
     vector<int> results;
 
     auto filterFunc = []( int v ) { return v > 10; };
 
-    auto obs = Observe(
+    auto obs = observe(
         Monitor( target ).Filter( filterFunc ), [&]( int v ) { results.push_back( v ); } );
 
     target <<= 10;
@@ -188,13 +188,13 @@ TYPED_TEST_P( OperationsTest, Pulse1 )
     using D = typename Pulse1::MyDomain;
 
     auto trigger = MakeEventSource<D>();
-    auto target = MakeVar<D>( 10 );
+    auto target = make_var<D>( 10 );
 
     vector<int> results;
 
     auto p = Pulse( trigger, target );
 
-    Observe( p, [&]( int v ) { results.push_back( v ); } );
+    observe( p, [&]( int v ) { results.push_back( v ); } );
 
     target <<= 10;
     trigger.Emit();
@@ -215,7 +215,7 @@ TYPED_TEST_P( OperationsTest, Snapshot1 )
     using D = typename Snapshot1::MyDomain;
 
     auto trigger = MakeEventSource<D>();
-    auto target = MakeVar<D>( 10 );
+    auto target = make_var<D>( 10 );
 
     auto snap = Snapshot( trigger, target );
 
@@ -283,8 +283,8 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
 {
     using D = typename SyncedTransform1::MyDomain;
 
-    auto in1 = MakeVar<D>( 1 );
-    auto in2 = MakeVar<D>( 1 );
+    auto in1 = make_var<D>( 1 );
+    auto in2 = make_var<D>( 1 );
 
     auto sum = in1 + in2;
     auto prod = in1 * in2;
@@ -293,11 +293,11 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
     auto src1 = MakeEventSource<D>();
     auto src2 = MakeEventSource<D, int>();
 
-    auto out1 = Transform( src1, With( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
+    auto out1 = Transform( src1, with( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
         return make_tuple( sum, prod, diff );
     } );
 
-    auto out2 = Transform( src2, With( sum, prod, diff ), []( int e, int sum, int prod, int diff ) {
+    auto out2 = Transform( src2, with( sum, prod, diff ), []( int e, int sum, int prod, int diff ) {
         return make_tuple( e, sum, prod, diff );
     } );
 
@@ -305,7 +305,7 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
     int obsCount2 = 0;
 
     {
-        auto obs1 = Observe( out1, [&]( const tuple<int, int, int>& t ) {
+        auto obs1 = observe( out1, [&]( const tuple<int, int, int>& t ) {
             ++obsCount1;
 
             ASSERT_EQ( get<0>( t ), 33 );
@@ -313,7 +313,7 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
             ASSERT_EQ( get<2>( t ), 11 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const tuple<int, int, int, int>& t ) {
+        auto obs2 = observe( out2, [&]( const tuple<int, int, int, int>& t ) {
             ++obsCount2;
 
             ASSERT_EQ( get<0>( t ), 42 );
@@ -336,7 +336,7 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
     }
 
     {
-        auto obs1 = Observe( out1, [&]( const tuple<int, int, int>& t ) {
+        auto obs1 = observe( out1, [&]( const tuple<int, int, int>& t ) {
             ++obsCount1;
 
             ASSERT_EQ( get<0>( t ), 330 );
@@ -344,7 +344,7 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
             ASSERT_EQ( get<2>( t ), 110 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const tuple<int, int, int, int>& t ) {
+        auto obs2 = observe( out2, [&]( const tuple<int, int, int, int>& t ) {
             ++obsCount2;
 
             ASSERT_EQ( get<0>( t ), 420 );
@@ -374,8 +374,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
 {
     using D = typename SyncedIterate1::MyDomain;
 
-    auto in1 = MakeVar<D>( 1 );
-    auto in2 = MakeVar<D>( 1 );
+    auto in1 = make_var<D>( 1 );
+    auto in2 = make_var<D>( 1 );
 
     auto op1 = in1 + in2;
     auto op2 = ( in1 + in2 ) * 10;
@@ -385,14 +385,14 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
 
     auto out1 = Iterate( src1,
         make_tuple( 0, 0 ),
-        With( op1, op2 ),
+        with( op1, op2 ),
         []( token, const tuple<int, int>& t, int op1, int op2 ) {
             return make_tuple( get<0>( t ) + op1, get<1>( t ) + op2 );
         } );
 
     auto out2 = Iterate( src2,
         make_tuple( 0, 0, 0 ),
-        With( op1, op2 ),
+        with( op1, op2 ),
         []( int e, const tuple<int, int, int>& t, int op1, int op2 ) {
             return make_tuple( get<0>( t ) + e, get<1>( t ) + op1, get<2>( t ) + op2 );
         } );
@@ -401,14 +401,14 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
     int obsCount2 = 0;
 
     {
-        auto obs1 = Observe( out1, [&]( const tuple<int, int>& t ) {
+        auto obs1 = observe( out1, [&]( const tuple<int, int>& t ) {
             ++obsCount1;
 
             ASSERT_EQ( get<0>( t ), 33 );
             ASSERT_EQ( get<1>( t ), 330 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const tuple<int, int, int>& t ) {
+        auto obs2 = observe( out2, [&]( const tuple<int, int, int>& t ) {
             ++obsCount2;
 
             ASSERT_EQ( get<0>( t ), 42 );
@@ -430,14 +430,14 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
     }
 
     {
-        auto obs1 = Observe( out1, [&]( const tuple<int, int>& t ) {
+        auto obs1 = observe( out1, [&]( const tuple<int, int>& t ) {
             ++obsCount1;
 
             ASSERT_EQ( get<0>( t ), 33 + 330 );
             ASSERT_EQ( get<1>( t ), 330 + 3300 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const tuple<int, int, int>& t ) {
+        auto obs2 = observe( out2, [&]( const tuple<int, int, int>& t ) {
             ++obsCount2;
 
             ASSERT_EQ( get<0>( t ), 42 + 420 );
@@ -466,8 +466,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
 {
     using D = typename SyncedIterate2::MyDomain;
 
-    auto in1 = MakeVar<D>( 1 );
-    auto in2 = MakeVar<D>( 1 );
+    auto in1 = make_var<D>( 1 );
+    auto in2 = make_var<D>( 1 );
 
     auto op1 = in1 + in2;
     auto op2 = ( in1 + in2 ) * 10;
@@ -477,7 +477,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
 
     auto out1 = Iterate( src1,
         vector<int>{},
-        With( op1, op2 ),
+        with( op1, op2 ),
         []( token, vector<int>& v, int op1, int op2 ) -> void {
             v.push_back( op1 );
             v.push_back( op2 );
@@ -485,7 +485,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
 
     auto out2 = Iterate( src2,
         vector<int>{},
-        With( op1, op2 ),
+        with( op1, op2 ),
         []( int e, vector<int>& v, int op1, int op2 ) -> void {
             v.push_back( e );
             v.push_back( op1 );
@@ -496,7 +496,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
     int obsCount2 = 0;
 
     {
-        auto obs1 = Observe( out1, [&]( const vector<int>& v ) {
+        auto obs1 = observe( out1, [&]( const vector<int>& v ) {
             ++obsCount1;
 
             ASSERT_EQ( v.size(), 2 );
@@ -505,7 +505,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
             ASSERT_EQ( v[1], 330 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const vector<int>& v ) {
+        auto obs2 = observe( out2, [&]( const vector<int>& v ) {
             ++obsCount2;
 
             ASSERT_EQ( v.size(), 3 );
@@ -529,7 +529,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
     }
 
     {
-        auto obs1 = Observe( out1, [&]( const vector<int>& v ) {
+        auto obs1 = observe( out1, [&]( const vector<int>& v ) {
             ++obsCount1;
 
             ASSERT_EQ( v.size(), 4 );
@@ -540,7 +540,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
             ASSERT_EQ( v[3], 3300 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const vector<int>& v ) {
+        auto obs2 = observe( out2, [&]( const vector<int>& v ) {
             ++obsCount2;
 
             ASSERT_EQ( v.size(), 6 );
@@ -575,8 +575,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
 {
     using D = typename SyncedIterate3::MyDomain;
 
-    auto in1 = MakeVar<D>( 1 );
-    auto in2 = MakeVar<D>( 1 );
+    auto in1 = make_var<D>( 1 );
+    auto in2 = make_var<D>( 1 );
 
     auto op1 = in1 + in2;
     auto op2 = ( in1 + in2 ) * 10;
@@ -586,37 +586,37 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
 
     auto out1 = Iterate( src1,
         make_tuple( 0, 0 ),
-        With( op1, op2 ),
-        []( EventRange<token> range, const tuple<int, int>& t, int op1, int op2 ) {
+        with( op1, op2 ),
+        []( event_range<token> range, const tuple<int, int>& t, int op1, int op2 ) {
             return make_tuple(
-                get<0>( t ) + ( op1 * range.Size() ), get<1>( t ) + ( op2 * range.Size() ) );
+                get<0>( t ) + ( op1 * range.size() ), get<1>( t ) + ( op2 * range.size() ) );
         } );
 
     auto out2 = Iterate( src2,
         make_tuple( 0, 0, 0 ),
-        With( op1, op2 ),
-        []( EventRange<int> range, const tuple<int, int, int>& t, int op1, int op2 ) {
+        with( op1, op2 ),
+        []( event_range<int> range, const tuple<int, int, int>& t, int op1, int op2 ) {
             int sum = 0;
             for( const auto& e : range )
                 sum += e;
 
             return make_tuple( get<0>( t ) + sum,
-                get<1>( t ) + ( op1 * range.Size() ),
-                get<2>( t ) + ( op2 * range.Size() ) );
+                get<1>( t ) + ( op1 * range.size() ),
+                get<2>( t ) + ( op2 * range.size() ) );
         } );
 
     int obsCount1 = 0;
     int obsCount2 = 0;
 
     {
-        auto obs1 = Observe( out1, [&]( const tuple<int, int>& t ) {
+        auto obs1 = observe( out1, [&]( const tuple<int, int>& t ) {
             ++obsCount1;
 
             ASSERT_EQ( get<0>( t ), 33 );
             ASSERT_EQ( get<1>( t ), 330 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const tuple<int, int, int>& t ) {
+        auto obs2 = observe( out2, [&]( const tuple<int, int, int>& t ) {
             ++obsCount2;
 
             ASSERT_EQ( get<0>( t ), 42 );
@@ -638,14 +638,14 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
     }
 
     {
-        auto obs1 = Observe( out1, [&]( const tuple<int, int>& t ) {
+        auto obs1 = observe( out1, [&]( const tuple<int, int>& t ) {
             ++obsCount1;
 
             ASSERT_EQ( get<0>( t ), 33 + 330 );
             ASSERT_EQ( get<1>( t ), 330 + 3300 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const tuple<int, int, int>& t ) {
+        auto obs2 = observe( out2, [&]( const tuple<int, int, int>& t ) {
             ++obsCount2;
 
             ASSERT_EQ( get<0>( t ), 42 + 420 );
@@ -674,8 +674,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
 {
     using D = typename SyncedIterate4::MyDomain;
 
-    auto in1 = MakeVar<D>( 1 );
-    auto in2 = MakeVar<D>( 1 );
+    auto in1 = make_var<D>( 1 );
+    auto in2 = make_var<D>( 1 );
 
     auto op1 = in1 + in2;
     auto op2 = ( in1 + in2 ) * 10;
@@ -685,8 +685,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
 
     auto out1 = Iterate( src1,
         vector<int>{},
-        With( op1, op2 ),
-        []( EventRange<token> range, vector<int>& v, int op1, int op2 ) -> void {
+        with( op1, op2 ),
+        []( event_range<token> range, vector<int>& v, int op1, int op2 ) -> void {
             for( const auto& e : range )
             {
                 (void)e;
@@ -697,8 +697,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
 
     auto out2 = Iterate( src2,
         vector<int>{},
-        With( op1, op2 ),
-        []( EventRange<int> range, vector<int>& v, int op1, int op2 ) -> void {
+        with( op1, op2 ),
+        []( event_range<int> range, vector<int>& v, int op1, int op2 ) -> void {
             for( const auto& e : range )
             {
                 v.push_back( e );
@@ -711,7 +711,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
     int obsCount2 = 0;
 
     {
-        auto obs1 = Observe( out1, [&]( const vector<int>& v ) {
+        auto obs1 = observe( out1, [&]( const vector<int>& v ) {
             ++obsCount1;
 
             ASSERT_EQ( v.size(), 2 );
@@ -720,7 +720,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
             ASSERT_EQ( v[1], 330 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const vector<int>& v ) {
+        auto obs2 = observe( out2, [&]( const vector<int>& v ) {
             ++obsCount2;
 
             ASSERT_EQ( v.size(), 3 );
@@ -744,7 +744,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
     }
 
     {
-        auto obs1 = Observe( out1, [&]( const vector<int>& v ) {
+        auto obs1 = observe( out1, [&]( const vector<int>& v ) {
             ++obsCount1;
 
             ASSERT_EQ( v.size(), 4 );
@@ -755,7 +755,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
             ASSERT_EQ( v[3], 3300 );
         } );
 
-        auto obs2 = Observe( out2, [&]( const vector<int>& v ) {
+        auto obs2 = observe( out2, [&]( const vector<int>& v ) {
             ++obsCount2;
 
             ASSERT_EQ( v.size(), 6 );
@@ -796,15 +796,15 @@ TYPED_TEST_P( OperationsTest, SyncedEventFilter1 )
 
     auto in = MakeEventSource<D, string>();
 
-    auto sig1 = MakeVar<D>( 1338 );
-    auto sig2 = MakeVar<D>( 1336 );
+    auto sig1 = make_var<D>( 1338 );
+    auto sig2 = make_var<D>( 1336 );
 
-    auto filtered = Filter( in, With( sig1, sig2 ), []( const string& s, int sig1, int sig2 ) {
+    auto filtered = Filter( in, with( sig1, sig2 ), []( const string& s, int sig1, int sig2 ) {
         return s == "Hello World" && sig1 > sig2;
     } );
 
 
-    Observe( filtered, [&]( const string& s ) { results.push( s ); } );
+    observe( filtered, [&]( const string& s ) { results.push( s ); } );
 
     in << string( "Hello Worlt" ) << string( "Hello World" ) << string( "Hello Vorld" );
     sig1 <<= 1335;
@@ -833,18 +833,18 @@ TYPED_TEST_P( OperationsTest, SyncedEventTransform1 )
 
     auto merged = Merge( in1, in2 );
 
-    auto first = MakeVar<D>( string( "Ace" ) );
-    auto last = MakeVar<D>( string( "McSteele" ) );
+    auto first = make_var<D>( string( "Ace" ) );
+    auto last = make_var<D>( string( "McSteele" ) );
 
     auto transformed = Transform( merged,
-        With( first, last ),
+        with( first, last ),
         []( string s, const string& first, const string& last ) -> string {
             std::transform( s.begin(), s.end(), s.begin(), ::toupper );
             s += string( ", " ) + first + string( " " ) + last;
             return s;
         } );
 
-    Observe( transformed, [&]( const string& s ) { results.push_back( s ); } );
+    observe( transformed, [&]( const string& s ) { results.push_back( s ); } );
 
     in1 << string( "Hello Worlt" ) << string( "Hello World" );
 
@@ -875,13 +875,13 @@ TYPED_TEST_P( OperationsTest, SyncedEventProcess1 )
     auto in1 = MakeEventSource<D, int>();
     auto in2 = MakeEventSource<D, int>();
 
-    auto mult = MakeVar<D>( 10 );
+    auto mult = make_var<D>( 10 );
 
     auto merged = Merge( in1, in2 );
     int callCount = 0;
 
     auto processed = Process<float>(
-        merged, With( mult ), [&]( EventRange<int> range, EventEmitter<float> out, int mult ) {
+        merged, with( mult ), [&]( event_range<int> range, event_emitter<float> out, int mult ) {
             for( const auto& e : range )
             {
                 *out = 0.1f * e * mult;
@@ -891,7 +891,7 @@ TYPED_TEST_P( OperationsTest, SyncedEventProcess1 )
             callCount++;
         } );
 
-    Observe( processed, [&]( float s ) { results.push_back( s ); } );
+    observe( processed, [&]( float s ) { results.push_back( s ); } );
 
     do_transaction<D>( [&] { in1 << 10 << 20; } );
 

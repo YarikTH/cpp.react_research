@@ -97,10 +97,10 @@ TYPED_TEST_P( MoveTest, Copy1 )
 
     Stats stats1;
 
-    auto a = MakeVar<D>( CopyCounter{ 1, &stats1 } );
-    auto b = MakeVar<D>( CopyCounter{ 10, &stats1 } );
-    auto c = MakeVar<D>( CopyCounter{ 100, &stats1 } );
-    auto d = MakeVar<D>( CopyCounter{ 1000, &stats1 } );
+    auto a = make_var<D>( CopyCounter{ 1, &stats1 } );
+    auto b = make_var<D>( CopyCounter{ 10, &stats1 } );
+    auto c = make_var<D>( CopyCounter{ 100, &stats1 } );
+    auto d = make_var<D>( CopyCounter{ 1000, &stats1 } );
 
     // 4x move to value_
     // 4x copy to newValue_ (can't be unitialized for references)

@@ -1640,7 +1640,7 @@ auto observe(
     const auto& subject_ptr = get_node_ptr( subject );
 
     std::unique_ptr<observer_node<D>> node_ptr( ::react::detail::apply(
-        node_builder( subject, std::forward<f_in_t>( func ) ), dep_pack.Data ) );
+        node_builder( subject, std::forward<f_in_t>( func ) ), dep_pack.data ) );
 
     observer_node<D>* raw_node_ptr = node_ptr.get();
 
@@ -1925,7 +1925,6 @@ public:
     {
         this->m_value = m_op.evaluate();
 
-
         m_op.template attach<D>( *this );
     }
 
@@ -2069,16 +2068,16 @@ class signal_pack
 {
 public:
     signal_pack( const signal<D, values_t>&... deps )
-        : Data( std::tie( deps... ) )
+        : data( std::tie( deps... ) )
     {}
 
     template <typename... cur_values_t, typename append_value_t>
     signal_pack(
         const signal_pack<D, cur_values_t...>& cur_args, const signal<D, append_value_t>& new_arg )
-        : Data( std::tuple_cat( cur_args.Data, std::tie( new_arg ) ) )
+        : data( std::tuple_cat( cur_args.data, std::tie( new_arg ) ) )
     {}
 
-    std::tuple<const signal<D, values_t>&...> Data;
+    std::tuple<const signal<D, values_t>&...> data;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2183,7 +2182,7 @@ auto make_signal( const signal_pack<D, values_t...>& arg_pack, f_in_t&& func )
         f_in_t m_func;
     };
 
-    return ::react::detail::apply( node_builder( std::forward<f_in_t>( func ) ), arg_pack.Data );
+    return ::react::detail::apply( node_builder( std::forward<f_in_t>( func ) ), arg_pack.data );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3570,7 +3569,7 @@ auto filter(
     };
 
     return ::react::detail::apply(
-        node_builder( source, std::forward<f_in_t>( func ) ), dep_pack.Data );
+        node_builder( source, std::forward<f_in_t>( func ) ), dep_pack.data );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3644,7 +3643,7 @@ auto transform(
     };
 
     return ::react::detail::apply(
-        node_builder( source, std::forward<f_in_t>( func ) ), dep_pack.Data );
+        node_builder( source, std::forward<f_in_t>( func ) ), dep_pack.data );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3699,7 +3698,7 @@ auto process(
     };
 
     return ::react::detail::apply(
-        node_builder( source, std::forward<f_in_t>( func ) ), dep_pack.Data );
+        node_builder( source, std::forward<f_in_t>( func ) ), dep_pack.data );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3714,14 +3713,14 @@ auto flatten( const signal<D, events<D, inner_value_t>>& outer ) -> events<D, in
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Join
+/// join
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D, typename... args_t>
-auto Join( const events<D, args_t>&... args ) -> events<D, std::tuple<args_t...>>
+auto join( const events<D, args_t>&... args ) -> events<D, std::tuple<args_t...>>
 {
     using ::react::detail::event_join_node;
 
-    static_assert( sizeof...( args_t ) > 1, "Join: 2+ arguments are required." );
+    static_assert( sizeof...( args_t ) > 1, "join: 2+ arguments are required." );
 
     return events<D, std::tuple<args_t...>>(
         std::make_shared<event_join_node<D, args_t...>>( get_node_ptr( args )... ) );
@@ -4653,7 +4652,7 @@ auto iterate( const events<D, E>& events,
 
     return ::react::detail::apply(
         node_builder( events, std::forward<V>( init ), std::forward<f_in_t>( func ) ),
-        dep_pack.Data );
+        dep_pack.data );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4686,7 +4685,7 @@ auto pulse( const events<D, E>& trigger, const signal<D, S>& target ) -> events<
 template <typename D, typename S>
 auto changed( const signal<D, S>& target ) -> events<D, token>
 {
-    return monitor( target ).tokenize();
+    return tokenize( monitor( target ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4695,7 +4694,7 @@ auto changed( const signal<D, S>& target ) -> events<D, token>
 template <typename D, typename V, typename S = typename std::decay<V>::type>
 auto changed_to( const signal<D, S>& target, V&& value ) -> events<D, token>
 {
-    return monitor( target ).filter( [=]( const S& v ) { return v == value; } ).tokenize();
+    return tokenize( filter( monitor( target ), [=]( const S& v ) { return v == value; } ) );
 }
 
 namespace detail

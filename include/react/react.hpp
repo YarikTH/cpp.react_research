@@ -294,8 +294,6 @@ public:
 class topological_sort_engine
 {
 public:
-    using node_t = reactive_node;
-
     void propagate( turn_type& turn );
 
     static void on_node_attach( reactive_node& node, reactive_node& parent )
@@ -359,15 +357,13 @@ private:
 template <typename D, typename engine_t>
 struct engine_interface
 {
-    using node_t = typename engine_t::node_t;
-
     static engine_t& instance()
     {
         static engine_t engine;
         return engine;
     }
 
-    static void on_input_change( node_t& node )
+    static void on_input_change( reactive_node& node )
     {
         instance().on_input_change( node );
     }
@@ -377,32 +373,32 @@ struct engine_interface
         instance().propagate( turn );
     }
 
-    static void on_node_destroy( node_t& node )
+    static void on_node_destroy( reactive_node& node )
     {
         instance().on_node_destroy( node );
     }
 
-    static void on_node_attach( node_t& node, node_t& parent )
+    static void on_node_attach( reactive_node& node, reactive_node& parent )
     {
         instance().on_node_attach( node, parent );
     }
 
-    static void on_node_detach( node_t& node, node_t& parent )
+    static void on_node_detach( reactive_node& node, reactive_node& parent )
     {
         instance().on_node_detach( node, parent );
     }
 
-    static void on_node_pulse( node_t& node )
+    static void on_node_pulse( reactive_node& node )
     {
         instance().on_node_pulse( node );
     }
 
-    static void on_dynamic_node_attach( node_t& node, node_t& parent )
+    static void on_dynamic_node_attach( reactive_node& node, reactive_node& parent )
     {
         instance().on_dynamic_node_attach( node, parent );
     }
 
-    static void on_dynamic_node_detach( node_t& node, node_t& parent )
+    static void on_dynamic_node_detach( reactive_node& node, reactive_node& parent )
     {
         instance().on_dynamic_node_detach( node, parent );
     }
@@ -482,7 +478,6 @@ class node_base : public reactive_node
 public:
     using domain_t = D;
     using engine = typename D::engine;
-    using node_t = reactive_node;
 
     node_base() = default;
 

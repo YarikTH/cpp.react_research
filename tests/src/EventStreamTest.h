@@ -256,7 +256,7 @@ TYPED_TEST_P( EventStreamTest, EventProcess )
     int callCount = 0;
 
     auto processed
-        = Process<float>( merged, [&]( event_range<int> range, event_emitter<float> out ) {
+        = process<float>( merged, [&]( event_range<int> range, event_emitter<float> out ) {
               for( const auto& e : range )
               {
                   *out = 0.1f * e;

@@ -888,7 +888,7 @@ TYPED_TEST_P( OperationsTest, SyncedEventProcess1 )
     auto merged = merge( in1, in2 );
     int callCount = 0;
 
-    auto processed = Process<float>(
+    auto processed = process<float>(
         merged, with( mult ), [&]( event_range<int> range, event_emitter<float> out, int mult ) {
             for( const auto& e : range )
             {

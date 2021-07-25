@@ -3648,7 +3648,7 @@ auto transform(
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Process
+/// process
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 using ::react::detail::event_emitter;
 using ::react::detail::event_range;
@@ -3658,7 +3658,7 @@ template <typename out_t,
     typename in_t,
     typename f_in_t,
     typename F = typename std::decay<f_in_t>::type>
-auto Process( const events<D, in_t>& src, f_in_t&& func ) -> events<D, out_t>
+auto process( const events<D, in_t>& src, f_in_t&& func ) -> events<D, out_t>
 {
     using ::react::detail::event_processing_node;
 
@@ -3667,10 +3667,10 @@ auto Process( const events<D, in_t>& src, f_in_t&& func ) -> events<D, out_t>
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Process - Synced
+/// process - Synced
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename out_t, typename D, typename in_t, typename f_in_t, typename... dep_values_t>
-auto Process(
+auto process(
     const events<D, in_t>& source, const signal_pack<D, dep_values_t...>& dep_pack, f_in_t&& func )
     -> events<D, out_t>
 {

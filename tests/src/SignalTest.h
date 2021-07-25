@@ -335,7 +335,7 @@ TYPED_TEST_P( SignalTest, Flatten1 )
 
     auto outer = make_var<D>( inner1 );
 
-    auto flattened = Flatten( outer );
+    auto flattened = flatten( outer );
 
     std::queue<int> results;
 
@@ -386,7 +386,7 @@ TYPED_TEST_P( SignalTest, Flatten2 )
 
     auto outer = make_var<D>( inner1 );
 
-    auto flattened = Flatten( outer );
+    auto flattened = flatten( outer );
 
     ASSERT_EQ( flattened(), 200 );
 
@@ -438,7 +438,7 @@ TYPED_TEST_P( SignalTest, Flatten3 )
 
     auto a0 = make_var<D>( 30 );
 
-    auto flattened = Flatten( outer );
+    auto flattened = flatten( outer );
 
     int observeCount = 0;
 
@@ -495,7 +495,7 @@ TYPED_TEST_P( SignalTest, Flatten4 )
 
     auto outer = make_var<D>( inner1 );
 
-    auto flattened = Flatten( outer );
+    auto flattened = flatten( outer );
 
     auto result = flattened + a3;
 
@@ -521,7 +521,7 @@ TYPED_TEST_P( SignalTest, Member1 )
     auto outer = make_var<D>( 10 );
     auto inner = make_var<D>( outer );
 
-    auto flattened = inner.Flatten();
+    auto flattened = inner.flatten();
 
     observe( flattened, []( int v ) { ASSERT_EQ( v, 30 ); } );
 

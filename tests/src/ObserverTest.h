@@ -139,8 +139,8 @@ TYPED_TEST_P( ObserverTest, SyncedObserveTest )
     auto prod = in1 * in2;
     auto diff = in1 - in2;
 
-    auto src1 = MakeEventSource<D>();
-    auto src2 = MakeEventSource<D, int>();
+    auto src1 = make_event_source<D>();
+    auto src2 = make_event_source<D, int>();
 
     observe( src1, with( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
         ASSERT_EQ( sum, 33 );
@@ -158,8 +158,8 @@ TYPED_TEST_P( ObserverTest, SyncedObserveTest )
     in1 <<= 22;
     in2 <<= 11;
 
-    src1.Emit();
-    src2.Emit( 42 );
+    src1.emit();
+    src2.emit( 42 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +169,7 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver1 )
 {
     using D = typename DetachThisObserver1::MyDomain;
 
-    auto src = MakeEventSource<D>();
+    auto src = make_event_source<D>();
 
     int count = 0;
 
@@ -178,8 +178,8 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver1 )
         return observer_action::stop_and_detach;
     } );
 
-    src.Emit();
-    src.Emit();
+    src.emit();
+    src.emit();
 
     printf( "Count %d\n", count );
     ASSERT_EQ( count, 1 );
@@ -199,7 +199,7 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver2 )
     auto prod = in1 * in2;
     auto diff = in1 - in2;
 
-    auto src = MakeEventSource<D>();
+    auto src = make_event_source<D>();
 
     int count = 0;
 
@@ -212,8 +212,8 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver2 )
     in1 <<= 22;
     in2 <<= 11;
 
-    src.Emit();
-    src.Emit();
+    src.emit();
+    src.emit();
 
     ASSERT_EQ( count, 1 );
 }

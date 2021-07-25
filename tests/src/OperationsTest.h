@@ -57,8 +57,8 @@ TYPED_TEST_P( OperationsTest, Iterate1 )
 {
     using D = typename Iterate1::MyDomain;
 
-    auto numSrc = MakeEventSource<D, int>();
-    auto numFold = Iterate( numSrc, 0, []( int d, int v ) { return v + d; } );
+    auto numSrc = make_event_source<D, int>();
+    auto numFold = iterate( numSrc, 0, []( int d, int v ) { return v + d; } );
 
     for( auto i = 1; i <= 100; i++ )
     {
@@ -67,8 +67,8 @@ TYPED_TEST_P( OperationsTest, Iterate1 )
 
     ASSERT_EQ( numFold(), 5050 );
 
-    auto charSrc = MakeEventSource<D, char>();
-    auto strFold = Iterate( charSrc, string( "" ), []( char c, string s ) { return s + c; } );
+    auto charSrc = make_event_source<D, char>();
+    auto strFold = iterate( charSrc, string( "" ), []( char c, string s ) { return s + c; } );
 
     charSrc << 'T' << 'e' << 's' << 't';
 
@@ -82,8 +82,8 @@ TYPED_TEST_P( OperationsTest, Iterate2 )
 {
     using D = typename Iterate2::MyDomain;
 
-    auto numSrc = MakeEventSource<D, int>();
-    auto numFold = Iterate( numSrc, 0, []( int d, int v ) { return v + d; } );
+    auto numSrc = make_event_source<D, int>();
+    auto numFold = iterate( numSrc, 0, []( int d, int v ) { return v + d; } );
 
     int c = 0;
 
@@ -108,20 +108,20 @@ TYPED_TEST_P( OperationsTest, Iterate3 )
 {
     using D = typename Iterate3::MyDomain;
 
-    auto trigger = MakeEventSource<D>();
+    auto trigger = make_event_source<D>();
 
     {
-        auto inc = Iterate( trigger, 0, Incrementer<int>{} );
+        auto inc = iterate( trigger, 0, Incrementer<int>{} );
         for( auto i = 1; i <= 100; i++ )
-            trigger.Emit();
+            trigger.emit();
 
         ASSERT_EQ( inc(), 100 );
     }
 
     {
-        auto dec = Iterate( trigger, 100, Decrementer<int>{} );
+        auto dec = iterate( trigger, 100, Decrementer<int>{} );
         for( auto i = 1; i <= 100; i++ )
-            trigger.Emit();
+            trigger.emit();
 
         ASSERT_EQ( dec(), 0 );
     }
@@ -141,7 +141,7 @@ TYPED_TEST_P( OperationsTest, Monitor1 )
     auto filterFunc = []( int v ) { return v > 10; };
 
     auto obs = observe(
-        Monitor( target ).Filter( filterFunc ), [&]( int v ) { results.push_back( v ); } );
+        monitor( target ).filter( filterFunc ), [&]( int v ) { results.push_back( v ); } );
 
     target <<= 10;
     target <<= 20;
@@ -165,9 +165,9 @@ TYPED_TEST_P( OperationsTest, Hold1 )
 {
     using D = typename Hold1::MyDomain;
 
-    auto src = MakeEventSource<D, int>();
+    auto src = make_event_source<D, int>();
 
-    auto h = Hold( src, 0 );
+    auto h = hold( src, 0 );
 
     ASSERT_EQ( h(), 0 );
 
@@ -187,22 +187,22 @@ TYPED_TEST_P( OperationsTest, Pulse1 )
 {
     using D = typename Pulse1::MyDomain;
 
-    auto trigger = MakeEventSource<D>();
+    auto trigger = make_event_source<D>();
     auto target = make_var<D>( 10 );
 
     vector<int> results;
 
-    auto p = Pulse( trigger, target );
+    auto p = pulse( trigger, target );
 
     observe( p, [&]( int v ) { results.push_back( v ); } );
 
     target <<= 10;
-    trigger.Emit();
+    trigger.emit();
 
     ASSERT_EQ( results[0], 10 );
 
     target <<= 20;
-    trigger.Emit();
+    trigger.emit();
 
     ASSERT_EQ( results[1], 20 );
 }
@@ -214,19 +214,19 @@ TYPED_TEST_P( OperationsTest, Snapshot1 )
 {
     using D = typename Snapshot1::MyDomain;
 
-    auto trigger = MakeEventSource<D>();
+    auto trigger = make_event_source<D>();
     auto target = make_var<D>( 10 );
 
-    auto snap = Snapshot( trigger, target );
+    auto snap = snapshot( trigger, target );
 
     target <<= 10;
-    trigger.Emit();
+    trigger.emit();
     target <<= 20;
 
     ASSERT_EQ( snap(), 10 );
 
     target <<= 20;
-    trigger.Emit();
+    trigger.emit();
     target <<= 30;
 
     ASSERT_EQ( snap(), 20 );
@@ -239,8 +239,8 @@ TYPED_TEST_P( OperationsTest, IterateByRef1 )
 {
     using D = typename IterateByRef1::MyDomain;
 
-    auto src = MakeEventSource<D, int>();
-    auto f = Iterate(
+    auto src = make_event_source<D, int>();
+    auto f = iterate(
         src, std::vector<int>(), []( int d, std::vector<int>& v ) { v.push_back( d ); } );
 
     // Push
@@ -261,13 +261,13 @@ TYPED_TEST_P( OperationsTest, IterateByRef2 )
 {
     using D = typename IterateByRef2::MyDomain;
 
-    auto src = MakeEventSource<D>();
-    auto x = Iterate(
+    auto src = make_event_source<D>();
+    auto x = iterate(
         src, std::vector<int>(), []( token, std::vector<int>& v ) { v.push_back( 123 ); } );
 
     // Push
     for( auto i = 0; i < 100; i++ )
-        src.Emit();
+        src.emit();
 
     ASSERT_EQ( x().size(), 100 );
 
@@ -290,14 +290,14 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
     auto prod = in1 * in2;
     auto diff = in1 - in2;
 
-    auto src1 = MakeEventSource<D>();
-    auto src2 = MakeEventSource<D, int>();
+    auto src1 = make_event_source<D>();
+    auto src2 = make_event_source<D, int>();
 
-    auto out1 = Transform( src1, with( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
+    auto out1 = transform( src1, with( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
         return make_tuple( sum, prod, diff );
     } );
 
-    auto out2 = Transform( src2, with( sum, prod, diff ), []( int e, int sum, int prod, int diff ) {
+    auto out2 = transform( src2, with( sum, prod, diff ), []( int e, int sum, int prod, int diff ) {
         return make_tuple( e, sum, prod, diff );
     } );
 
@@ -325,8 +325,8 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
         in1 <<= 22;
         in2 <<= 11;
 
-        src1.Emit();
-        src2.Emit( 42 );
+        src1.emit();
+        src2.emit( 42 );
 
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
@@ -356,8 +356,8 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
         in1 <<= 220;
         in2 <<= 110;
 
-        src1.Emit();
-        src2.Emit( 420 );
+        src1.emit();
+        src2.emit( 420 );
 
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
@@ -380,17 +380,17 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
     auto op1 = in1 + in2;
     auto op2 = ( in1 + in2 ) * 10;
 
-    auto src1 = MakeEventSource<D>();
-    auto src2 = MakeEventSource<D, int>();
+    auto src1 = make_event_source<D>();
+    auto src2 = make_event_source<D, int>();
 
-    auto out1 = Iterate( src1,
+    auto out1 = iterate( src1,
         make_tuple( 0, 0 ),
         with( op1, op2 ),
         []( token, const tuple<int, int>& t, int op1, int op2 ) {
             return make_tuple( get<0>( t ) + op1, get<1>( t ) + op2 );
         } );
 
-    auto out2 = Iterate( src2,
+    auto out2 = iterate( src2,
         make_tuple( 0, 0, 0 ),
         with( op1, op2 ),
         []( int e, const tuple<int, int, int>& t, int op1, int op2 ) {
@@ -419,8 +419,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
         in1 <<= 22;
         in2 <<= 11;
 
-        src1.Emit();
-        src2.Emit( 42 );
+        src1.emit();
+        src2.emit( 42 );
 
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
@@ -448,8 +448,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
         in1 <<= 220;
         in2 <<= 110;
 
-        src1.Emit();
-        src2.Emit( 420 );
+        src1.emit();
+        src2.emit( 420 );
 
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
@@ -472,10 +472,10 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
     auto op1 = in1 + in2;
     auto op2 = ( in1 + in2 ) * 10;
 
-    auto src1 = MakeEventSource<D>();
-    auto src2 = MakeEventSource<D, int>();
+    auto src1 = make_event_source<D>();
+    auto src2 = make_event_source<D, int>();
 
-    auto out1 = Iterate( src1,
+    auto out1 = iterate( src1,
         vector<int>{},
         with( op1, op2 ),
         []( token, vector<int>& v, int op1, int op2 ) -> void {
@@ -483,7 +483,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
             v.push_back( op2 );
         } );
 
-    auto out2 = Iterate( src2,
+    auto out2 = iterate( src2,
         vector<int>{},
         with( op1, op2 ),
         []( int e, vector<int>& v, int op1, int op2 ) -> void {
@@ -518,8 +518,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
         in1 <<= 22;
         in2 <<= 11;
 
-        src1.Emit();
-        src2.Emit( 42 );
+        src1.emit();
+        src2.emit( 42 );
 
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
@@ -557,8 +557,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
         in1 <<= 220;
         in2 <<= 110;
 
-        src1.Emit();
-        src2.Emit( 420 );
+        src1.emit();
+        src2.emit( 420 );
 
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
@@ -581,10 +581,10 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
     auto op1 = in1 + in2;
     auto op2 = ( in1 + in2 ) * 10;
 
-    auto src1 = MakeEventSource<D>();
-    auto src2 = MakeEventSource<D, int>();
+    auto src1 = make_event_source<D>();
+    auto src2 = make_event_source<D, int>();
 
-    auto out1 = Iterate( src1,
+    auto out1 = iterate( src1,
         make_tuple( 0, 0 ),
         with( op1, op2 ),
         []( event_range<token> range, const tuple<int, int>& t, int op1, int op2 ) {
@@ -592,7 +592,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
                 get<0>( t ) + ( op1 * range.size() ), get<1>( t ) + ( op2 * range.size() ) );
         } );
 
-    auto out2 = Iterate( src2,
+    auto out2 = iterate( src2,
         make_tuple( 0, 0, 0 ),
         with( op1, op2 ),
         []( event_range<int> range, const tuple<int, int, int>& t, int op1, int op2 ) {
@@ -627,8 +627,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
         in1 <<= 22;
         in2 <<= 11;
 
-        src1.Emit();
-        src2.Emit( 42 );
+        src1.emit();
+        src2.emit( 42 );
 
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
@@ -656,8 +656,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
         in1 <<= 220;
         in2 <<= 110;
 
-        src1.Emit();
-        src2.Emit( 420 );
+        src1.emit();
+        src2.emit( 420 );
 
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
@@ -680,10 +680,10 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
     auto op1 = in1 + in2;
     auto op2 = ( in1 + in2 ) * 10;
 
-    auto src1 = MakeEventSource<D>();
-    auto src2 = MakeEventSource<D, int>();
+    auto src1 = make_event_source<D>();
+    auto src2 = make_event_source<D, int>();
 
-    auto out1 = Iterate( src1,
+    auto out1 = iterate( src1,
         vector<int>{},
         with( op1, op2 ),
         []( event_range<token> range, vector<int>& v, int op1, int op2 ) -> void {
@@ -695,7 +695,7 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
             }
         } );
 
-    auto out2 = Iterate( src2,
+    auto out2 = iterate( src2,
         vector<int>{},
         with( op1, op2 ),
         []( event_range<int> range, vector<int>& v, int op1, int op2 ) -> void {
@@ -733,8 +733,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
         in1 <<= 22;
         in2 <<= 11;
 
-        src1.Emit();
-        src2.Emit( 42 );
+        src1.emit();
+        src2.emit( 42 );
 
         ASSERT_EQ( obsCount1, 1 );
         ASSERT_EQ( obsCount2, 1 );
@@ -772,8 +772,8 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
         in1 <<= 220;
         in2 <<= 110;
 
-        src1.Emit();
-        src2.Emit( 420 );
+        src1.emit();
+        src2.emit( 420 );
 
         ASSERT_EQ( obsCount1, 2 );
         ASSERT_EQ( obsCount2, 2 );
@@ -794,12 +794,12 @@ TYPED_TEST_P( OperationsTest, SyncedEventFilter1 )
 
     std::queue<string> results;
 
-    auto in = MakeEventSource<D, string>();
+    auto in = make_event_source<D, string>();
 
     auto sig1 = make_var<D>( 1338 );
     auto sig2 = make_var<D>( 1336 );
 
-    auto filtered = Filter( in, with( sig1, sig2 ), []( const string& s, int sig1, int sig2 ) {
+    auto filtered = filter( in, with( sig1, sig2 ), []( const string& s, int sig1, int sig2 ) {
         return s == "Hello World" && sig1 > sig2;
     } );
 
@@ -828,15 +828,15 @@ TYPED_TEST_P( OperationsTest, SyncedEventTransform1 )
 
     std::vector<string> results;
 
-    auto in1 = MakeEventSource<D, string>();
-    auto in2 = MakeEventSource<D, string>();
+    auto in1 = make_event_source<D, string>();
+    auto in2 = make_event_source<D, string>();
 
-    auto merged = Merge( in1, in2 );
+    auto merged = merge( in1, in2 );
 
     auto first = make_var<D>( string( "Ace" ) );
     auto last = make_var<D>( string( "McSteele" ) );
 
-    auto transformed = Transform( merged,
+    auto transformed = transform( merged,
         with( first, last ),
         []( string s, const string& first, const string& last ) -> string {
             std::transform( s.begin(), s.end(), s.begin(), ::toupper );
@@ -872,12 +872,12 @@ TYPED_TEST_P( OperationsTest, SyncedEventProcess1 )
 
     std::vector<float> results;
 
-    auto in1 = MakeEventSource<D, int>();
-    auto in2 = MakeEventSource<D, int>();
+    auto in1 = make_event_source<D, int>();
+    auto in2 = make_event_source<D, int>();
 
     auto mult = make_var<D>( 10 );
 
-    auto merged = Merge( in1, in2 );
+    auto merged = merge( in1, in2 );
     int callCount = 0;
 
     auto processed = Process<float>(

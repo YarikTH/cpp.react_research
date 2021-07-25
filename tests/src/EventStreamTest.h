@@ -37,8 +37,8 @@ TYPED_TEST_P( EventStreamTest, EventSources )
 {
     using D = typename EventSources::MyDomain;
 
-    auto es1 = MakeEventSource<D, int>();
-    auto es2 = MakeEventSource<D, int>();
+    auto es1 = make_event_source<D, int>();
+    auto es2 = make_event_source<D, int>();
 
     std::queue<int> results1;
     std::queue<int> results2;
@@ -88,11 +88,11 @@ TYPED_TEST_P( EventStreamTest, EventMerge1 )
 {
     using D = typename EventMerge1::MyDomain;
 
-    auto a1 = MakeEventSource<D, int>();
-    auto a2 = MakeEventSource<D, int>();
-    auto a3 = MakeEventSource<D, int>();
+    auto a1 = make_event_source<D, int>();
+    auto a2 = make_event_source<D, int>();
+    auto a3 = make_event_source<D, int>();
 
-    auto merged = Merge( a1, a2, a3 );
+    auto merged = merge( a1, a2, a3 );
 
     std::vector<int> results;
 
@@ -117,11 +117,11 @@ TYPED_TEST_P( EventStreamTest, EventMerge2 )
 {
     using D = typename EventMerge2::MyDomain;
 
-    auto a1 = MakeEventSource<D, std::string>();
-    auto a2 = MakeEventSource<D, std::string>();
-    auto a3 = MakeEventSource<D, std::string>();
+    auto a1 = make_event_source<D, std::string>();
+    auto a2 = make_event_source<D, std::string>();
+    auto a3 = make_event_source<D, std::string>();
 
-    auto merged = Merge( a1, a2, a3 );
+    auto merged = merge( a1, a2, a3 );
 
     std::vector<std::string> results;
 
@@ -150,13 +150,13 @@ TYPED_TEST_P( EventStreamTest, EventMerge3 )
 {
     using D = typename EventMerge3::MyDomain;
 
-    auto a1 = MakeEventSource<D, int>();
-    auto a2 = MakeEventSource<D, int>();
+    auto a1 = make_event_source<D, int>();
+    auto a2 = make_event_source<D, int>();
 
-    auto f1 = Filter( a1, []( int v ) { return true; } );
-    auto f2 = Filter( a2, []( int v ) { return true; } );
+    auto f1 = filter( a1, []( int v ) { return true; } );
+    auto f2 = filter( a2, []( int v ) { return true; } );
 
-    auto merged = Merge( f1, f2 );
+    auto merged = merge( f1, f2 );
 
     std::queue<int> results;
 
@@ -192,9 +192,9 @@ TYPED_TEST_P( EventStreamTest, EventFilter )
 
     std::queue<string> results;
 
-    auto in = MakeEventSource<D, string>();
+    auto in = make_event_source<D, string>();
 
-    auto filtered = Filter( in, []( const string& s ) { return s == "Hello World"; } );
+    auto filtered = filter( in, []( const string& s ) { return s == "Hello World"; } );
 
 
     observe( filtered, [&]( const string& s ) { results.push( s ); } );
@@ -219,12 +219,12 @@ TYPED_TEST_P( EventStreamTest, EventTransform )
 
     std::vector<string> results;
 
-    auto in1 = MakeEventSource<D, string>();
-    auto in2 = MakeEventSource<D, string>();
+    auto in1 = make_event_source<D, string>();
+    auto in2 = make_event_source<D, string>();
 
-    auto merged = Merge( in1, in2 );
+    auto merged = merge( in1, in2 );
 
-    auto transformed = Transform( merged, []( string s ) -> string {
+    auto transformed = transform( merged, []( string s ) -> string {
         std::transform( s.begin(), s.end(), s.begin(), ::toupper );
         return s;
     } );
@@ -249,10 +249,10 @@ TYPED_TEST_P( EventStreamTest, EventProcess )
 
     std::vector<float> results;
 
-    auto in1 = MakeEventSource<D, int>();
-    auto in2 = MakeEventSource<D, int>();
+    auto in1 = make_event_source<D, int>();
+    auto in2 = make_event_source<D, int>();
 
-    auto merged = Merge( in1, in2 );
+    auto merged = merge( in1, in2 );
     int callCount = 0;
 
     auto processed

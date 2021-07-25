@@ -858,8 +858,8 @@ TYPED_TEST_P( OperationsTest, SyncedEventTransform1 )
 
     do_transaction<D>( [&] {
         in2 << string( "Hello Vorld" );
-        first.Set( string( "Alice" ) );
-        last.Set( string( "Anderson" ) );
+        first.set( string( "Alice" ) );
+        last.set( string( "Anderson" ) );
     } );
 
     ASSERT_EQ( results.size(), 3 );

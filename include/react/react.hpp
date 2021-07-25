@@ -1769,7 +1769,7 @@ public:
     template <typename F>
     void modify_input( F& func )
     {
-        // There hasn't been any Set(...) input yet, modify.
+        // There hasn't been any set(...) input yet, modify.
         if( !m_is_input_added )
         {
             func( this->m_value );
@@ -2206,7 +2206,7 @@ auto flatten( const signal<D, signal<D, inner_value_t>>& outer ) -> signal<D, in
 {
     return signal<D, inner_value_t>(
         std::make_shared<::react::detail::flatten_node<D, signal<D, inner_value_t>, inner_value_t>>(
-            get_node_ptr( outer ), get_node_ptr( outer.Value() ) ) );
+            get_node_ptr( outer ), get_node_ptr( outer.value() ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2247,7 +2247,7 @@ public:
         return *this;
     }
 
-    const S& Value() const
+    const S& value() const
     {
         return signal::signal_base::get_value();
     }
@@ -2265,13 +2265,6 @@ public:
     bool is_valid() const
     {
         return signal::signal_base::is_valid();
-    }
-
-    S flatten() const
-    {
-        static_assert( is_signal<S>::value || is_event<S>::value,
-            "flatten requires a signal or events value type." );
-        return ::react::flatten( *this );
     }
 };
 
@@ -2311,7 +2304,7 @@ public:
         return *this;
     }
 
-    const S& Value() const
+    const S& value() const
     {
         return signal::signal_base::get_value();
     }
@@ -2368,12 +2361,12 @@ public:
         return *this;
     }
 
-    void Set( const S& new_value ) const
+    void set( const S& new_value ) const
     {
         var_signal::signal_base::set_value( new_value );
     }
 
-    void Set( S&& new_value ) const
+    void set( S&& new_value ) const
     {
         var_signal::signal_base::set_value( std::move( new_value ) );
     }
@@ -2391,7 +2384,7 @@ public:
     }
 
     template <typename F>
-    void Modify( const F& func ) const
+    void modify( const F& func ) const
     {
         var_signal::signal_base::modify_value( func );
     }
@@ -2433,7 +2426,7 @@ public:
         return *this;
     }
 
-    void Set( std::reference_wrapper<S> new_value ) const
+    void set( std::reference_wrapper<S> new_value ) const
     {
         var_signal::signal_base::set_value( new_value );
     }
@@ -3669,7 +3662,7 @@ auto flatten( const signal<D, events<D, inner_value_t>>& outer ) -> events<D, in
 {
     return events<D, inner_value_t>( std::make_shared<
         ::react::detail::event_flatten_node<D, events<D, inner_value_t>, inner_value_t>>(
-        get_node_ptr( outer ), get_node_ptr( outer.Value() ) ) );
+        get_node_ptr( outer ), get_node_ptr( outer.value() ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

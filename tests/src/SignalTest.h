@@ -541,7 +541,7 @@ TYPED_TEST_P( SignalTest, Member1 )
     auto outer = make_var<D>( 10 );
     auto inner = make_var<D>( outer );
 
-    auto flattened = inner.flatten();
+    auto flattened = flatten( inner );
 
     observe( flattened, []( int v ) { ASSERT_EQ( v, 30 ); } );
 
@@ -569,7 +569,7 @@ TYPED_TEST_P( SignalTest, Modify1 )
         obsCount++;
     } );
 
-    v.Modify( []( vector<int>& v ) {
+    v.modify( []( vector<int>& v ) {
         v.push_back( 30 );
         v.push_back( 50 );
         v.push_back( 70 );
@@ -600,11 +600,11 @@ TYPED_TEST_P( SignalTest, Modify2 )
     } );
 
     do_transaction<D>( [&] {
-        v.Modify( []( vector<int>& v ) { v.push_back( 30 ); } );
+        v.modify( []( vector<int>& v ) { v.push_back( 30 ); } );
 
-        v.Modify( []( vector<int>& v ) { v.push_back( 50 ); } );
+        v.modify( []( vector<int>& v ) { v.push_back( 50 ); } );
 
-        v.Modify( []( vector<int>& v ) { v.push_back( 70 ); } );
+        v.modify( []( vector<int>& v ) { v.push_back( 70 ); } );
     } );
 
 
@@ -634,9 +634,9 @@ TYPED_TEST_P( SignalTest, Modify3 )
 
     // Also terrible
     do_transaction<D>( [&] {
-        vect.Set( vector<int>{ 30, 50 } );
+        vect.set( vector<int>{ 30, 50 } );
 
-        vect.Modify( []( vector<int>& v ) { v.push_back( 70 ); } );
+        vect.modify( []( vector<int>& v ) { v.push_back( 70 ); } );
     } );
 
     ASSERT_EQ( obsCount, 1 );

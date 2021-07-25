@@ -3717,7 +3717,6 @@ class events : public ::react::detail::event_stream_base<D, E>
 {
 private:
     using node_t = ::react::detail::event_stream_node<D, E>;
-    using node_ptr_T = std::shared_ptr<node_t>;
 
 public:
     using value_t = E;
@@ -3734,7 +3733,7 @@ public:
     {}
 
     // Node ctor
-    explicit events( node_ptr_T&& node_ptr )
+    explicit events( std::shared_ptr<node_t>&& node_ptr )
         : events::event_stream_base( std::move( node_ptr ) )
     {}
 
@@ -3765,7 +3764,6 @@ class events<D, E&> : public ::react::detail::event_stream_base<D, std::referenc
 {
 private:
     using node_t = ::react::detail::event_stream_node<D, std::reference_wrapper<E>>;
-    using node_ptr_T = std::shared_ptr<node_t>;
 
 public:
     using value_t = E;
@@ -3782,7 +3780,7 @@ public:
     {}
 
     // Node ctor
-    explicit events( node_ptr_T&& node_ptr )
+    explicit events( std::shared_ptr<node_t>&& node_ptr )
         : events::event_stream_base( std::move( node_ptr ) )
     {}
 
@@ -3815,7 +3813,6 @@ class event_source : public events<D, E>
 {
 private:
     using node_t = ::react::detail::event_source_node<D, E>;
-    using node_ptr_T = std::shared_ptr<node_t>;
 
 public:
     // Default ctor
@@ -3830,7 +3827,7 @@ public:
     {}
 
     // Node ctor
-    explicit event_source( node_ptr_T&& node_ptr )
+    explicit event_source( std::shared_ptr<node_t>&& node_ptr )
         : event_source::events( std::move( node_ptr ) )
     {}
 
@@ -3898,7 +3895,6 @@ class event_source<D, E&> : public events<D, std::reference_wrapper<E>>
 {
 private:
     using node_t = ::react::detail::event_source_node<D, std::reference_wrapper<E>>;
-    using node_ptr_T = std::shared_ptr<node_t>;
 
 public:
     // Default ctor
@@ -3913,7 +3909,7 @@ public:
     {}
 
     // Node ctor
-    explicit event_source( node_ptr_T&& node_ptr )
+    explicit event_source( std::shared_ptr<node_t>&& node_ptr )
         : event_source::events( std::move( node_ptr ) )
     {}
 
@@ -3955,7 +3951,6 @@ class temp_events : public events<D, E>
 {
 protected:
     using node_t = ::react::detail::event_op_node<D, E, op_t>;
-    using node_ptr_T = std::shared_ptr<node_t>;
 
 public:
     // Default ctor
@@ -3970,7 +3965,7 @@ public:
     {}
 
     // Node ctor
-    explicit temp_events( node_ptr_T&& node_ptr )
+    explicit temp_events( std::shared_ptr<node_t>&& node_ptr )
         : temp_events::events( std::move( node_ptr ) )
     {}
 

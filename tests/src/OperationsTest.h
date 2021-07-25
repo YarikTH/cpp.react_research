@@ -286,9 +286,9 @@ TYPED_TEST_P( OperationsTest, SyncedTransform1 )
     auto in1 = make_var<D>( 1 );
     auto in2 = make_var<D>( 1 );
 
-    auto sum = in1 + in2;
-    auto prod = in1 * in2;
-    auto diff = in1 - in2;
+    auto sum = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a + b; } );
+    auto prod = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a * b; } );
+    auto diff = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a - b; } );
 
     auto src1 = make_event_source<D>();
     auto src2 = make_event_source<D, int>();
@@ -377,8 +377,10 @@ TYPED_TEST_P( OperationsTest, SyncedIterate1 )
     auto in1 = make_var<D>( 1 );
     auto in2 = make_var<D>( 1 );
 
-    auto op1 = in1 + in2;
-    auto op2 = ( in1 + in2 ) * 10;
+    auto summ = []( int a, int b ) { return a + b; };
+
+    auto op1 = ( in1, in2 )->*summ;
+    auto op2 = ( ( in1, in2 )->*summ )->*[]( int a ) { return a * 10; };
 
     auto src1 = make_event_source<D>();
     auto src2 = make_event_source<D, int>();
@@ -469,8 +471,10 @@ TYPED_TEST_P( OperationsTest, SyncedIterate2 )
     auto in1 = make_var<D>( 1 );
     auto in2 = make_var<D>( 1 );
 
-    auto op1 = in1 + in2;
-    auto op2 = ( in1 + in2 ) * 10;
+    auto summ = []( int a, int b ) { return a + b; };
+
+    auto op1 = ( in1, in2 )->*summ;
+    auto op2 = ( ( in1, in2 )->*summ )->*[]( int a ) { return a * 10; };
 
     auto src1 = make_event_source<D>();
     auto src2 = make_event_source<D, int>();
@@ -578,8 +582,10 @@ TYPED_TEST_P( OperationsTest, SyncedIterate3 )
     auto in1 = make_var<D>( 1 );
     auto in2 = make_var<D>( 1 );
 
-    auto op1 = in1 + in2;
-    auto op2 = ( in1 + in2 ) * 10;
+    auto summ = []( int a, int b ) { return a + b; };
+
+    auto op1 = ( in1, in2 )->*summ;
+    auto op2 = ( ( in1, in2 )->*summ )->*[]( int a ) { return a * 10; };
 
     auto src1 = make_event_source<D>();
     auto src2 = make_event_source<D, int>();
@@ -677,8 +683,10 @@ TYPED_TEST_P( OperationsTest, SyncedIterate4 )
     auto in1 = make_var<D>( 1 );
     auto in2 = make_var<D>( 1 );
 
-    auto op1 = in1 + in2;
-    auto op2 = ( in1 + in2 ) * 10;
+    auto summ = []( int a, int b ) { return a + b; };
+
+    auto op1 = ( in1, in2 )->*summ;
+    auto op2 = ( ( in1, in2 )->*summ )->*[]( int a ) { return a * 10; };
 
     auto src1 = make_event_source<D>();
     auto src2 = make_event_source<D, int>();

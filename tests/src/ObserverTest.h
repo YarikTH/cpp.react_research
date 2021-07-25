@@ -39,7 +39,7 @@ TYPED_TEST_P( ObserverTest, detach )
     auto a1 = make_var<D>( 1 );
     auto a2 = make_var<D>( 1 );
 
-    auto result = a1 + a2;
+    auto result = make_signal<D>( ( a1, a2 ), []( int a, int b ) { return a + b; } );
 
     int observeCount1 = 0;
     int observeCount2 = 0;
@@ -135,9 +135,9 @@ TYPED_TEST_P( ObserverTest, SyncedObserveTest )
     auto in1 = make_var<D>( 1 );
     auto in2 = make_var<D>( 1 );
 
-    auto sum = in1 + in2;
-    auto prod = in1 * in2;
-    auto diff = in1 - in2;
+    auto sum = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a + b; } );
+    auto prod = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a * b; } );
+    auto diff = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a - b; } );
 
     auto src1 = make_event_source<D>();
     auto src2 = make_event_source<D, int>();
@@ -195,9 +195,9 @@ TYPED_TEST_P( ObserverTest, DetachThisObserver2 )
     auto in1 = make_var<D>( 1 );
     auto in2 = make_var<D>( 1 );
 
-    auto sum = in1 + in2;
-    auto prod = in1 * in2;
-    auto diff = in1 - in2;
+    auto sum = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a + b; } );
+    auto prod = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a * b; } );
+    auto diff = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a - b; } );
 
     auto src = make_event_source<D>();
 

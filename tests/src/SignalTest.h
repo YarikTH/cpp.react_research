@@ -65,6 +65,8 @@ TYPED_TEST_P( SignalTest, Signals1 )
 {
     using D = typename Signals1::MyDomain;
 
+    auto summ = []( int a, int b ) { return a + b; };
+
     auto v1 = make_var<D>( 1 );
     auto v2 = make_var<D>( 2 );
     auto v3 = make_var<D>( 3 );
@@ -74,7 +76,7 @@ TYPED_TEST_P( SignalTest, Signals1 )
 
     auto s2 = make_signal( with( v3, v4 ), []( int a, int b ) { return a + b; } );
 
-    auto s3 = s1 + s2;
+    auto s3 = ( s1, s2 )->*summ;
 
     ASSERT_EQ( s1(), 3 );
     ASSERT_EQ( s2(), 7 );
@@ -114,14 +116,17 @@ TYPED_TEST_P( SignalTest, Signals2 )
     auto a1 = make_var<D>( 1 );
     auto a2 = make_var<D>( 1 );
 
-    auto b1 = a1 + 0;
-    auto b2 = a1 + a2;
-    auto b3 = a2 + 0;
+    auto plus0 = []( int value ) { return value + 0; };
+    auto summ = []( int a, int b ) { return a + b; };
 
-    auto c1 = b1 + b2;
-    auto c2 = b2 + b3;
+    auto b1 = a1->*plus0;
+    auto b2 = ( a1, a2 )->*summ;
+    auto b3 = a2->*plus0;
 
-    auto result = c1 + c2;
+    auto c1 = ( b1, b2 )->*summ;
+    auto c2 = ( b2, b3 )->*summ;
+
+    auto result = ( c1, c2 )->*summ;
 
     int observeCount = 0;
 
@@ -188,14 +193,17 @@ TYPED_TEST_P( SignalTest, Signals3 )
     auto a1 = make_var<D>( 1 );
     auto a2 = make_var<D>( 1 );
 
-    auto b1 = a1 + 0;
-    auto b2 = a1 + a2;
-    auto b3 = a2 + 0;
+    auto plus0 = []( int value ) { return value + 0; };
+    auto summ = []( int a, int b ) { return a + b; };
 
-    auto c1 = b1 + b2;
-    auto c2 = b2 + b3;
+    auto b1 = a1->*plus0;
+    auto b2 = ( a1, a2 )->*summ;
+    auto b3 = a2->*plus0;
 
-    auto result = c1 + c2;
+    auto c1 = ( b1, b2 )->*summ;
+    auto c2 = ( b2, b3 )->*summ;
+
+    auto result = ( c1, c2 )->*summ;
 
     int observeCount = 0;
 
@@ -246,8 +254,10 @@ TYPED_TEST_P( SignalTest, Signals4 )
     auto a1 = make_var<D>( 1 );
     auto a2 = make_var<D>( 1 );
 
-    auto b1 = a1 + a2;
-    auto b2 = b1 + a2;
+    auto summ = []( int a, int b ) { return a + b; };
+
+    auto b1 = ( a1, a2 )->*summ;
+    auto b2 = ( b1, a2 )->*summ;
 
     ASSERT_EQ( a1(), 1 );
     ASSERT_EQ( a2(), 1 );
@@ -305,10 +315,12 @@ TYPED_TEST_P( SignalTest, FunctionBind2 )
     auto a = make_var<D>( 1 );
     auto b = make_var<D>( 1 );
 
-    auto c = ( ( a + b ), ( a + 100 ) )->*&myfunc;
+    auto summ = []( int a, int b ) { return a + b; };
+
+    auto c = ( ( ( a, b )->*summ ), ( ( a, make_var<D>( 100 ) )->*summ ) )->*&myfunc;
     auto d = c->*&myfunc2;
     auto e = ( d, d )->*&myfunc3;
-    auto f = -e + 100;
+    auto f = make_signal<D>( e, []( float value ) { return -value + 100; } );
 
     ASSERT_EQ( c(), 103 );
     ASSERT_EQ( d(), 51.5f );
@@ -373,13 +385,15 @@ TYPED_TEST_P( SignalTest, Flatten2 )
 
     auto inner1 = make_var<D>( 200 );
 
+    auto plus0 = []( int value ) { return value + 0; };
+
     auto a1 = make_var<D>( 300 );
-    auto a2 = a1 + 0;
-    auto a3 = a2 + 0;
-    auto a4 = a3 + 0;
-    auto a5 = a4 + 0;
-    auto a6 = a5 + 0;
-    auto inner2 = a6 + 0;
+    auto a2 = make_signal<D>( a1, plus0 );
+    auto a3 = make_signal<D>( a2, plus0 );
+    auto a4 = make_signal<D>( a3, plus0 );
+    auto a5 = make_signal<D>( a4, plus0 );
+    auto a6 = make_signal<D>( a5, plus0 );
+    auto inner2 = make_signal<D>( a6, plus0 );
 
     ASSERT_EQ( inner1(), 200 );
     ASSERT_EQ( inner2(), 300 );
@@ -394,10 +408,10 @@ TYPED_TEST_P( SignalTest, Flatten2 )
 
     observe( flattened, [&observeCount]( int v ) { observeCount++; } );
 
-    auto o1 = a0 + flattened;
-    auto o2 = o1 + 0;
-    auto o3 = o2 + 0;
-    auto result = o3 + 0;
+    auto o1 = make_signal<D>( ( a0, flattened ), []( int a, int b ) { return a + b; } );
+    auto o2 = make_signal<D>( o1, plus0 );
+    auto o3 = make_signal<D>( o2, plus0 );
+    auto result = make_signal<D>( o3, plus0 );
 
     ASSERT_EQ( result(), 100 + 200 );
 
@@ -427,12 +441,15 @@ TYPED_TEST_P( SignalTest, Flatten3 )
 {
     using D = typename Flatten3::MyDomain;
 
+    auto plus0 = []( int value ) { return value + 0; };
+    auto summ = []( int a, int b ) { return a + b; };
+
     auto inner1 = make_var<D>( 10 );
 
     auto a1 = make_var<D>( 20 );
-    auto a2 = a1 + 0;
-    auto a3 = a2 + 0;
-    auto inner2 = a3 + 0;
+    auto a2 = a1->*plus0;
+    auto a3 = a2->*plus0;
+    auto inner2 = a3->*plus0;
 
     auto outer = make_var<D>( inner1 );
 
@@ -444,7 +461,7 @@ TYPED_TEST_P( SignalTest, Flatten3 )
 
     observe( flattened, [&observeCount]( int v ) { observeCount++; } );
 
-    auto result = flattened + a0;
+    auto result = ( flattened, a0 )->*summ;
 
     ASSERT_EQ( result(), 10 + 30 );
     ASSERT_EQ( observeCount, 0 );
@@ -485,8 +502,11 @@ TYPED_TEST_P( SignalTest, Flatten4 )
 
     std::vector<int> results;
 
+    auto plus0 = []( int value ) { return value + 0; };
+    auto summ = []( int a, int b ) { return a + b; };
+
     auto a1 = make_var<D>( 100 );
-    auto inner1 = a1 + 0;
+    auto inner1 = a1->*plus0;
 
     auto a2 = make_var<D>( 200 );
     auto inner2 = a2;
@@ -497,7 +517,7 @@ TYPED_TEST_P( SignalTest, Flatten4 )
 
     auto flattened = flatten( outer );
 
-    auto result = flattened + a3;
+    auto result = ( flattened, a3 )->*summ;
 
     observe( result, [&]( int v ) { results.push_back( v ); } );
 

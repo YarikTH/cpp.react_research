@@ -141,7 +141,7 @@ TYPED_TEST_P( OperationsTest, Monitor1 )
     auto filterFunc = []( int v ) { return v > 10; };
 
     auto obs = observe(
-        monitor( target ).filter( filterFunc ), [&]( int v ) { results.push_back( v ); } );
+        filter( monitor( target ), filterFunc ), [&]( int v ) { results.push_back( v ); } );
 
     target <<= 10;
     target <<= 20;

@@ -3798,32 +3798,6 @@ public:
     {
         return events::event_stream_base::is_valid();
     }
-
-    auto tokenize() const -> decltype( ::react::tokenize( std::declval<events>() ) )
-    {
-        return ::react::tokenize( *this );
-    }
-
-    template <typename... args_t>
-    auto merge( args_t&&... args ) const
-        -> decltype( ::react::merge( std::declval<events>(), std::forward<args_t>( args )... ) )
-    {
-        return ::react::merge( *this, std::forward<args_t>( args )... );
-    }
-
-    template <typename F>
-    auto filter( F&& f ) const
-        -> decltype( ::react::filter( std::declval<events>(), std::forward<F>( f ) ) )
-    {
-        return ::react::filter( *this, std::forward<F>( f ) );
-    }
-
-    template <typename F>
-    auto transform( F&& f ) const
-        -> decltype( ::react::transform( std::declval<events>(), std::forward<F>( f ) ) )
-    {
-        return ::react::transform( *this, std::forward<F>( f ) );
-    }
 };
 
 // Specialize for references
@@ -3871,32 +3845,6 @@ public:
     bool is_valid() const
     {
         return events::event_stream_base::is_valid();
-    }
-
-    auto tokenize() const -> decltype( ::react::tokenize( std::declval<events>() ) )
-    {
-        return ::react::tokenize( *this );
-    }
-
-    template <typename... args_t>
-    auto merge( args_t&&... args )
-        -> decltype( ::react::merge( std::declval<events>(), std::forward<args_t>( args )... ) )
-    {
-        return ::react::merge( *this, std::forward<args_t>( args )... );
-    }
-
-    template <typename F>
-    auto filter( F&& f ) const
-        -> decltype( ::react::filter( std::declval<events>(), std::forward<F>( f ) ) )
-    {
-        return ::react::filter( *this, std::forward<F>( f ) );
-    }
-
-    template <typename F>
-    auto transform( F&& f ) const
-        -> decltype( ::react::transform( std::declval<events>(), std::forward<F>( f ) ) )
-    {
-        return ::react::transform( *this, std::forward<F>( f ) );
     }
 };
 
@@ -4080,27 +4028,6 @@ public:
     op_t steal_op()
     {
         return std::move( reinterpret_cast<node_t*>( this->m_ptr.get() )->steal_op() );
-    }
-
-    template <typename... args_t>
-    auto merge( args_t&&... args ) -> decltype(
-        ::react::merge( std::declval<temp_events>(), std::forward<args_t>( args )... ) )
-    {
-        return ::react::merge( *this, std::forward<args_t>( args )... );
-    }
-
-    template <typename F>
-    auto filter( F&& f ) const
-        -> decltype( ::react::filter( std::declval<temp_events>(), std::forward<F>( f ) ) )
-    {
-        return ::react::filter( *this, std::forward<F>( f ) );
-    }
-
-    template <typename F>
-    auto transform( F&& f ) const
-        -> decltype( ::react::transform( std::declval<temp_events>(), std::forward<F>( f ) ) )
-    {
-        return ::react::transform( *this, std::forward<F>( f ) );
     }
 };
 

@@ -270,26 +270,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-using turn_id_t = unsigned;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// turn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class turn_type
-{
-public:
-    inline turn_type( turn_id_t id )
-        : id_( id )
-    {}
-
-    inline turn_id_t id() const
-    {
-        return id_;
-    }
-
-private:
-    turn_id_t id_;
-};
+using turn_type = unsigned;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// reactive_node
@@ -887,7 +868,7 @@ public:
     }
 
 private:
-    turn_id_t next_turn_id()
+    turn_type next_turn_id()
     {
         return m_next_turn_id++;
     }
@@ -945,7 +926,7 @@ private:
 
     detached_observers_manager m_detached_observers_manager;
 
-    turn_id_t m_next_turn_id{ 0 };
+    turn_type m_next_turn_id{ 0 };
 
     bool m_is_transaction_active = false;
 
@@ -2565,9 +2546,9 @@ public:
 
     void set_current_turn( const turn_type& turn, bool force_update = false, bool no_clear = false )
     {
-        if( m_cur_turn_id != turn.id() || force_update )
+        if( m_cur_turn_id != turn || force_update )
         {
-            m_cur_turn_id = turn.id();
+            m_cur_turn_id = turn;
             if( !no_clear )
             {
                 m_events.clear();
@@ -2584,7 +2565,7 @@ protected:
     data_t m_events;
 
 private:
-    unsigned m_cur_turn_id{ ( std::numeric_limits<unsigned>::max )() };
+    unsigned m_cur_turn_id{ std::numeric_limits<unsigned>::max() };
 };
 
 template <typename D, typename E>

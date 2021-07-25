@@ -268,25 +268,6 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// reactive_node
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class reactive_node
-{
-public:
-    int level{ 0 };
-    int new_level{ 0 };
-    bool queued{ false };
-
-    node_vector<reactive_node> successors;
-
-    virtual ~reactive_node() = default;
-
-    // Note: Could get rid of this ugly ptr by adding a template parameter to the interface
-    // But that would mean all engine nodes need that template parameter too - so rather cast
-    virtual void tick( void* turn_ptr ) = 0;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 using turn_id_t = unsigned;
@@ -310,11 +291,29 @@ private:
     turn_id_t id_;
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// reactive_node
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class reactive_node
+{
+public:
+    int level{ 0 };
+    int new_level{ 0 };
+    bool queued{ false };
+
+    node_vector<reactive_node> successors;
+
+    virtual ~reactive_node() = default;
+
+    // Note: Could get rid of this ugly ptr by adding a template parameter to the interface
+    // But that would mean all engine nodes need that template parameter too - so rather cast
+    virtual void tick( turn_type* turn_ptr ) = 0;
+};
+
 class topological_sort_engine
 {
 public:
     using node_t = reactive_node;
-    using turn_t = turn_type;
 
     void propagate( turn_type& turn );
 
@@ -380,7 +379,6 @@ template <typename D, typename engine_t>
 struct engine_interface
 {
     using node_t = typename engine_t::node_t;
-    using turn_t = typename engine_t::turn_t;
 
     static engine_t& instance()
     {
@@ -393,7 +391,7 @@ struct engine_interface
         instance().on_input_change( node );
     }
 
-    static void propagate( turn_t& turn )
+    static void propagate( turn_type& turn )
     {
         instance().propagate( turn );
     }
@@ -433,7 +431,7 @@ struct input_node_interface
 {
     virtual ~input_node_interface() = default;
 
-    virtual bool apply_input( void* turn_ptr ) = 0;
+    virtual bool apply_input( turn_type* turn_ptr ) = 0;
 };
 
 class observer_interface
@@ -504,7 +502,6 @@ public:
     using domain_t = D;
     using engine = typename D::engine;
     using node_t = reactive_node;
-    using turn_t = typename engine::turn_t;
 
     node_base() = default;
 
@@ -821,7 +818,6 @@ template <typename D>
 class input_manager
 {
 public:
-    using turn_t = typename D::turn_t;
     using engine = typename D::engine;
 
     input_manager() = default;
@@ -834,7 +830,7 @@ public:
         // Phase 1 - Input admission
         m_is_transaction_active = true;
 
-        turn_t turn( next_turn_id() );
+        turn_type turn( next_turn_id() );
 
         func();
 
@@ -900,7 +896,7 @@ private:
     template <typename R, typename V>
     void add_simple_input( R& r, V&& v )
     {
-        turn_t turn( next_turn_id() );
+        turn_type turn( next_turn_id() );
         r.add_input( std::forward<V>( v ) );
 
         if( r.apply_input( &turn ) )
@@ -914,7 +910,7 @@ private:
     template <typename R, typename F>
     void modify_simple_input( R& r, const F& func )
     {
-        turn_t turn( next_turn_id() );
+        turn_type turn( next_turn_id() );
 
         r.modify_input( func );
 
@@ -1026,8 +1022,6 @@ template <typename D>
 class domain_base
 {
 public:
-    using turn_t = turn_type;
-
     domain_base() = delete;
 
     using engine = ::react::detail::engine_interface<D, topological_sort_engine>;
@@ -1201,7 +1195,7 @@ public:
 
     ~signal_observer_node() = default;
 
-    void tick( void* ) override
+    void tick( turn_type* ) override
     {
         bool should_detach = false;
 
@@ -1261,7 +1255,7 @@ public:
 
     ~event_observer_node() = default;
 
-    void tick( void* ) override
+    void tick( turn_type* ) override
     {
         bool should_detach = false;
 
@@ -1325,10 +1319,9 @@ public:
 
     ~synced_observer_node() = default;
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         bool should_detach = false;
 
@@ -1779,7 +1772,7 @@ public:
 
     ~var_node() override = default;
 
-    void tick( void* ) override
+    void tick( turn_type* ) override
     {
         assert( !"Ticked var_node" );
     }
@@ -1816,7 +1809,7 @@ public:
         }
     }
 
-    bool apply_input( void* ) override
+    bool apply_input( turn_type* ) override
     {
         if( m_is_input_added )
         {
@@ -1936,7 +1929,7 @@ public:
         }
     }
 
-    void tick( void* ) override
+    void tick( turn_type* ) override
     {
         bool changed = false;
 
@@ -1994,7 +1987,7 @@ public:
         engine::on_node_detach( *this, *m_outer );
     }
 
-    void tick( void* ) override
+    void tick( turn_type* ) override
     {
         auto new_inner = get_node_ptr( m_outer->value_ref() );
 
@@ -2567,11 +2560,10 @@ class event_stream_node : public observable_node<D>
 public:
     using data_t = std::vector<E>;
     using engine_t = typename D::engine;
-    using turn_t = typename engine_t::turn_t;
 
     event_stream_node() = default;
 
-    void set_current_turn( const turn_t& turn, bool force_update = false, bool no_clear = false )
+    void set_current_turn( const turn_type& turn, bool force_update = false, bool no_clear = false )
     {
         if( m_cur_turn_id != turn.id() || force_update )
         {
@@ -2615,7 +2607,7 @@ public:
 
     ~event_source_node() override = default;
 
-    void tick( void* ) override
+    void tick( turn_type* ) override
     {
         assert( !"Ticked event_source_node" );
     }
@@ -2633,12 +2625,11 @@ public:
         this->m_events.push_back( std::forward<V>( v ) );
     }
 
-    bool apply_input( void* turn_ptr ) override
+    bool apply_input( turn_type* turn_ptr ) override
     {
         if( this->m_events.size() > 0 && !m_changed_flag )
         {
-            using turn_t = typename D::engine::turn_t;
-            turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+            turn_type& turn = *turn_ptr;
 
             this->set_current_turn( turn, true, true );
             m_changed_flag = true;
@@ -2903,10 +2894,9 @@ public:
         }
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         this->set_current_turn( turn, true );
 
@@ -2973,10 +2963,9 @@ public:
         engine::on_node_detach( *this, *m_inner );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        typedef typename D::engine::turn_t turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         this->set_current_turn( turn, true );
         m_inner->set_current_turn( turn );
@@ -3044,10 +3033,9 @@ public:
             m_deps );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         this->set_current_turn( turn, true );
         // Update of this node could be triggered from deps,
@@ -3115,10 +3103,9 @@ public:
             m_deps );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         this->set_current_turn( turn, true );
         // Update of this node could be triggered from deps,
@@ -3180,10 +3167,9 @@ public:
         engine::on_node_detach( *this, *m_source );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         this->set_current_turn( turn, true );
 
@@ -3234,10 +3220,9 @@ public:
             m_deps );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         this->set_current_turn( turn, true );
         // Update of this node could be triggered from deps,
@@ -3278,7 +3263,6 @@ template <typename D, typename... values_t>
 class event_join_node : public event_stream_node<D, std::tuple<values_t...>>
 {
     using engine = typename event_join_node::engine;
-    using turn_t = typename engine::turn_t;
 
 public:
     event_join_node( const std::shared_ptr<event_stream_node<D, values_t>>&... sources )
@@ -3297,9 +3281,9 @@ public:
             m_slots );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         this->set_current_turn( turn, true );
 
@@ -3357,7 +3341,7 @@ private:
     };
 
     template <typename T>
-    static void fetch_buffer( turn_t& turn, slot<T>& slot )
+    static void fetch_buffer( turn_type& turn, slot<T>& slot )
     {
         slot.source->set_current_turn( turn );
 
@@ -4120,7 +4104,7 @@ public:
         engine::on_node_detach( *this, *m_events );
     }
 
-    void tick( void* ) override
+    void tick( turn_type* ) override
     {
         bool changed = false;
 
@@ -4171,7 +4155,7 @@ public:
         engine::on_node_detach( *this, *m_events );
     }
 
-    void tick( void* ) override
+    void tick( turn_type* ) override
     {
         m_func( event_range<E>( m_events->events() ), this->m_value );
 
@@ -4218,10 +4202,9 @@ public:
             m_deps );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         m_events->set_current_turn( turn );
 
@@ -4291,10 +4274,9 @@ public:
             m_deps );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         m_events->set_current_turn( turn );
 
@@ -4350,7 +4332,7 @@ public:
         engine::on_node_detach( *this, *m_events );
     }
 
-    void tick( void* ) override
+    void tick( turn_type* ) override
     {
         bool changed = false;
 
@@ -4400,10 +4382,9 @@ public:
         engine::on_node_detach( *this, *m_trigger );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         m_trigger->set_current_turn( turn );
 
@@ -4452,10 +4433,9 @@ public:
         engine::on_node_detach( *this, *m_target );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        using turn_t = typename D::engine::turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         this->set_current_turn( turn, true );
 
@@ -4496,10 +4476,9 @@ public:
         engine::on_node_detach( *this, *m_trigger );
     }
 
-    void tick( void* turn_ptr ) override
+    void tick( turn_type* turn_ptr ) override
     {
-        typedef typename D::engine::turn_t turn_t;
-        turn_t& turn = *reinterpret_cast<turn_t*>( turn_ptr );
+        turn_type& turn = *turn_ptr;
 
         this->set_current_turn( turn, true );
         m_trigger->set_current_turn( turn );

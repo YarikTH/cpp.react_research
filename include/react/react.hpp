@@ -1157,7 +1157,7 @@ public:
 template <typename D, typename S, typename func_t>
 class signal_observer_node : public observer_node<D>
 {
-    using engine = typename signal_observer_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename F>
@@ -1217,7 +1217,7 @@ private:
 template <typename D, typename E, typename func_t>
 class event_observer_node : public observer_node<D>
 {
-    using engine = typename event_observer_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename F>
@@ -1276,7 +1276,7 @@ private:
 template <typename D, typename E, typename func_t, typename... dep_values_t>
 class synced_observer_node : public observer_node<D>
 {
-    using engine = typename synced_observer_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename F>
@@ -1737,7 +1737,7 @@ class var_node
     : public signal_node<D, S>
     , public input_node_interface
 {
-    using engine = typename var_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename T>
@@ -1884,7 +1884,7 @@ private:
 template <typename D, typename S, typename op_t>
 class signal_op_node : public signal_node<D, S>
 {
-    using engine = typename signal_op_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename... args_t>
@@ -1944,7 +1944,7 @@ private:
 template <typename D, typename outer_t, typename inner_t>
 class flatten_node : public signal_node<D, inner_t>
 {
-    using engine = typename flatten_node::engine;
+    using engine = typename D::engine;
 
 public:
     flatten_node( const std::shared_ptr<signal_node<D, outer_t>>& outer,
@@ -2574,7 +2574,7 @@ class event_source_node
     : public event_stream_node<D, E>
     , public input_node_interface
 {
-    using engine = typename event_source_node::engine;
+    using engine = typename D::engine;
 
 public:
     event_source_node()
@@ -2850,7 +2850,7 @@ private:
 template <typename D, typename E, typename op_t>
 class event_op_node : public event_stream_node<D, E>
 {
-    using engine = typename event_op_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename... args_t>
@@ -2919,7 +2919,7 @@ private:
 template <typename D, typename outer_t, typename inner_t>
 class event_flatten_node : public event_stream_node<D, inner_t>
 {
-    using engine = typename event_flatten_node::engine;
+    using engine = typename D::engine;
 
 public:
     event_flatten_node( const std::shared_ptr<signal_node<D, outer_t>>& outer,
@@ -2982,7 +2982,7 @@ private:
 template <typename D, typename in_t, typename out_t, typename func_t, typename... dep_values_t>
 class synced_event_transform_node : public event_stream_node<D, out_t>
 {
-    using engine = typename synced_event_transform_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename F>
@@ -3052,7 +3052,7 @@ private:
 template <typename D, typename E, typename func_t, typename... dep_values_t>
 class synced_event_filter_node : public event_stream_node<D, E>
 {
-    using engine = typename synced_event_filter_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename F>
@@ -3125,7 +3125,7 @@ private:
 template <typename D, typename in_t, typename out_t, typename func_t>
 class event_processing_node : public event_stream_node<D, out_t>
 {
-    using engine = typename event_processing_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename F>
@@ -3169,7 +3169,7 @@ private:
 template <typename D, typename in_t, typename out_t, typename func_t, typename... dep_values_t>
 class synced_event_processing_node : public event_stream_node<D, out_t>
 {
-    using engine = typename synced_event_processing_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename F>
@@ -3238,7 +3238,7 @@ private:
 template <typename D, typename... values_t>
 class event_join_node : public event_stream_node<D, std::tuple<values_t...>>
 {
-    using engine = typename event_join_node::engine;
+    using engine = typename D::engine;
 
 public:
     event_join_node( const std::shared_ptr<event_stream_node<D, values_t>>&... sources )
@@ -4057,7 +4057,7 @@ struct add_iterate_by_ref_range_wrapper
 template <typename D, typename S, typename E, typename func_t>
 class iterate_node : public signal_node<D, S>
 {
-    using engine = typename iterate_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename T, typename F>
@@ -4107,7 +4107,7 @@ private:
 template <typename D, typename S, typename E, typename func_t>
 class iterate_by_ref_node : public signal_node<D, S>
 {
-    using engine = typename iterate_by_ref_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename T, typename F>
@@ -4146,7 +4146,7 @@ protected:
 template <typename D, typename S, typename E, typename func_t, typename... dep_values_t>
 class synced_iterate_node : public signal_node<D, S>
 {
-    using engine = typename synced_iterate_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename T, typename F>
@@ -4218,7 +4218,7 @@ private:
 template <typename D, typename S, typename E, typename func_t, typename... dep_values_t>
 class synced_iterate_by_ref_node : public signal_node<D, S>
 {
-    using engine = typename synced_iterate_by_ref_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename T, typename F>
@@ -4286,7 +4286,7 @@ private:
 template <typename D, typename S>
 class hold_node : public signal_node<D, S>
 {
-    using engine = typename hold_node::engine;
+    using engine = typename D::engine;
 
 public:
     template <typename T>
@@ -4334,7 +4334,7 @@ private:
 template <typename D, typename S, typename E>
 class snapshot_node : public signal_node<D, S>
 {
-    using engine = typename snapshot_node::engine;
+    using engine = typename D::engine;
 
 public:
     snapshot_node( const std::shared_ptr<signal_node<D, S>>& target,
@@ -4389,7 +4389,7 @@ private:
 template <typename D, typename E>
 class monitor_node : public event_stream_node<D, E>
 {
-    using engine = typename monitor_node::engine;
+    using engine = typename D::engine;
 
 public:
     monitor_node( const std::shared_ptr<signal_node<D, E>>& target )
@@ -4428,7 +4428,7 @@ private:
 template <typename D, typename S, typename E>
 class pulse_node : public event_stream_node<D, S>
 {
-    using engine = typename pulse_node::engine;
+    using engine = typename D::engine;
 
 public:
     pulse_node( const std::shared_ptr<signal_node<D, S>>& target,

@@ -2532,18 +2532,26 @@ public:
 
     event_stream_node() = default;
 
-    void set_current_turn( const turn_type& turn, bool force_update = false, bool no_clear = false )
+    void set_current_turn( const turn_type& turn )
     {
-        if( m_cur_turn_id != turn || force_update )
+        if( m_cur_turn_id != turn )
         {
             m_cur_turn_id = turn;
-            if( !no_clear )
-            {
-                m_events.clear();
-            }
+            m_events.clear();
         }
     }
 
+    void set_current_turn_force_update( const turn_type& turn )
+    {
+        m_cur_turn_id = turn;
+        m_events.clear();
+    }
+    
+    void set_current_turn_force_update_no_clear( const turn_type& turn )
+    {
+        m_cur_turn_id = turn;
+    }
+    
     data_t& events()
     {
         return m_events;
@@ -2600,7 +2608,7 @@ public:
         {
             turn_type& turn = *turn_ptr;
 
-            this->set_current_turn( turn, true, true );
+            this->set_current_turn_force_update_no_clear( turn );
             m_changed_flag = true;
             engine::on_input_change( *this );
             return true;
@@ -2867,7 +2875,7 @@ public:
     {
         turn_type& turn = *turn_ptr;
 
-        this->set_current_turn( turn, true );
+        this->set_current_turn_force_update( turn );
 
         m_op.collect( turn, event_collector( this->m_events ) );
 
@@ -2936,7 +2944,7 @@ public:
     {
         turn_type& turn = *turn_ptr;
 
-        this->set_current_turn( turn, true );
+        this->set_current_turn_force_update( turn );
         m_inner->set_current_turn( turn );
 
         auto new_inner = get_node_ptr( m_outer->value_ref() );
@@ -3006,7 +3014,7 @@ public:
     {
         turn_type& turn = *turn_ptr;
 
-        this->set_current_turn( turn, true );
+        this->set_current_turn_force_update( turn );
         // Update of this node could be triggered from deps,
         // so make sure source doesn't contain events from last turn
         m_source->set_current_turn( turn );
@@ -3076,7 +3084,7 @@ public:
     {
         turn_type& turn = *turn_ptr;
 
-        this->set_current_turn( turn, true );
+        this->set_current_turn_force_update( turn );
         // Update of this node could be triggered from deps,
         // so make sure source doesn't contain events from last turn
         m_source->set_current_turn( turn );
@@ -3140,7 +3148,7 @@ public:
     {
         turn_type& turn = *turn_ptr;
 
-        this->set_current_turn( turn, true );
+        this->set_current_turn_force_update( turn );
 
         m_func( event_range<in_t>( m_source->events() ), std::back_inserter( this->m_events ) );
 
@@ -3193,7 +3201,7 @@ public:
     {
         turn_type& turn = *turn_ptr;
 
-        this->set_current_turn( turn, true );
+        this->set_current_turn_force_update( turn );
         // Update of this node could be triggered from deps,
         // so make sure source doesn't contain events from last turn
         m_source->set_current_turn( turn );
@@ -3254,7 +3262,7 @@ public:
     {
         turn_type& turn = *turn_ptr;
 
-        this->set_current_turn( turn, true );
+        this->set_current_turn_force_update( turn );
 
         {
             // Move events into buffers
@@ -4401,7 +4409,7 @@ public:
     {
         turn_type& turn = *turn_ptr;
 
-        this->set_current_turn( turn, true );
+        this->set_current_turn_force_update( turn );
 
         this->m_events.push_back( m_target->value_ref() );
 
@@ -4444,7 +4452,7 @@ public:
     {
         turn_type& turn = *turn_ptr;
 
-        this->set_current_turn( turn, true );
+        this->set_current_turn_force_update( turn );
         m_trigger->set_current_turn( turn );
 
         for( size_t i = 0, ie = m_trigger->events().size(); i < ie; ++i )

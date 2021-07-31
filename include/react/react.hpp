@@ -1304,7 +1304,7 @@ public:
         if( auto p = m_subject.lock() )
         {
             // Update of this node could be triggered from deps,
-            // so make sure source doesnt contain events from last turn
+            // so make sure source doesn't contain events from last turn
             p->set_current_turn( turn );
 
             {
@@ -1777,7 +1777,7 @@ public:
             m_is_input_modified = true;
         }
         // There's a new_value, modify new_value instead.
-        // The modified new_value will handled like before, i.e. it'll be compared to m_value
+        // The modified new_value will be handled like before, i.e. it'll be compared to m_value
         // in apply_input
         else
         {
@@ -3008,7 +3008,7 @@ public:
 
         this->set_current_turn( turn, true );
         // Update of this node could be triggered from deps,
-        // so make sure source doesnt contain events from last turn
+        // so make sure source doesn't contain events from last turn
         m_source->set_current_turn( turn );
 
         // Don't time if there is nothing to do
@@ -3078,7 +3078,7 @@ public:
 
         this->set_current_turn( turn, true );
         // Update of this node could be triggered from deps,
-        // so make sure source doesnt contain events from last turn
+        // so make sure source doesn't contain events from last turn
         m_source->set_current_turn( turn );
 
         // Don't time if there is nothing to do
@@ -3195,7 +3195,7 @@ public:
 
         this->set_current_turn( turn, true );
         // Update of this node could be triggered from deps,
-        // so make sure source doesnt contain events from last turn
+        // so make sure source doesn't contain events from last turn
         m_source->set_current_turn( turn );
 
         // Don't time if there is nothing to do

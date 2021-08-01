@@ -136,13 +136,19 @@ TEST_SUITE( "OperationsTest" )
     
         observe( src, [&]( token ) -> observer_action {
             ++count;
+            if( count == 1 )
+            {
+                return observer_action::next;
+            }
             return observer_action::stop_and_detach;
         } );
     
         src.emit();
         src.emit();
+        src.emit();
+        src.emit();
         
-        CHECK_EQ( count, 1 );
+        CHECK_EQ( count, 2 );
     }
     
     TEST_CASE( "DetachThisObserver2" )
@@ -177,5 +183,34 @@ TEST_SUITE( "OperationsTest" )
         src.emit();
     
         CHECK_EQ( count, 2 );
+    }
+    
+    TEST_CASE( "Detaching observers using return value" )
+    {
+        auto x = make_var<D>( 0 );
+        
+        std::vector<int> x_values;
+        
+        // Functor used for observer can optionally return value
+        // Using this value observer can be optionally self detached
+        auto obs = observe( x, [&]( const int v ) {
+            if( v < 0 )
+            {
+                return observer_action::stop_and_detach;
+            }
+            else
+            {
+                x_values.push_back( v );
+                return observer_action::next;
+            }
+        } );
+
+        x <<= 1;
+        x <<= 2;
+        x <<= 3;
+        x <<= -1;
+        x <<= 4;
+
+        CHECK( x_values == std::vector<int>{ 1, 2, 3 } );
     }
 }

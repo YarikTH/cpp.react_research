@@ -64,7 +64,25 @@ TEST_SUITE( "EventStreamTest" )
         auto a2 = make_event_source<D, int>();
         auto a3 = make_event_source<D, int>();
     
-        auto merged = merge( a1, a2, a3 );
+        events<D, int> merged;
+    
+        SUBCASE("Function")
+        {
+            merged = merge( a1, a2, a3 );
+        }
+        SUBCASE("Operator1")
+        {
+            merged = a1 | a2 | a3;
+        }
+        SUBCASE("Operator2")
+        {
+            merged = a1 | (a2 | a3);
+        }
+        SUBCASE("Operator3")
+        {
+            auto a4 = make_event_source<D, int>();
+            merged = (a1 | a4) | (a2 | a3);
+        }
     
         std::vector<int> results;
     
@@ -147,7 +165,16 @@ TEST_SUITE( "EventStreamTest" )
     
         auto in = make_event_source<D, std::string>();
     
-        auto filtered = filter( in, []( const std::string& s ) { return s == "Hello World"; } );
+        events<D, std::string> filtered;
+    
+        SUBCASE("Filter")
+        {
+            filtered = filter( in, []( const std::string& s ) { return s == "Hello World"; } );
+        }
+        SUBCASE("Filter filtered")
+        {
+            filtered = filter( filter( in, []( const std::string& s ){ return true; } ), []( const std::string& s ) { return s == "Hello World"; } );
+        }
     
         observe( filtered, [&]( const std::string& s ) { results.push( s ); } );
     
@@ -169,11 +196,23 @@ TEST_SUITE( "EventStreamTest" )
     
         auto merged = merge( in1, in2 );
     
-        auto transformed = transform( merged, []( std::string s ) -> std::string {
-            std::transform( s.begin(), s.end(), s.begin(), ::toupper );
-            return s;
-        } );
-    
+        events<D, std::string> transformed;
+        
+        SUBCASE("Transform")
+        {
+            transformed = transform( merged, []( std::string s ) -> std::string {
+                std::transform( s.begin(), s.end(), s.begin(), ::toupper );
+                return s;
+            } );
+        }
+        SUBCASE("Transform filtered")
+        {
+            transformed = transform( filter( merged, []( const std::string& s ){ return true; } ), []( std::string s ) -> std::string {
+                std::transform( s.begin(), s.end(), s.begin(), ::toupper );
+                return s;
+            } );
+        }
+
         observe( transformed, [&]( const std::string& s ) { results.push_back( s ); } );
     
         in1 << std::string( "Hello Worlt" ) << std::string( "Hello World" );

@@ -22,6 +22,42 @@ namespace
     {
         return a * b;
     }
+    
+    class Company
+    {
+    public:
+        int index;
+        var_signal<D, std::string> name;
+    
+        Company( const int index, const char* name )
+            : index( index )
+            , name( make_var<D>( std::string( name ) ) )
+        {}
+    
+        friend bool operator==( const Company& lhs, const Company& rhs )
+        {
+            // clang-format off
+            return std::tie( lhs.index, lhs.name.value() )
+                == std::tie( rhs.index, rhs.name.value() );
+            // clang-format on
+        }
+    };
+    
+    std::ostream& operator<<( std::ostream& os, const Company& company )
+    {
+        os << "Company{ index: " << company.index << ", name: \"" << company.name.value() << "\" }";
+        return os;
+    }
+    
+    class Employee
+    {
+    public:
+        var_signal<D, Company&> company;
+    
+        Employee( Company& company )
+            : company( make_var<D>( std::ref( company ) ) )
+        {}
+    };
 }
 
 TEST_SUITE( "SignalTest" )
@@ -533,5 +569,85 @@ TEST_SUITE( "SignalTest" )
         } );
     
         CHECK_EQ( obsCount, 1 );
+    }
+    
+    TEST_CASE( "Signals of references" )
+    {
+        Company company1( 1, "MetroTec" );
+        Company company2( 2, "ACME" );
+
+        Employee Bob( company1 );
+
+        CHECK( Bob.company.value().get() == Company( 1, "MetroTec" ) );
+
+        std::vector<std::string> bob_company_names;
+
+        observe( Bob.company, [&]( const Company& company ) {
+            bob_company_names.emplace_back( company.name.value() );
+        } );
+
+        // Changing ref of Bob's company to company2
+        Bob.company <<= company2;
+
+        CHECK( Bob.company.value().get() == Company( 2, "ACME" ) );
+
+        CHECK( bob_company_names == std::vector<std::string>{ "ACME" } );
+    }
+
+    TEST_CASE( "Dynamic signal references" )
+    {
+        Company company1( 1, "MetroTec" );
+        Company company2( 2, "ACME" );
+
+        Employee Alice( company1 );
+
+        CHECK( Alice.company.value() == Company( 1, "MetroTec" ) );
+
+        std::vector<std::string> alice_company_names;
+
+        // Observer isn't bound to long term lived signal. So we need to keep it alive
+        auto obs = observe( REACTIVE_REF( Alice.company, name ),
+            [&]( const std::string& name ) { alice_company_names.emplace_back( name ); } );
+
+        company1.name <<= std::string( "ModernTec" );
+        Alice.company <<= std::ref( company2 );
+        company2.name <<= std::string( "A.C.M.E." );
+
+        CHECK( alice_company_names == std::vector<std::string>{ "ModernTec", "ACME", "A.C.M.E." } );
+    }
+    
+    TEST_CASE( "Signal of events" )
+    {
+        auto in1 = make_event_source<D, int>();
+        auto in2 = make_event_source<D, int>();
+        
+        auto sig = make_var<D>( in1 );
+    
+        int reassign_count = 0;
+        
+        observe(sig, [&]( const events<D, int>& )
+        {
+            ++reassign_count;
+        });
+        
+        auto f = flatten( sig );
+        
+        std::vector<int> saved_events;
+        
+        observe(f, [&]( const int value )
+        {
+            saved_events.push_back( value );
+        });
+        
+        in1 << -1;
+        in2 << 1;
+        
+        sig <<= in2;
+        
+        in1 << -2;
+        in2 << 2;
+        
+        CHECK( saved_events == std::vector<int>{ -1, 2 } );
+        CHECK( reassign_count == 1 );
     }
 }

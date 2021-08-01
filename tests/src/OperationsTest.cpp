@@ -176,6 +176,24 @@ TEST_SUITE( "OperationsTest" )
         CHECK_EQ( snap(), 20 );
     }
     
+    TEST_CASE( "Changed" )
+    {
+        auto value = make_var<D>( -1 );
+        
+        int changes_amount = 0;
+        int changes_to_zero_amount = 0;
+        auto obs1 = observe( changed( value ), [&](token){ ++changes_amount; } );
+        auto obs2 = observe( changed_to( value, 0 ), [&](token){ ++changes_to_zero_amount; } );
+        
+        value <<= 1;
+        value <<= 0;
+        value <<= 2;
+        value <<= 0;
+        
+        CHECK( changes_amount == 4 );
+        CHECK( changes_to_zero_amount == 2 );
+    }
+    
     TEST_CASE( "IterateByRef1" )
     {
         auto src = make_event_source<D, int>();
@@ -804,5 +822,57 @@ TEST_SUITE( "OperationsTest" )
         CHECK_EQ( results[3], 300.0f );
         CHECK_EQ( results[4], 30.0f );
         CHECK_EQ( results[5], 450.0f );
+    }
+    
+    TEST_CASE( "Join1" )
+    {
+        auto in1 = make_event_source<D, int>();
+        auto in2 = make_event_source<D, int>();
+        
+        auto joined = join(in1, in2);
+        
+        std::vector<std::tuple<int, int>> saved_events;
+        
+        observe(joined, [&](const std::tuple<int, int>& value){
+            saved_events.push_back( value );
+        });
+        
+        in1 << -1 << -2 << -3;
+        in2 <<  1 <<  2 <<  3 <<  4;
+        
+        const std::vector<std::tuple<int, int>> expected = {
+            { -1, 1 },
+            { -2, 2 },
+            { -3, 3 },
+        };
+        
+        CHECK( saved_events == expected );
+    }
+    
+    TEST_CASE( "Join2" )
+    {
+        auto in1 = make_event_source<D, int>();
+        auto in2 = make_event_source<D, int>();
+        
+        auto joined = join(in1, in2);
+        
+        std::vector<std::tuple<int, int>> saved_events;
+        
+        observe(joined, [&](const std::tuple<int, int>& value){
+            saved_events.push_back( value );
+        });
+    
+        do_transaction<D>([&]{
+            in1 << -1 << -2 << -3;
+            in2 <<  1 <<  2 <<  3 <<  4;
+        });
+        
+        const std::vector<std::tuple<int, int>> expected = {
+            { -1, 1 },
+            { -2, 2 },
+            { -3, 3 },
+        };
+        
+        CHECK( saved_events == expected );
     }
 }

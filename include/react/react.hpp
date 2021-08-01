@@ -288,7 +288,7 @@ public:
 
     // Note: Could get rid of this ugly ptr by adding a template parameter to the interface
     // But that would mean all engine nodes need that template parameter too - so rather cast
-    virtual void tick( turn_type* turn_ptr ) = 0;
+    virtual void tick( turn_type& turn ) = 0;
 };
 
 class topological_sort_engine
@@ -408,7 +408,7 @@ struct input_node_interface
 {
     virtual ~input_node_interface() = default;
 
-    virtual bool apply_input( turn_type* turn_ptr ) = 0;
+    virtual bool apply_input( turn_type& turn ) = 0;
 };
 
 class observer_interface
@@ -815,7 +815,7 @@ public:
         // Phase 2 - Apply input node changes
         for( auto* p : m_changed_inputs )
         {
-            if( p->apply_input( &turn ) )
+            if( p->apply_input( turn ) )
             {
                 should_propagate = true;
             }
@@ -875,7 +875,7 @@ private:
         turn_type turn( next_turn_id() );
         r.add_input( std::forward<V>( v ) );
 
-        if( r.apply_input( &turn ) )
+        if( r.apply_input( turn ) )
         {
             engine::propagate( turn );
         }
@@ -892,7 +892,7 @@ private:
 
 
         // Return value, will always be true
-        r.apply_input( &turn );
+        r.apply_input( turn );
 
         engine::propagate( turn );
 
@@ -1171,7 +1171,7 @@ public:
 
     ~signal_observer_node() = default;
 
-    void tick( turn_type* ) override
+    void tick( turn_type& ) override
     {
         bool should_detach = false;
 
@@ -1231,7 +1231,7 @@ public:
 
     ~event_observer_node() = default;
 
-    void tick( turn_type* ) override
+    void tick( turn_type& ) override
     {
         bool should_detach = false;
 
@@ -1295,10 +1295,8 @@ public:
 
     ~synced_observer_node() = default;
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         bool should_detach = false;
 
         if( auto p = m_subject.lock() )
@@ -1748,7 +1746,7 @@ public:
 
     ~var_node() override = default;
 
-    void tick( turn_type* ) override
+    void tick( turn_type& ) override
     {
         assert( !"Ticked var_node" );
     }
@@ -1785,7 +1783,7 @@ public:
         }
     }
 
-    bool apply_input( turn_type* ) override
+    bool apply_input( turn_type& ) override
     {
         if( m_is_input_added )
         {
@@ -1905,7 +1903,7 @@ public:
         }
     }
 
-    void tick( turn_type* ) override
+    void tick( turn_type& ) override
     {
         bool changed = false;
 
@@ -1963,7 +1961,7 @@ public:
         engine::on_node_detach( *this, *m_outer );
     }
 
-    void tick( turn_type* ) override
+    void tick( turn_type& ) override
     {
         auto new_inner = get_node_ptr( m_outer->value_ref() );
 
@@ -2584,7 +2582,7 @@ public:
 
     ~event_source_node() override = default;
 
-    void tick( turn_type* ) override
+    void tick( turn_type& ) override
     {
         assert( !"Ticked event_source_node" );
     }
@@ -2602,12 +2600,10 @@ public:
         this->m_events.push_back( std::forward<V>( v ) );
     }
 
-    bool apply_input( turn_type* turn_ptr ) override
+    bool apply_input( turn_type& turn ) override
     {
         if( this->m_events.size() > 0 && !m_changed_flag )
         {
-            turn_type& turn = *turn_ptr;
-
             this->set_current_turn_force_update_no_clear( turn );
             m_changed_flag = true;
             engine::on_input_change( *this );
@@ -2871,10 +2867,8 @@ public:
         }
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         this->set_current_turn_force_update( turn );
 
         m_op.collect( turn, event_collector( this->m_events ) );
@@ -2940,10 +2934,8 @@ public:
         engine::on_node_detach( *this, *m_inner );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         this->set_current_turn_force_update( turn );
         m_inner->set_current_turn( turn );
 
@@ -3010,10 +3002,8 @@ public:
             m_deps );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         this->set_current_turn_force_update( turn );
         // Update of this node could be triggered from deps,
         // so make sure source doesn't contain events from last turn
@@ -3080,10 +3070,8 @@ public:
             m_deps );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         this->set_current_turn_force_update( turn );
         // Update of this node could be triggered from deps,
         // so make sure source doesn't contain events from last turn
@@ -3144,10 +3132,8 @@ public:
         engine::on_node_detach( *this, *m_source );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         this->set_current_turn_force_update( turn );
 
         m_func( event_range<in_t>( m_source->events() ), std::back_inserter( this->m_events ) );
@@ -3197,10 +3183,8 @@ public:
             m_deps );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         this->set_current_turn_force_update( turn );
         // Update of this node could be triggered from deps,
         // so make sure source doesn't contain events from last turn
@@ -3258,10 +3242,8 @@ public:
             m_slots );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         this->set_current_turn_force_update( turn );
 
         {
@@ -4076,7 +4058,7 @@ public:
         engine::on_node_detach( *this, *m_events );
     }
 
-    void tick( turn_type* ) override
+    void tick( turn_type& ) override
     {
         bool changed = false;
 
@@ -4127,7 +4109,7 @@ public:
         engine::on_node_detach( *this, *m_events );
     }
 
-    void tick( turn_type* ) override
+    void tick( turn_type& ) override
     {
         m_func( event_range<E>( m_events->events() ), this->m_value );
 
@@ -4174,10 +4156,8 @@ public:
             m_deps );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         m_events->set_current_turn( turn );
 
         bool changed = false;
@@ -4246,10 +4226,8 @@ public:
             m_deps );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         m_events->set_current_turn( turn );
 
         bool changed = false;
@@ -4304,7 +4282,7 @@ public:
         engine::on_node_detach( *this, *m_events );
     }
 
-    void tick( turn_type* ) override
+    void tick( turn_type& ) override
     {
         bool changed = false;
 
@@ -4354,10 +4332,8 @@ public:
         engine::on_node_detach( *this, *m_trigger );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         m_trigger->set_current_turn( turn );
 
         bool changed = false;
@@ -4405,10 +4381,8 @@ public:
         engine::on_node_detach( *this, *m_target );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         this->set_current_turn_force_update( turn );
 
         this->m_events.push_back( m_target->value_ref() );
@@ -4448,10 +4422,8 @@ public:
         engine::on_node_detach( *this, *m_trigger );
     }
 
-    void tick( turn_type* turn_ptr ) override
+    void tick( turn_type& turn ) override
     {
-        turn_type& turn = *turn_ptr;
-
         this->set_current_turn_force_update( turn );
         m_trigger->set_current_turn( turn );
 
@@ -4666,7 +4638,7 @@ inline void topological_sort_engine::propagate( turn_type& turn )
             }
 
             cur_node->queued = false;
-            cur_node->tick( &turn );
+            cur_node->tick( turn );
         }
     }
 }

@@ -2,8 +2,8 @@
 
 #include <sstream>
 #include <string>
-#include <vector>
 #include <tuple>
+#include <vector>
 
 #include <doctest.h>
 
@@ -11,25 +11,25 @@ namespace std // NOLINT
 {
 
 template <size_t n, typename... T>
-typename std::enable_if<(n >= sizeof...(T))>::type
-    print_tuple(std::ostream&, const std::tuple<T...>&)
+typename std::enable_if<( n >= sizeof...( T ) )>::type print_tuple(
+    std::ostream&, const std::tuple<T...>& )
 {}
 
 template <size_t n, typename... T>
-typename std::enable_if<(n < sizeof...(T))>::type
-    print_tuple(std::ostream& os, const std::tuple<T...>& tup)
+typename std::enable_if<( n < sizeof...( T ) )>::type print_tuple(
+    std::ostream& os, const std::tuple<T...>& tup )
 {
-    if (n != 0)
+    if( n != 0 )
         os << ", ";
-    os << std::get<n>(tup);
-    print_tuple<n+1>(os, tup);
+    os << std::get<n>( tup );
+    print_tuple<n + 1>( os, tup );
 }
 
 template <typename... T>
-std::ostream& operator<<(std::ostream& os, const std::tuple<T...>& tup)
+std::ostream& operator<<( std::ostream& os, const std::tuple<T...>& tup )
 {
     os << "[";
-    print_tuple<0>(os, tup);
+    print_tuple<0>( os, tup );
     return os << "]";
 }
 

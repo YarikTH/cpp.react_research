@@ -2092,19 +2092,18 @@ template <typename D,
     typename S = typename std::decay<V>::type,
     class = typename std::enable_if<!is_signal<S>::value>::type,
     class = typename std::enable_if<!is_event<S>::value>::type>
-auto make_var( V&& value ) -> var_signal<D, S>
+auto make_var( context& context, V&& value ) -> var_signal<D, S>
 {
-    context ctx;
     return var_signal<D, S>(
-        std::make_shared<::react::detail::var_node<D, S>>( ctx, std::forward<V>( value ) ) );
+        std::make_shared<::react::detail::var_node<D, S>>( context, std::forward<V>( value ) ) );
 }
 
 template <typename D, typename S>
-auto make_var( std::reference_wrapper<S> value ) -> var_signal<D, S&>
+auto make_var( context& context, std::reference_wrapper<S> value ) -> var_signal<D, S&>
 {
-    context ctx;
     return var_signal<D, S&>(
-        std::make_shared<::react::detail::var_node<D, std::reference_wrapper<S>>>( ctx, value ) );
+        std::make_shared<::react::detail::var_node<D, std::reference_wrapper<S>>>(
+            context, value ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2115,12 +2114,11 @@ template <typename D,
     typename S = typename std::decay<V>::type,
     typename inner_t = typename S::value_t,
     class = typename std::enable_if<is_signal<S>::value>::type>
-auto make_var( V&& value ) -> var_signal<D, signal<D, inner_t>>
+auto make_var( context& context, V&& value ) -> var_signal<D, signal<D, inner_t>>
 {
-    context ctx;
     return var_signal<D, signal<D, inner_t>>(
         std::make_shared<::react::detail::var_node<D, signal<D, inner_t>>>(
-            ctx, std::forward<V>( value ) ) );
+            context, std::forward<V>( value ) ) );
 }
 
 template <typename D,
@@ -2128,12 +2126,11 @@ template <typename D,
     typename S = typename std::decay<V>::type,
     typename inner_t = typename S::value_t,
     class = typename std::enable_if<is_event<S>::value>::type>
-auto make_var( V&& value ) -> var_signal<D, events<D, inner_t>>
+auto make_var( context& context, V&& value ) -> var_signal<D, events<D, inner_t>>
 {
-    context ctx;
     return var_signal<D, events<D, inner_t>>(
         std::make_shared<::react::detail::var_node<D, events<D, inner_t>>>(
-            ctx, std::forward<V>( value ) ) );
+            context, std::forward<V>( value ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3392,12 +3389,11 @@ protected:
 /// make_event_source
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename D, typename E = token>
-auto make_event_source() -> event_source<D, E>
+auto make_event_source( context context ) -> event_source<D, E>
 {
     using ::react::detail::event_source_node;
 
-    context ctx;
-    return event_source<D, E>( std::make_shared<event_source_node<D, E>>( ctx ) );
+    return event_source<D, E>( std::make_shared<event_source_node<D, E>>( context ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

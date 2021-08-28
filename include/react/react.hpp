@@ -21,6 +21,9 @@
 
 namespace react
 {
+struct context
+{};
+
 namespace detail
 {
 
@@ -479,10 +482,20 @@ public:
     using domain_t = D;
     using engine = typename D::engine;
 
-    node_base() = default;
+    explicit node_base( context& context )
+        : m_context( context )
+    {}
 
     // Nodes can't be copied
     node_base( const node_base& ) = delete;
+
+    context& get_context() const
+    {
+        return m_context;
+    }
+
+private:
+    context& m_context;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -494,7 +507,9 @@ class observable_node
     , public observable<D>
 {
 public:
-    observable_node() = default;
+    explicit observable_node( context& context )
+        : observable_node::node_base( context )
+    {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -890,7 +905,6 @@ private:
 
         r.modify_input( func );
 
-
         // Return value, will always be true
         r.apply_input( turn );
 
@@ -1148,7 +1162,9 @@ class observer_node
     , public observer_interface
 {
 public:
-    observer_node() = default;
+    explicit observer_node( context& context )
+        : observer_node::node_base( context )
+    {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1161,8 +1177,9 @@ class signal_observer_node : public observer_node<D>
 
 public:
     template <typename F>
-    signal_observer_node( const std::shared_ptr<signal_node<D, S>>& subject, F&& func )
-        : signal_observer_node::observer_node()
+    signal_observer_node(
+        context& context, const std::shared_ptr<signal_node<D, S>>& subject, F&& func )
+        : signal_observer_node::observer_node( context )
         , m_subject( subject )
         , m_func( std::forward<F>( func ) )
     {
@@ -1221,8 +1238,9 @@ class event_observer_node : public observer_node<D>
 
 public:
     template <typename F>
-    event_observer_node( const std::shared_ptr<event_stream_node<D, E>>& subject, F&& func )
-        : event_observer_node::observer_node()
+    event_observer_node(
+        context& context, const std::shared_ptr<event_stream_node<D, E>>& subject, F&& func )
+        : event_observer_node::observer_node( context )
         , m_subject( subject )
         , m_func( std::forward<F>( func ) )
     {
@@ -1280,10 +1298,11 @@ class synced_observer_node : public observer_node<D>
 
 public:
     template <typename F>
-    synced_observer_node( const std::shared_ptr<event_stream_node<D, E>>& subject,
+    synced_observer_node( context& context,
+        const std::shared_ptr<event_stream_node<D, E>>& subject,
         F&& func,
         const std::shared_ptr<signal_node<D, dep_values_t>>&... deps )
-        : synced_observer_node::observer_node()
+        : synced_observer_node::observer_node( context )
         , m_subject( subject )
         , m_func( std::forward<F>( func ) )
         , m_deps( deps... )
@@ -1494,8 +1513,10 @@ auto observe( const signal<D, S>& subject, f_in_t&& func ) -> observer<D>
 
     const auto& subject_ptr = get_node_ptr( subject );
 
+    context ctx;
+
     std::unique_ptr<observer_node<D>> node_ptr(
-        new node_t( subject_ptr, std::forward<f_in_t>( func ) ) );
+        new node_t( ctx, subject_ptr, std::forward<f_in_t>( func ) ) );
     observer_node<D>* raw_node_ptr = node_ptr.get();
 
     subject_ptr->register_observer( std::move( node_ptr ) );
@@ -1540,8 +1561,10 @@ auto observe( const events<D, E>& subject, f_in_t&& func ) -> observer<D>
 
     const auto& subject_ptr = get_node_ptr( subject );
 
+    context ctx;
+
     std::unique_ptr<observer_node<D>> node_ptr(
-        new node_t( subject_ptr, std::forward<f_in_t>( func ) ) );
+        new node_t( ctx, subject_ptr, std::forward<f_in_t>( func ) ) );
     observer_node<D>* raw_node_ptr = node_ptr.get();
 
     subject_ptr->register_observer( std::move( node_ptr ) );
@@ -1595,7 +1618,9 @@ auto observe(
 
         auto operator()( const signal<D, dep_values_t>&... deps ) -> observer_node<D>*
         {
-            return new node_t( get_node_ptr( m_subject ),
+            context ctx;
+            return new node_t( ctx,
+                get_node_ptr( m_subject ),
                 std::forward<f_in_t>( m_func ),
                 get_node_ptr( deps )... );
         }
@@ -1707,11 +1732,13 @@ template <typename D, typename S>
 class signal_node : public observable_node<D>
 {
 public:
-    signal_node() = default;
+    explicit signal_node( context& context )
+        : signal_node::observable_node( context )
+    {}
 
     template <typename T>
-    explicit signal_node( T&& value )
-        : signal_node::observable_node()
+    explicit signal_node( context& context, T&& value )
+        : signal_node::observable_node( context )
         , m_value( std::forward<T>( value ) )
     {}
 
@@ -1739,8 +1766,8 @@ class var_node
 
 public:
     template <typename T>
-    var_node( T&& value )
-        : var_node::signal_node( std::forward<T>( value ) )
+    var_node( context& context, T&& value )
+        : var_node::signal_node( context, std::forward<T>( value ) )
         , m_new_value( value )
     {}
 
@@ -1886,8 +1913,8 @@ class signal_op_node : public signal_node<D, S>
 
 public:
     template <typename... args_t>
-    signal_op_node( args_t&&... args )
-        : signal_op_node::signal_node()
+    signal_op_node( context& context, args_t&&... args )
+        : signal_op_node::signal_node( context )
         , m_op( std::forward<args_t>( args )... )
     {
         this->m_value = m_op.evaluate();
@@ -1945,9 +1972,10 @@ class flatten_node : public signal_node<D, inner_t>
     using engine = typename D::engine;
 
 public:
-    flatten_node( const std::shared_ptr<signal_node<D, outer_t>>& outer,
+    flatten_node( context& context,
+        const std::shared_ptr<signal_node<D, outer_t>>& outer,
         const std::shared_ptr<signal_node<D, inner_t>>& inner )
-        : flatten_node::signal_node( inner->value_ref() )
+        : flatten_node::signal_node( context, inner->value_ref() )
         , m_outer( outer )
         , m_inner( inner )
     {
@@ -2066,15 +2094,17 @@ template <typename D,
     class = typename std::enable_if<!is_event<S>::value>::type>
 auto make_var( V&& value ) -> var_signal<D, S>
 {
+    context ctx;
     return var_signal<D, S>(
-        std::make_shared<::react::detail::var_node<D, S>>( std::forward<V>( value ) ) );
+        std::make_shared<::react::detail::var_node<D, S>>( ctx, std::forward<V>( value ) ) );
 }
 
 template <typename D, typename S>
 auto make_var( std::reference_wrapper<S> value ) -> var_signal<D, S&>
 {
+    context ctx;
     return var_signal<D, S&>(
-        std::make_shared<::react::detail::var_node<D, std::reference_wrapper<S>>>( value ) );
+        std::make_shared<::react::detail::var_node<D, std::reference_wrapper<S>>>( ctx, value ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2087,9 +2117,10 @@ template <typename D,
     class = typename std::enable_if<is_signal<S>::value>::type>
 auto make_var( V&& value ) -> var_signal<D, signal<D, inner_t>>
 {
+    context ctx;
     return var_signal<D, signal<D, inner_t>>(
         std::make_shared<::react::detail::var_node<D, signal<D, inner_t>>>(
-            std::forward<V>( value ) ) );
+            ctx, std::forward<V>( value ) ) );
 }
 
 template <typename D,
@@ -2099,9 +2130,10 @@ template <typename D,
     class = typename std::enable_if<is_event<S>::value>::type>
 auto make_var( V&& value ) -> var_signal<D, events<D, inner_t>>
 {
+    context ctx;
     return var_signal<D, events<D, inner_t>>(
         std::make_shared<::react::detail::var_node<D, events<D, inner_t>>>(
-            std::forward<V>( value ) ) );
+            ctx, std::forward<V>( value ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2117,8 +2149,9 @@ template <typename D,
     = ::react::detail::function_op<S, F, ::react::detail::signal_node_ptr_t<D, TValue>>>
 auto make_signal( const signal<D, TValue>& arg, f_in_t&& func ) -> temp_signal<D, S, op_t>
 {
+    context ctx;
     return temp_signal<D, S, op_t>( std::make_shared<::react::detail::signal_op_node<D, S, op_t>>(
-        std::forward<f_in_t>( func ), get_node_ptr( arg ) ) );
+        ctx, std::forward<f_in_t>( func ), get_node_ptr( arg ) ) );
 }
 
 // Multiple args
@@ -2142,8 +2175,9 @@ auto make_signal( const signal_pack<D, values_t...>& arg_pack, f_in_t&& func )
 
         auto operator()( const signal<D, values_t>&... args ) -> temp_signal<D, S, op_t>
         {
+            context ctx;
             return temp_signal<D, S, op_t>( std::make_shared<signal_op_node<D, S, op_t>>(
-                std::forward<f_in_t>( m_func ), get_node_ptr( args )... ) );
+                ctx, std::forward<f_in_t>( m_func ), get_node_ptr( args )... ) );
         }
 
         f_in_t m_func;
@@ -2202,9 +2236,10 @@ auto operator->*( const signal_pack<D, values_t...>& arg_pack, F&& func )
 template <typename D, typename inner_value_t>
 auto flatten( const signal<D, signal<D, inner_value_t>>& outer ) -> signal<D, inner_value_t>
 {
+    context ctx;
     return signal<D, inner_value_t>(
         std::make_shared<::react::detail::flatten_node<D, signal<D, inner_value_t>, inner_value_t>>(
-            get_node_ptr( outer ), get_node_ptr( outer.value() ) ) );
+            ctx, get_node_ptr( outer ), get_node_ptr( outer.value() ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2528,7 +2563,9 @@ public:
     using data_t = std::vector<E>;
     using engine_t = typename D::engine;
 
-    event_stream_node() = default;
+    explicit event_stream_node( context& context )
+        : event_stream_node::observable_node( context )
+    {}
 
     void set_current_turn( const turn_type& turn )
     {
@@ -2544,12 +2581,12 @@ public:
         m_cur_turn_id = turn;
         m_events.clear();
     }
-    
+
     void set_current_turn_force_update_no_clear( const turn_type& turn )
     {
         m_cur_turn_id = turn;
     }
-    
+
     data_t& events()
     {
         return m_events;
@@ -2576,8 +2613,8 @@ class event_source_node
     using engine = typename D::engine;
 
 public:
-    event_source_node()
-        : event_source_node::event_stream_node{}
+    event_source_node( context& context )
+        : event_source_node::event_stream_node( context )
     {}
 
     ~event_source_node() override = default;
@@ -2851,8 +2888,8 @@ class event_op_node : public event_stream_node<D, E>
 
 public:
     template <typename... args_t>
-    event_op_node( args_t&&... args )
-        : event_op_node::event_stream_node()
+    event_op_node( context& context, args_t&&... args )
+        : event_op_node::event_stream_node( context )
         , m_op( std::forward<args_t>( args )... )
     {
 
@@ -2917,9 +2954,10 @@ class event_flatten_node : public event_stream_node<D, inner_t>
     using engine = typename D::engine;
 
 public:
-    event_flatten_node( const std::shared_ptr<signal_node<D, outer_t>>& outer,
+    event_flatten_node( context& context,
+        const std::shared_ptr<signal_node<D, outer_t>>& outer,
         const std::shared_ptr<event_stream_node<D, inner_t>>& inner )
-        : event_flatten_node::event_stream_node()
+        : event_flatten_node::event_stream_node( context )
         , m_outer( outer )
         , m_inner( inner )
     {
@@ -2979,10 +3017,11 @@ class synced_event_transform_node : public event_stream_node<D, out_t>
 
 public:
     template <typename F>
-    synced_event_transform_node( const std::shared_ptr<event_stream_node<D, in_t>>& source,
+    synced_event_transform_node( context& context,
+        const std::shared_ptr<event_stream_node<D, in_t>>& source,
         F&& func,
         const std::shared_ptr<signal_node<D, dep_values_t>>&... deps )
-        : synced_event_transform_node::event_stream_node()
+        : synced_event_transform_node::event_stream_node( context )
         , m_source( source )
         , m_func( std::forward<F>( func ) )
         , m_deps( deps... )
@@ -3047,10 +3086,11 @@ class synced_event_filter_node : public event_stream_node<D, E>
 
 public:
     template <typename F>
-    synced_event_filter_node( const std::shared_ptr<event_stream_node<D, E>>& source,
+    synced_event_filter_node( context& context,
+        const std::shared_ptr<event_stream_node<D, E>>& source,
         F&& filter,
         const std::shared_ptr<signal_node<D, dep_values_t>>&... deps )
-        : synced_event_filter_node::event_stream_node()
+        : synced_event_filter_node::event_stream_node( context )
         , m_source( source )
         , m_filter( std::forward<F>( filter ) )
         , m_deps( deps... )
@@ -3118,8 +3158,9 @@ class event_processing_node : public event_stream_node<D, out_t>
 
 public:
     template <typename F>
-    event_processing_node( const std::shared_ptr<event_stream_node<D, in_t>>& source, F&& func )
-        : event_processing_node::event_stream_node()
+    event_processing_node(
+        context& context, const std::shared_ptr<event_stream_node<D, in_t>>& source, F&& func )
+        : event_processing_node::event_stream_node( context )
         , m_source( source )
         , m_func( std::forward<F>( func ) )
     {
@@ -3160,10 +3201,11 @@ class synced_event_processing_node : public event_stream_node<D, out_t>
 
 public:
     template <typename F>
-    synced_event_processing_node( const std::shared_ptr<event_stream_node<D, in_t>>& source,
+    synced_event_processing_node( context& context,
+        const std::shared_ptr<event_stream_node<D, in_t>>& source,
         F&& func,
         const std::shared_ptr<signal_node<D, dep_values_t>>&... deps )
-        : synced_event_processing_node::event_stream_node()
+        : synced_event_processing_node::event_stream_node( context )
         , m_source( source )
         , m_func( std::forward<F>( func ) )
         , m_deps( deps... )
@@ -3226,8 +3268,9 @@ class event_join_node : public event_stream_node<D, std::tuple<values_t...>>
     using engine = typename D::engine;
 
 public:
-    event_join_node( const std::shared_ptr<event_stream_node<D, values_t>>&... sources )
-        : event_join_node::event_stream_node()
+    event_join_node(
+        context& context, const std::shared_ptr<event_stream_node<D, values_t>>&... sources )
+        : event_join_node::event_stream_node( context )
         , m_slots( sources... )
     {
         REACT_EXPAND_PACK( engine::on_node_attach( *this, *sources ) );
@@ -3353,7 +3396,8 @@ auto make_event_source() -> event_source<D, E>
 {
     using ::react::detail::event_source_node;
 
-    return event_source<D, E>( std::make_shared<event_source_node<D, E>>() );
+    context ctx;
+    return event_source<D, E>( std::make_shared<event_source_node<D, E>>( ctx ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3373,8 +3417,9 @@ auto merge( const events<D, TArg1>& arg1, const events<D, args_t>&... args )
 
     static_assert( sizeof...( args_t ) > 0, "merge: 2+ arguments are required." );
 
+    context ctx;
     return temp_events<D, E, op_t>( std::make_shared<event_op_node<D, E, op_t>>(
-        get_node_ptr( arg1 ), get_node_ptr( args )... ) );
+        ctx, get_node_ptr( arg1 ), get_node_ptr( args )... ) );
 }
 
 template <typename left_events_t,
@@ -3392,8 +3437,9 @@ auto operator|( const left_events_t& lhs, const right_events_t& rhs ) -> temp_ev
 {
     using ::react::detail::event_op_node;
 
-    return temp_events<D, E, op_t>(
-        std::make_shared<event_op_node<D, E, op_t>>( get_node_ptr( lhs ), get_node_ptr( rhs ) ) );
+    context ctx;
+    return temp_events<D, E, op_t>( std::make_shared<event_op_node<D, E, op_t>>(
+        ctx, get_node_ptr( lhs ), get_node_ptr( rhs ) ) );
 }
 
 template <typename D,
@@ -3408,8 +3454,9 @@ auto operator|( temp_events<D, left_val_t, left_op_t>&& lhs,
 {
     using ::react::detail::event_op_node;
 
+    context ctx;
     return temp_events<D, E, op_t>(
-        std::make_shared<event_op_node<D, E, op_t>>( lhs.steal_op(), rhs.steal_op() ) );
+        std::make_shared<event_op_node<D, E, op_t>>( ctx, lhs.steal_op(), rhs.steal_op() ) );
 }
 
 template <typename D,
@@ -3426,8 +3473,9 @@ auto operator|( temp_events<D, left_val_t, left_op_t>&& lhs, const right_events_
 {
     using ::react::detail::event_op_node;
 
+    context ctx;
     return temp_events<D, E, op_t>(
-        std::make_shared<event_op_node<D, E, op_t>>( lhs.steal_op(), get_node_ptr( rhs ) ) );
+        std::make_shared<event_op_node<D, E, op_t>>( ctx, lhs.steal_op(), get_node_ptr( rhs ) ) );
 }
 
 template <typename left_events_t,
@@ -3444,8 +3492,9 @@ auto operator|( const left_events_t& lhs, temp_events<D, right_val_t, right_op_t
 {
     using ::react::detail::event_op_node;
 
+    context ctx;
     return temp_events<D, E, op_t>(
-        std::make_shared<event_op_node<D, E, op_t>>( get_node_ptr( lhs ), rhs.steal_op() ) );
+        std::make_shared<event_op_node<D, E, op_t>>( ctx, get_node_ptr( lhs ), rhs.steal_op() ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3461,8 +3510,9 @@ auto filter( const events<D, E>& src, f_in_t&& filter ) -> temp_events<D, E, op_
 {
     using ::react::detail::event_op_node;
 
+    context ctx;
     return temp_events<D, E, op_t>( std::make_shared<event_op_node<D, E, op_t>>(
-        std::forward<f_in_t>( filter ), get_node_ptr( src ) ) );
+        ctx, std::forward<f_in_t>( filter ), get_node_ptr( src ) ) );
 }
 
 template <typename D,
@@ -3475,8 +3525,9 @@ auto filter( temp_events<D, E, op_in_t>&& src, f_in_t&& filter ) -> temp_events<
 {
     using ::react::detail::event_op_node;
 
+    context ctx;
     return temp_events<D, E, op_out_t>( std::make_shared<event_op_node<D, E, op_out_t>>(
-        std::forward<f_in_t>( filter ), src.steal_op() ) );
+        ctx, std::forward<f_in_t>( filter ), src.steal_op() ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3500,8 +3551,9 @@ auto filter(
 
         auto operator()( const signal<D, dep_values_t>&... deps ) -> events<D, E>
         {
+            context ctx;
             return events<D, E>(
-                std::make_shared<synced_event_filter_node<D, E, F, dep_values_t...>>(
+                std::make_shared<synced_event_filter_node<D, E, F, dep_values_t...>>( ctx,
                     get_node_ptr( m_source ),
                     std::forward<f_in_t>( m_func ),
                     get_node_ptr( deps )... ) );
@@ -3529,8 +3581,9 @@ auto transform( const events<D, in_t>& src, f_in_t&& func ) -> temp_events<D, ou
 {
     using ::react::detail::event_op_node;
 
+    context ctx;
     return temp_events<D, out_t, op_t>( std::make_shared<event_op_node<D, out_t, op_t>>(
-        std::forward<f_in_t>( func ), get_node_ptr( src ) ) );
+        ctx, std::forward<f_in_t>( func ), get_node_ptr( src ) ) );
 }
 
 template <typename D,
@@ -3545,8 +3598,9 @@ auto transform( temp_events<D, in_t, op_in_t>&& src, f_in_t&& func )
 {
     using ::react::detail::event_op_node;
 
+    context ctx;
     return temp_events<D, out_t, op_out_t>( std::make_shared<event_op_node<D, out_t, op_out_t>>(
-        std::forward<f_in_t>( func ), src.steal_op() ) );
+        ctx, std::forward<f_in_t>( func ), src.steal_op() ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3574,8 +3628,10 @@ auto transform(
 
         auto operator()( const signal<D, dep_values_t>&... deps ) -> events<D, out_t>
         {
+            context ctx;
             return events<D, out_t>(
                 std::make_shared<synced_event_transform_node<D, in_t, out_t, F, dep_values_t...>>(
+                    ctx,
                     get_node_ptr( m_source ),
                     std::forward<f_in_t>( m_func ),
                     get_node_ptr( deps )... ) );
@@ -3604,8 +3660,9 @@ auto process( const events<D, in_t>& src, f_in_t&& func ) -> events<D, out_t>
 {
     using ::react::detail::event_processing_node;
 
+    context ctx;
     return events<D, out_t>( std::make_shared<event_processing_node<D, in_t, out_t, F>>(
-        get_node_ptr( src ), std::forward<f_in_t>( func ) ) );
+        ctx, get_node_ptr( src ), std::forward<f_in_t>( func ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3629,8 +3686,10 @@ auto process(
 
         auto operator()( const signal<D, dep_values_t>&... deps ) -> events<D, out_t>
         {
+            context ctx;
             return events<D, out_t>(
                 std::make_shared<synced_event_processing_node<D, in_t, out_t, F, dep_values_t...>>(
+                    ctx,
                     get_node_ptr( m_source ),
                     std::forward<f_in_t>( m_func ),
                     get_node_ptr( deps )... ) );
@@ -3650,9 +3709,10 @@ auto process(
 template <typename D, typename inner_value_t>
 auto flatten( const signal<D, events<D, inner_value_t>>& outer ) -> events<D, inner_value_t>
 {
+    context ctx;
     return events<D, inner_value_t>( std::make_shared<
         ::react::detail::event_flatten_node<D, events<D, inner_value_t>, inner_value_t>>(
-        get_node_ptr( outer ), get_node_ptr( outer.value() ) ) );
+        ctx, get_node_ptr( outer ), get_node_ptr( outer.value() ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3665,8 +3725,9 @@ auto join( const events<D, args_t>&... args ) -> events<D, std::tuple<args_t...>
 
     static_assert( sizeof...( args_t ) > 1, "join: 2+ arguments are required." );
 
+    context ctx;
     return events<D, std::tuple<args_t...>>(
-        std::make_shared<event_join_node<D, args_t...>>( get_node_ptr( args )... ) );
+        std::make_shared<event_join_node<D, args_t...>>( ctx, get_node_ptr( args )... ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4044,8 +4105,11 @@ class iterate_node : public signal_node<D, S>
 
 public:
     template <typename T, typename F>
-    iterate_node( T&& init, const std::shared_ptr<event_stream_node<D, E>>& events, F&& func )
-        : iterate_node::signal_node( std::forward<T>( init ) )
+    iterate_node( context& context,
+        T&& init,
+        const std::shared_ptr<event_stream_node<D, E>>& events,
+        F&& func )
+        : iterate_node::signal_node( context, std::forward<T>( init ) )
         , m_events( events )
         , m_func( std::forward<F>( func ) )
     {
@@ -4094,13 +4158,14 @@ class iterate_by_ref_node : public signal_node<D, S>
 
 public:
     template <typename T, typename F>
-    iterate_by_ref_node(
-        T&& init, const std::shared_ptr<event_stream_node<D, E>>& events, F&& func )
-        : iterate_by_ref_node::signal_node( std::forward<T>( init ) )
+    iterate_by_ref_node( context& context,
+        T&& init,
+        const std::shared_ptr<event_stream_node<D, E>>& events,
+        F&& func )
+        : iterate_by_ref_node::signal_node( context, std::forward<T>( init ) )
         , m_func( std::forward<F>( func ) )
         , m_events( events )
     {
-
         engine::on_node_attach( *this, *events );
     }
 
@@ -4133,11 +4198,12 @@ class synced_iterate_node : public signal_node<D, S>
 
 public:
     template <typename T, typename F>
-    synced_iterate_node( T&& init,
+    synced_iterate_node( context& context,
+        T&& init,
         const std::shared_ptr<event_stream_node<D, E>>& events,
         F&& func,
         const std::shared_ptr<signal_node<D, dep_values_t>>&... deps )
-        : synced_iterate_node::signal_node( std::forward<T>( init ) )
+        : synced_iterate_node::signal_node( context, std::forward<T>( init ) )
         , m_events( events )
         , m_func( std::forward<F>( func ) )
         , m_deps( deps... )
@@ -4203,11 +4269,12 @@ class synced_iterate_by_ref_node : public signal_node<D, S>
 
 public:
     template <typename T, typename F>
-    synced_iterate_by_ref_node( T&& init,
+    synced_iterate_by_ref_node( context& context,
+        T&& init,
         const std::shared_ptr<event_stream_node<D, E>>& events,
         F&& func,
         const std::shared_ptr<signal_node<D, dep_values_t>>&... deps )
-        : synced_iterate_by_ref_node::signal_node( std::forward<T>( init ) )
+        : synced_iterate_by_ref_node::signal_node( context, std::forward<T>( init ) )
         , m_events( events )
         , m_func( std::forward<F>( func ) )
         , m_deps( deps... )
@@ -4269,8 +4336,8 @@ class hold_node : public signal_node<D, S>
 
 public:
     template <typename T>
-    hold_node( T&& init, const std::shared_ptr<event_stream_node<D, S>>& events )
-        : hold_node::signal_node( std::forward<T>( init ) )
+    hold_node( context& context, T&& init, const std::shared_ptr<event_stream_node<D, S>>& events )
+        : hold_node::signal_node( context, std::forward<T>( init ) )
         , m_events( events )
     {
 
@@ -4316,9 +4383,10 @@ class snapshot_node : public signal_node<D, S>
     using engine = typename D::engine;
 
 public:
-    snapshot_node( const std::shared_ptr<signal_node<D, S>>& target,
+    snapshot_node( context& context,
+        const std::shared_ptr<signal_node<D, S>>& target,
         const std::shared_ptr<event_stream_node<D, E>>& trigger )
-        : snapshot_node::signal_node( target->value_ref() )
+        : snapshot_node::signal_node( context, target->value_ref() )
         , m_target( target )
         , m_trigger( trigger )
     {
@@ -4369,8 +4437,8 @@ class monitor_node : public event_stream_node<D, E>
     using engine = typename D::engine;
 
 public:
-    monitor_node( const std::shared_ptr<signal_node<D, E>>& target )
-        : monitor_node::event_stream_node()
+    monitor_node( context& context, const std::shared_ptr<signal_node<D, E>>& target )
+        : monitor_node::event_stream_node( context )
         , m_target( target )
     {
         engine::on_node_attach( *this, *m_target );
@@ -4406,9 +4474,10 @@ class pulse_node : public event_stream_node<D, S>
     using engine = typename D::engine;
 
 public:
-    pulse_node( const std::shared_ptr<signal_node<D, S>>& target,
+    pulse_node( context& context,
+        const std::shared_ptr<signal_node<D, S>>& target,
         const std::shared_ptr<event_stream_node<D, E>>& trigger )
-        : pulse_node::event_stream_node()
+        : pulse_node::event_stream_node( context )
         , m_target( target )
         , m_trigger( trigger )
     {
@@ -4453,8 +4522,9 @@ auto hold( const events<D, T>& events, V&& init ) -> signal<D, T>
 {
     using ::react::detail::hold_node;
 
+    context ctx;
     return signal<D, T>(
-        std::make_shared<hold_node<D, T>>( std::forward<V>( init ), get_node_ptr( events ) ) );
+        std::make_shared<hold_node<D, T>>( ctx, std::forward<V>( init ), get_node_ptr( events ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4465,7 +4535,8 @@ auto monitor( const signal<D, S>& target ) -> events<D, S>
 {
     using ::react::detail::monitor_node;
 
-    return events<D, S>( std::make_shared<monitor_node<D, S>>( get_node_ptr( target ) ) );
+    context ctx;
+    return events<D, S>( std::make_shared<monitor_node<D, S>>( ctx, get_node_ptr( target ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4500,8 +4571,9 @@ auto iterate( const events<D, E>& events, V&& init, f_in_t&& func ) -> signal<D,
     static_assert( !std::is_same<node_t, void>::value,
         "iterate: Passed function does not match any of the supported signatures." );
 
+    context ctx;
     return signal<D, S>( std::make_shared<node_t>(
-        std::forward<V>( init ), get_node_ptr( events ), std::forward<f_in_t>( func ) ) );
+        ctx, std::forward<V>( init ), get_node_ptr( events ), std::forward<f_in_t>( func ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4550,8 +4622,6 @@ auto iterate( const events<D, E>& events,
     static_assert( !std::is_same<node_t, void>::value,
         "iterate: Passed function does not match any of the supported signatures." );
 
-    //static_assert(node_t::dummy_error, "DUMP MY TYPE" );
-
     struct node_builder
     {
         node_builder( const ::react::events<D, E>& source, V&& init, f_in_t&& func )
@@ -4562,7 +4632,9 @@ auto iterate( const events<D, E>& events,
 
         auto operator()( const signal<D, dep_values_t>&... deps ) -> signal<D, S>
         {
-            return signal<D, S>( std::make_shared<node_t>( std::forward<V>( m_init ),
+            context ctx;
+            return signal<D, S>( std::make_shared<node_t>( ctx,
+                std::forward<V>( m_init ),
                 get_node_ptr( m_source ),
                 std::forward<f_in_t>( m_func ),
                 get_node_ptr( deps )... ) );
@@ -4586,8 +4658,9 @@ auto snapshot( const events<D, E>& trigger, const signal<D, S>& target ) -> sign
 {
     using ::react::detail::snapshot_node;
 
+    context ctx;
     return signal<D, S>( std::make_shared<snapshot_node<D, S, E>>(
-        get_node_ptr( target ), get_node_ptr( trigger ) ) );
+        ctx, get_node_ptr( target ), get_node_ptr( trigger ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4598,8 +4671,9 @@ auto pulse( const events<D, E>& trigger, const signal<D, S>& target ) -> events<
 {
     using ::react::detail::pulse_node;
 
-    return events<D, S>(
-        std::make_shared<pulse_node<D, S, E>>( get_node_ptr( target ), get_node_ptr( trigger ) ) );
+    context ctx;
+    return events<D, S>( std::make_shared<pulse_node<D, S, E>>(
+        ctx, get_node_ptr( target ), get_node_ptr( trigger ) ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

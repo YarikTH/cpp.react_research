@@ -5,7 +5,6 @@ namespace
 {
 using namespace react;
 
-REACTIVE_DOMAIN( D )
 } // namespace
 
 TEST_SUITE( "OperationsTest" )
@@ -14,10 +13,10 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto a1 = make_var<D>( ctx, 1 );
-        auto a2 = make_var<D>( ctx, 1 );
+        auto a1 = make_var( ctx, 1 );
+        auto a2 = make_var( ctx, 1 );
 
-        auto result = make_signal<D>( ( a1, a2 ), []( int a, int b ) { return a + b; } );
+        auto result = make_signal( ( a1, a2 ), []( int a, int b ) { return a + b; } );
 
         int observeCount1 = 0;
         int observeCount2 = 0;
@@ -86,10 +85,10 @@ TEST_SUITE( "OperationsTest" )
 
         context ctx;
 
-        auto in = make_var<D>( ctx, 1 );
+        auto in = make_var( ctx, 1 );
 
         {
-            scoped_observer<D> obs = observe( in, [&]( int v ) { results.push_back( v ); } );
+            scoped_observer obs = observe( in, [&]( int v ) { results.push_back( v ); } );
 
             in <<= 2;
         }
@@ -104,15 +103,15 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto in1 = make_var<D>( ctx, 1 );
-        auto in2 = make_var<D>( ctx, 1 );
+        auto in1 = make_var( ctx, 1 );
+        auto in2 = make_var( ctx, 1 );
 
-        auto sum = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a + b; } );
-        auto prod = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a * b; } );
-        auto diff = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a - b; } );
+        auto sum = make_signal( ( in1, in2 ), []( int a, int b ) { return a + b; } );
+        auto prod = make_signal( ( in1, in2 ), []( int a, int b ) { return a * b; } );
+        auto diff = make_signal( ( in1, in2 ), []( int a, int b ) { return a - b; } );
 
-        auto src1 = make_event_source<D>( ctx );
-        auto src2 = make_event_source<D, int>( ctx );
+        auto src1 = make_event_source( ctx );
+        auto src2 = make_event_source<int>( ctx );
 
         observe( src1, with( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
             CHECK_EQ( sum, 33 );
@@ -138,7 +137,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto src = make_event_source<D>( ctx );
+        auto src = make_event_source( ctx );
 
         int count = 0;
 
@@ -163,14 +162,14 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto in1 = make_var<D>( ctx, 1 );
-        auto in2 = make_var<D>( ctx, 1 );
+        auto in1 = make_var( ctx, 1 );
+        auto in2 = make_var( ctx, 1 );
 
-        auto sum = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a + b; } );
-        auto prod = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a * b; } );
-        auto diff = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a - b; } );
+        auto sum = make_signal( ( in1, in2 ), []( int a, int b ) { return a + b; } );
+        auto prod = make_signal( ( in1, in2 ), []( int a, int b ) { return a * b; } );
+        auto diff = make_signal( ( in1, in2 ), []( int a, int b ) { return a - b; } );
 
-        auto src = make_event_source<D>( ctx );
+        auto src = make_event_source( ctx );
 
         int count = 0;
 
@@ -200,7 +199,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto x = make_var<D>( ctx, 0 );
+        auto x = make_var( ctx, 0 );
 
         std::vector<int> x_values;
 

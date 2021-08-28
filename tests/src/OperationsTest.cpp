@@ -7,8 +7,6 @@ namespace
 {
 using namespace react;
 
-REACTIVE_DOMAIN( D )
-
 template <typename T>
 struct Incrementer
 {
@@ -34,7 +32,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto numSrc = make_event_source<D, int>( ctx );
+        auto numSrc = make_event_source<int>( ctx );
         auto numFold = iterate( numSrc, 0, []( int d, int v ) { return v + d; } );
 
         for( auto i = 1; i <= 100; i++ )
@@ -44,7 +42,7 @@ TEST_SUITE( "OperationsTest" )
 
         CHECK_EQ( numFold(), 5050 );
 
-        auto charSrc = make_event_source<D, char>( ctx );
+        auto charSrc = make_event_source<char>( ctx );
         auto strFold = iterate(
             charSrc, std::string( "" ), []( char c, const std::string& s ) { return s + c; } );
 
@@ -57,7 +55,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto numSrc = make_event_source<D, int>( ctx );
+        auto numSrc = make_event_source<int>( ctx );
         auto numFold = iterate( numSrc, 0, []( int d, int v ) { return v + d; } );
 
         int c = 0;
@@ -67,7 +65,7 @@ TEST_SUITE( "OperationsTest" )
             CHECK_EQ( v, 5050 );
         } );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             for( auto i = 1; i <= 100; i++ )
                 numSrc << i;
         } );
@@ -80,7 +78,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto trigger = make_event_source<D>( ctx );
+        auto trigger = make_event_source( ctx );
 
         {
             auto inc = iterate( trigger, 0, Incrementer<int>{} );
@@ -103,7 +101,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto target = make_var<D>( ctx, 10 );
+        auto target = make_var( ctx, 10 );
 
         std::vector<int> results;
 
@@ -131,7 +129,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto src = make_event_source<D, int>( ctx );
+        auto src = make_event_source<int>( ctx );
 
         auto h = hold( src, 0 );
 
@@ -150,8 +148,8 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto trigger = make_event_source<D>( ctx );
-        auto target = make_var<D>( ctx, 10 );
+        auto trigger = make_event_source( ctx );
+        auto target = make_var( ctx, 10 );
 
         std::vector<int> results;
 
@@ -174,8 +172,8 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto trigger = make_event_source<D>( ctx );
-        auto target = make_var<D>( ctx, 10 );
+        auto trigger = make_event_source( ctx );
+        auto target = make_var( ctx, 10 );
 
         auto snap = snapshot( trigger, target );
 
@@ -196,7 +194,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto value = make_var<D>( ctx, -1 );
+        auto value = make_var( ctx, -1 );
 
         int changes_amount = 0;
         int changes_to_zero_amount = 0;
@@ -216,7 +214,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto src = make_event_source<D, int>( ctx );
+        auto src = make_event_source<int>( ctx );
         auto f = iterate(
             src, std::vector<int>(), []( int d, std::vector<int>& v ) { v.push_back( d ); } );
 
@@ -235,7 +233,7 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto src = make_event_source<D>( ctx );
+        auto src = make_event_source( ctx );
         auto x = iterate(
             src, std::vector<int>(), []( token, std::vector<int>& v ) { v.push_back( 123 ); } );
 
@@ -254,15 +252,15 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto in1 = make_var<D>( ctx, 1 );
-        auto in2 = make_var<D>( ctx, 1 );
+        auto in1 = make_var( ctx, 1 );
+        auto in2 = make_var( ctx, 1 );
 
-        auto sum = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a + b; } );
-        auto prod = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a * b; } );
-        auto diff = make_signal<D>( ( in1, in2 ), []( int a, int b ) { return a - b; } );
+        auto sum = make_signal( ( in1, in2 ), []( int a, int b ) { return a + b; } );
+        auto prod = make_signal( ( in1, in2 ), []( int a, int b ) { return a * b; } );
+        auto diff = make_signal( ( in1, in2 ), []( int a, int b ) { return a - b; } );
 
-        auto src1 = make_event_source<D>( ctx );
-        auto src2 = make_event_source<D, int>( ctx );
+        auto src1 = make_event_source( ctx );
+        auto src2 = make_event_source<int>( ctx );
 
         auto out1
             = transform( src1, with( sum, prod, diff ), []( token, int sum, int prod, int diff ) {
@@ -344,16 +342,16 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto in1 = make_var<D>( ctx, 1 );
-        auto in2 = make_var<D>( ctx, 1 );
+        auto in1 = make_var( ctx, 1 );
+        auto in2 = make_var( ctx, 1 );
 
         auto summ = []( int a, int b ) { return a + b; };
 
         auto op1 = ( in1, in2 )->*summ;
         auto op2 = ( ( in1, in2 )->*summ )->*[]( int a ) { return a * 10; };
 
-        auto src1 = make_event_source<D>( ctx );
-        auto src2 = make_event_source<D, int>( ctx );
+        auto src1 = make_event_source( ctx );
+        auto src2 = make_event_source<int>( ctx );
 
         auto out1 = iterate( src1,
             std::make_tuple( 0, 0 ),
@@ -436,16 +434,16 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto in1 = make_var<D>( ctx, 1 );
-        auto in2 = make_var<D>( ctx, 1 );
+        auto in1 = make_var( ctx, 1 );
+        auto in2 = make_var( ctx, 1 );
 
         auto summ = []( int a, int b ) { return a + b; };
 
         auto op1 = ( in1, in2 )->*summ;
         auto op2 = ( ( in1, in2 )->*summ )->*[]( int a ) { return a * 10; };
 
-        auto src1 = make_event_source<D>( ctx );
-        auto src2 = make_event_source<D, int>( ctx );
+        auto src1 = make_event_source( ctx );
+        auto src2 = make_event_source<int>( ctx );
 
         auto out1 = iterate( src1,
             std::vector<int>{},
@@ -544,16 +542,16 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto in1 = make_var<D>( ctx, 1 );
-        auto in2 = make_var<D>( ctx, 1 );
+        auto in1 = make_var( ctx, 1 );
+        auto in2 = make_var( ctx, 1 );
 
         auto summ = []( int a, int b ) { return a + b; };
 
         auto op1 = ( in1, in2 )->*summ;
         auto op2 = ( ( in1, in2 )->*summ )->*[]( int a ) { return a * 10; };
 
-        auto src1 = make_event_source<D>( ctx );
-        auto src2 = make_event_source<D, int>( ctx );
+        auto src1 = make_event_source( ctx );
+        auto src2 = make_event_source<int>( ctx );
 
         auto out1 = iterate( src1,
             std::make_tuple( 0, 0 ),
@@ -642,16 +640,16 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto in1 = make_var<D>( ctx, 1 );
-        auto in2 = make_var<D>( ctx, 1 );
+        auto in1 = make_var( ctx, 1 );
+        auto in2 = make_var( ctx, 1 );
 
         auto summ = []( int a, int b ) { return a + b; };
 
         auto op1 = ( in1, in2 )->*summ;
         auto op2 = ( ( in1, in2 )->*summ )->*[]( int a ) { return a * 10; };
 
-        auto src1 = make_event_source<D>( ctx );
-        auto src2 = make_event_source<D, int>( ctx );
+        auto src1 = make_event_source( ctx );
+        auto src2 = make_event_source<int>( ctx );
 
         auto out1 = iterate( src1,
             std::vector<int>{},
@@ -759,10 +757,10 @@ TEST_SUITE( "OperationsTest" )
 
         context ctx;
 
-        auto in = make_event_source<D, std::string>( ctx );
+        auto in = make_event_source<std::string>( ctx );
 
-        auto sig1 = make_var<D>( ctx, 1338 );
-        auto sig2 = make_var<D>( ctx, 1336 );
+        auto sig1 = make_var( ctx, 1338 );
+        auto sig2 = make_var( ctx, 1336 );
 
         auto filtered
             = filter( in, with( sig1, sig2 ), []( const std::string& s, int sig1, int sig2 ) {
@@ -790,13 +788,13 @@ TEST_SUITE( "OperationsTest" )
 
         context ctx;
 
-        auto in1 = make_event_source<D, std::string>( ctx );
-        auto in2 = make_event_source<D, std::string>( ctx );
+        auto in1 = make_event_source<std::string>( ctx );
+        auto in2 = make_event_source<std::string>( ctx );
 
         auto merged = merge( in1, in2 );
 
-        auto first = make_var<D>( ctx, std::string( "Ace" ) );
-        auto last = make_var<D>( ctx, std::string( "McSteele" ) );
+        auto first = make_var( ctx, std::string( "Ace" ) );
+        auto last = make_var( ctx, std::string( "McSteele" ) );
 
         auto transformed = transform( merged,
             with( first, last ),
@@ -810,11 +808,13 @@ TEST_SUITE( "OperationsTest" )
 
         in1 << std::string( "Hello Worlt" ) << std::string( "Hello World" );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             in2 << std::string( "Hello Vorld" );
             first.set( std::string( "Alice" ) );
             last.set( std::string( "Anderson" ) );
         } );
+
+        CAPTURE( results );
 
         CHECK_EQ( results.size(), 3 );
         CHECK( std::find( results.begin(), results.end(), "HELLO WORLT, Ace McSteele" )
@@ -831,10 +831,10 @@ TEST_SUITE( "OperationsTest" )
 
         context ctx;
 
-        auto in1 = make_event_source<D, int>( ctx );
-        auto in2 = make_event_source<D, int>( ctx );
+        auto in1 = make_event_source<int>( ctx );
+        auto in2 = make_event_source<int>( ctx );
 
-        auto mult = make_var<D>( ctx, 10 );
+        auto mult = make_var( ctx, 10 );
 
         auto merged = merge( in1, in2 );
         int callCount = 0;
@@ -853,7 +853,7 @@ TEST_SUITE( "OperationsTest" )
 
         observe( processed, [&]( float s ) { results.push_back( s ); } );
 
-        do_transaction<D>( [&] { in1 << 10 << 20; } );
+        ctx.do_transaction( [&] { in1 << 10 << 20; } );
 
         in2 << 30;
 
@@ -872,8 +872,8 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto in1 = make_event_source<D, int>( ctx );
-        auto in2 = make_event_source<D, int>( ctx );
+        auto in1 = make_event_source<int>( ctx );
+        auto in2 = make_event_source<int>( ctx );
 
         auto joined = join( in1, in2 );
 
@@ -898,8 +898,8 @@ TEST_SUITE( "OperationsTest" )
     {
         context ctx;
 
-        auto in1 = make_event_source<D, int>( ctx );
-        auto in2 = make_event_source<D, int>( ctx );
+        auto in1 = make_event_source<int>( ctx );
+        auto in2 = make_event_source<int>( ctx );
 
         auto joined = join( in1, in2 );
 
@@ -908,7 +908,7 @@ TEST_SUITE( "OperationsTest" )
         observe(
             joined, [&]( const std::tuple<int, int>& value ) { saved_events.push_back( value ); } );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             in1 << -1 << -2 << -3;
             in2 << 1 << 2 << 3 << 4;
         } );

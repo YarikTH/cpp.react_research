@@ -7,8 +7,6 @@ namespace
 {
 using namespace react;
 
-REACTIVE_DOMAIN( D )
-
 int myfunc( int a, int b )
 {
     return a + b;
@@ -28,11 +26,11 @@ class Company
 {
 public:
     int index;
-    var_signal<D, std::string> name;
+    var_signal<std::string> name;
 
     Company( context& ctx, const int index, const char* name )
         : index( index )
-        , name( make_var<D>( ctx, std::string( name ) ) )
+        , name( make_var( ctx, std::string( name ) ) )
     {}
 
     friend bool operator==( const Company& lhs, const Company& rhs )
@@ -53,10 +51,10 @@ std::ostream& operator<<( std::ostream& os, const Company& company )
 class Employee
 {
 public:
-    var_signal<D, Company&> company;
+    var_signal<Company&> company;
 
     Employee( context& ctx, Company& company )
-        : company( make_var<D>( ctx, std::ref( company ) ) )
+        : company( make_var( ctx, std::ref( company ) ) )
     {}
 };
 } // namespace
@@ -67,10 +65,10 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto v1 = make_var<D>( ctx, 1 );
-        auto v2 = make_var<D>( ctx, 2 );
-        auto v3 = make_var<D>( ctx, 3 );
-        auto v4 = make_var<D>( ctx, 4 );
+        auto v1 = make_var( ctx, 1 );
+        auto v2 = make_var( ctx, 2 );
+        auto v3 = make_var( ctx, 3 );
+        auto v4 = make_var( ctx, 4 );
 
         CHECK_EQ( v1.value(), 1 );
         CHECK_EQ( v2.value(), 2 );
@@ -94,10 +92,10 @@ TEST_SUITE( "SignalTest" )
 
         context ctx;
 
-        auto v1 = make_var<D>( ctx, 1 );
-        auto v2 = make_var<D>( ctx, 2 );
-        auto v3 = make_var<D>( ctx, 3 );
-        auto v4 = make_var<D>( ctx, 4 );
+        auto v1 = make_var( ctx, 1 );
+        auto v2 = make_var( ctx, 2 );
+        auto v3 = make_var( ctx, 3 );
+        auto v4 = make_var( ctx, 4 );
 
         auto s1 = make_signal( with( v1, v2 ), []( int a, int b ) { return a + b; } );
 
@@ -137,8 +135,8 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto a1 = make_var<D>( ctx, 1 );
-        auto a2 = make_var<D>( ctx, 1 );
+        auto a1 = make_var( ctx, 1 );
+        auto a2 = make_var( ctx, 1 );
 
         auto plus0 = []( int value ) { return value + 0; };
         auto summ = []( int a, int b ) { return a + b; };
@@ -211,8 +209,8 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto a1 = make_var<D>( ctx, 1 );
-        auto a2 = make_var<D>( ctx, 1 );
+        auto a1 = make_var( ctx, 1 );
+        auto a2 = make_var( ctx, 1 );
 
         auto plus0 = []( int value ) { return value + 0; };
         auto summ = []( int a, int b ) { return a + b; };
@@ -245,7 +243,7 @@ TEST_SUITE( "SignalTest" )
 
         CHECK_EQ( result(), 6 );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             a1 <<= 2;
             a2 <<= 2;
         } );
@@ -269,8 +267,8 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto a1 = make_var<D>( ctx, 1 );
-        auto a2 = make_var<D>( ctx, 1 );
+        auto a1 = make_var( ctx, 1 );
+        auto a2 = make_var( ctx, 1 );
 
         auto summ = []( int a, int b ) { return a + b; };
 
@@ -296,9 +294,9 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto v1 = make_var<D>( ctx, 2 );
-        auto v2 = make_var<D>( ctx, 30 );
-        auto v3 = make_var<D>( ctx, 10 );
+        auto v1 = make_var( ctx, 2 );
+        auto v2 = make_var( ctx, 30 );
+        auto v3 = make_var( ctx, 10 );
 
         auto signal = ( v1, v2, v3 )->*[=]( int a, int b, int c ) -> int { return a * b * c; };
 
@@ -311,15 +309,15 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto a = make_var<D>( ctx, 1 );
-        auto b = make_var<D>( ctx, 1 );
+        auto a = make_var( ctx, 1 );
+        auto b = make_var( ctx, 1 );
 
         auto summ = []( int a, int b ) { return a + b; };
 
-        auto c = ( ( ( a, b )->*summ ), ( ( a, make_var<D>( ctx, 100 ) )->*summ ) )->*&myfunc;
+        auto c = ( ( ( a, b )->*summ ), ( ( a, make_var( ctx, 100 ) )->*summ ) )->*&myfunc;
         auto d = c->*&myfunc2;
         auto e = ( d, d )->*&myfunc3;
-        auto f = make_signal<D>( e, []( float value ) { return -value + 100; } );
+        auto f = make_signal( e, []( float value ) { return -value + 100; } );
 
         CHECK_EQ( c(), 103 );
         CHECK_EQ( d(), 51.5f );
@@ -338,10 +336,10 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto inner1 = make_var<D>( ctx, 123 );
-        auto inner2 = make_var<D>( ctx, 789 );
+        auto inner1 = make_var( ctx, 123 );
+        auto inner2 = make_var( ctx, 789 );
 
-        auto outer = make_var<D>( ctx, inner1 );
+        auto outer = make_var( ctx, inner1 );
 
         auto flattened = flatten( outer );
 
@@ -374,24 +372,24 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto a0 = make_var<D>( ctx, 100 );
+        auto a0 = make_var( ctx, 100 );
 
-        auto inner1 = make_var<D>( ctx, 200 );
+        auto inner1 = make_var( ctx, 200 );
 
         auto plus0 = []( int value ) { return value + 0; };
 
-        auto a1 = make_var<D>( ctx, 300 );
-        auto a2 = make_signal<D>( a1, plus0 );
-        auto a3 = make_signal<D>( a2, plus0 );
-        auto a4 = make_signal<D>( a3, plus0 );
-        auto a5 = make_signal<D>( a4, plus0 );
-        auto a6 = make_signal<D>( a5, plus0 );
-        auto inner2 = make_signal<D>( a6, plus0 );
+        auto a1 = make_var( ctx, 300 );
+        auto a2 = make_signal( a1, plus0 );
+        auto a3 = make_signal( a2, plus0 );
+        auto a4 = make_signal( a3, plus0 );
+        auto a5 = make_signal( a4, plus0 );
+        auto a6 = make_signal( a5, plus0 );
+        auto inner2 = make_signal( a6, plus0 );
 
         CHECK_EQ( inner1(), 200 );
         CHECK_EQ( inner2(), 300 );
 
-        auto outer = make_var<D>( ctx, inner1 );
+        auto outer = make_var( ctx, inner1 );
 
         auto flattened = flatten( outer );
 
@@ -401,10 +399,10 @@ TEST_SUITE( "SignalTest" )
 
         observe( flattened, [&observeCount]( int v ) { observeCount++; } );
 
-        auto o1 = make_signal<D>( ( a0, flattened ), []( int a, int b ) { return a + b; } );
-        auto o2 = make_signal<D>( o1, plus0 );
-        auto o3 = make_signal<D>( o2, plus0 );
-        auto result = make_signal<D>( o3, plus0 );
+        auto o1 = make_signal( ( a0, flattened ), []( int a, int b ) { return a + b; } );
+        auto o2 = make_signal( o1, plus0 );
+        auto o3 = make_signal( o2, plus0 );
+        auto result = make_signal( o3, plus0 );
 
         CHECK_EQ( result(), 100 + 200 );
 
@@ -418,7 +416,7 @@ TEST_SUITE( "SignalTest" )
         CHECK_EQ( result(), 100 + 300 );
         CHECK_EQ( observeCount, 2 );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             a0 <<= 5000;
             a1 <<= 6000;
         } );
@@ -434,16 +432,16 @@ TEST_SUITE( "SignalTest" )
 
         context ctx;
 
-        auto inner1 = make_var<D>( ctx, 10 );
+        auto inner1 = make_var( ctx, 10 );
 
-        auto a1 = make_var<D>( ctx, 20 );
+        auto a1 = make_var( ctx, 20 );
         auto a2 = a1->*plus0;
         auto a3 = a2->*plus0;
         auto inner2 = a3->*plus0;
 
-        auto outer = make_var<D>( ctx, inner1 );
+        auto outer = make_var( ctx, inner1 );
 
-        auto a0 = make_var<D>( ctx, 30 );
+        auto a0 = make_var( ctx, 30 );
 
         auto flattened = flatten( outer );
 
@@ -456,7 +454,7 @@ TEST_SUITE( "SignalTest" )
         CHECK_EQ( result(), 10 + 30 );
         CHECK_EQ( observeCount, 0 );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             inner1 <<= 1000;
             a0 <<= 200000;
             a1 <<= 50000;
@@ -466,7 +464,7 @@ TEST_SUITE( "SignalTest" )
         CHECK_EQ( result(), 50000 + 200000 );
         CHECK_EQ( observeCount, 1 );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             a0 <<= 667;
             a1 <<= 776;
         } );
@@ -474,7 +472,7 @@ TEST_SUITE( "SignalTest" )
         CHECK_EQ( result(), 776 + 667 );
         CHECK_EQ( observeCount, 2 );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             inner1 <<= 999;
             a0 <<= 888;
         } );
@@ -492,15 +490,15 @@ TEST_SUITE( "SignalTest" )
 
         context ctx;
 
-        auto a1 = make_var<D>( ctx, 100 );
+        auto a1 = make_var( ctx, 100 );
         auto inner1 = a1->*plus0;
 
-        auto a2 = make_var<D>( ctx, 200 );
+        auto a2 = make_var( ctx, 200 );
         auto inner2 = a2;
 
-        auto a3 = make_var<D>( ctx, 200 );
+        auto a3 = make_var( ctx, 200 );
 
-        auto outer = make_var<D>( ctx, inner1 );
+        auto outer = make_var( ctx, inner1 );
 
         auto flattened = flatten( outer );
 
@@ -508,7 +506,7 @@ TEST_SUITE( "SignalTest" )
 
         observe( result, [&]( int v ) { results.push_back( v ); } );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             a3 <<= 400;
             outer <<= inner2;
         } );
@@ -522,8 +520,8 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto outer = make_var<D>( ctx, 10 );
-        auto inner = make_var<D>( ctx, outer );
+        auto outer = make_var( ctx, 10 );
+        auto inner = make_var( ctx, outer );
 
         auto flattened = flatten( inner );
 
@@ -536,7 +534,7 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto v = make_var<D>( ctx, std::vector<int>{} );
+        auto v = make_var( ctx, std::vector<int>{} );
 
         int obsCount = 0;
 
@@ -558,7 +556,7 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto v = make_var<D>( ctx, std::vector<int>{} );
+        auto v = make_var( ctx, std::vector<int>{} );
 
         int obsCount = 0;
 
@@ -567,7 +565,7 @@ TEST_SUITE( "SignalTest" )
             obsCount++;
         } );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             v.modify( []( std::vector<int>& v ) { v.push_back( 30 ); } );
 
             v.modify( []( std::vector<int>& v ) { v.push_back( 50 ); } );
@@ -583,7 +581,7 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto vect = make_var<D>( ctx, std::vector<int>{} );
+        auto vect = make_var( ctx, std::vector<int>{} );
 
         int obsCount = 0;
 
@@ -593,7 +591,7 @@ TEST_SUITE( "SignalTest" )
         } );
 
         // Also terrible
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             vect.set( std::vector<int>{ 30, 50 } );
 
             vect.modify( []( std::vector<int>& v ) { v.push_back( 70 ); } );
@@ -655,14 +653,14 @@ TEST_SUITE( "SignalTest" )
     {
         context ctx;
 
-        auto in1 = make_event_source<D, int>( ctx );
-        auto in2 = make_event_source<D, int>( ctx );
+        auto in1 = make_event_source<int>( ctx );
+        auto in2 = make_event_source<int>( ctx );
 
-        auto sig = make_var<D>( ctx, in1 );
+        auto sig = make_var( ctx, in1 );
 
         int reassign_count = 0;
 
-        observe( sig, [&]( const events<D, int>& ) { ++reassign_count; } );
+        observe( sig, [&]( const events<int>& ) { ++reassign_count; } );
 
         auto f = flatten( sig );
 

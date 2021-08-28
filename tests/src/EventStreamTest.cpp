@@ -8,7 +8,6 @@ namespace
 {
 using namespace react;
 
-REACTIVE_DOMAIN( D )
 } // namespace
 
 TEST_SUITE( "EventStreamTest" )
@@ -17,8 +16,8 @@ TEST_SUITE( "EventStreamTest" )
     {
         context ctx;
 
-        auto es1 = make_event_source<D, int>( ctx );
-        auto es2 = make_event_source<D, int>( ctx );
+        auto es1 = make_event_source<int>( ctx );
+        auto es2 = make_event_source<int>( ctx );
 
         std::queue<int> results1;
         std::queue<int> results2;
@@ -65,11 +64,11 @@ TEST_SUITE( "EventStreamTest" )
     {
         context ctx;
 
-        auto a1 = make_event_source<D, int>( ctx );
-        auto a2 = make_event_source<D, int>( ctx );
-        auto a3 = make_event_source<D, int>( ctx );
+        auto a1 = make_event_source<int>( ctx );
+        auto a2 = make_event_source<int>( ctx );
+        auto a3 = make_event_source<int>( ctx );
 
-        events<D, int> merged;
+        events<int> merged;
 
         SUBCASE( "Function" )
         {
@@ -80,7 +79,7 @@ TEST_SUITE( "EventStreamTest" )
 
         observe( merged, [&]( int v ) { results.push_back( v ); } );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             a1 << 10;
             a2 << 20;
             a3 << 30;
@@ -95,9 +94,9 @@ TEST_SUITE( "EventStreamTest" )
     {
         context ctx;
 
-        auto a1 = make_event_source<D, std::string>( ctx );
-        auto a2 = make_event_source<D, std::string>( ctx );
-        auto a3 = make_event_source<D, std::string>( ctx );
+        auto a1 = make_event_source<std::string>( ctx );
+        auto a2 = make_event_source<std::string>( ctx );
+        auto a3 = make_event_source<std::string>( ctx );
 
         auto merged = merge( a1, a2, a3 );
 
@@ -109,7 +108,7 @@ TEST_SUITE( "EventStreamTest" )
         std::string s2( "two" );
         std::string s3( "three" );
 
-        do_transaction<D>( [&] {
+        ctx.do_transaction( [&] {
             a1 << s1;
             a2 << s2;
             a3 << s3;
@@ -124,8 +123,8 @@ TEST_SUITE( "EventStreamTest" )
     {
         context ctx;
 
-        auto a1 = make_event_source<D, int>( ctx );
-        auto a2 = make_event_source<D, int>( ctx );
+        auto a1 = make_event_source<int>( ctx );
+        auto a2 = make_event_source<int>( ctx );
 
         auto f1 = filter( a1, []( int v ) { return true; } );
         auto f2 = filter( a2, []( int v ) { return true; } );
@@ -161,9 +160,9 @@ TEST_SUITE( "EventStreamTest" )
 
         context ctx;
 
-        auto in = make_event_source<D, std::string>( ctx );
+        auto in = make_event_source<std::string>( ctx );
 
-        events<D, std::string> filtered;
+        events<std::string> filtered;
 
         SUBCASE( "Filter" )
         {
@@ -193,12 +192,12 @@ TEST_SUITE( "EventStreamTest" )
 
         context ctx;
 
-        auto in1 = make_event_source<D, std::string>( ctx );
-        auto in2 = make_event_source<D, std::string>( ctx );
+        auto in1 = make_event_source<std::string>( ctx );
+        auto in2 = make_event_source<std::string>( ctx );
 
         auto merged = merge( in1, in2 );
 
-        events<D, std::string> transformed;
+        events<std::string> transformed;
 
         SUBCASE( "Transform" )
         {
@@ -230,8 +229,8 @@ TEST_SUITE( "EventStreamTest" )
 
         context ctx;
 
-        auto in1 = make_event_source<D, int>( ctx );
-        auto in2 = make_event_source<D, int>( ctx );
+        auto in1 = make_event_source<int>( ctx );
+        auto in2 = make_event_source<int>( ctx );
 
         auto merged = merge( in1, in2 );
         int callCount = 0;
@@ -249,7 +248,7 @@ TEST_SUITE( "EventStreamTest" )
 
         observe( processed, [&]( float s ) { results.push_back( s ); } );
 
-        do_transaction<D>( [&] { in1 << 10 << 20; } );
+        ctx.do_transaction( [&] { in1 << 10 << 20; } );
 
         in2 << 30;
 

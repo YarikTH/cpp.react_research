@@ -75,19 +75,6 @@ TEST_SUITE( "EventStreamTest" )
         {
             merged = merge( a1, a2, a3 );
         }
-        SUBCASE( "Operator1" )
-        {
-            merged = a1 | a2 | a3;
-        }
-        SUBCASE( "Operator2" )
-        {
-            merged = a1 | ( a2 | a3 );
-        }
-        SUBCASE( "Operator3" )
-        {
-            auto a4 = make_event_source<D, int>( ctx );
-            merged = ( a1 | a4 ) | ( a2 | a3 );
-        }
 
         std::vector<int> results;
 

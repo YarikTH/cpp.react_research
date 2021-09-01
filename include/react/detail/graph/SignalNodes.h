@@ -189,7 +189,7 @@ public:
 
     S Evaluate() 
     {
-        return apply(EvalFunctor( func_ ), this->deps_);
+        return REACT_IMPL::apply(EvalFunctor( func_ ), this->deps_);
     }
 
 private:

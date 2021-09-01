@@ -282,7 +282,7 @@ public:
     {
         Engine::OnNodeDetach(*this, *trigger_);
 
-        apply(
+        REACT_IMPL::apply(
             DetachFunctor<D,SyncedContinuationNode,
                 std::shared_ptr<SignalNode<D,TDepValues>>...>( *this ),
             deps_);
@@ -309,7 +309,7 @@ public:
         auto& storedFunc = func_;
 
         // Copy values to tuple
-        ValueTupleT storedValues = apply(TupleBuilder_( ), deps_);
+        ValueTupleT storedValues = REACT_IMPL::apply(TupleBuilder_( ), deps_);
 
         // Note: MSVC error, if using () initialization.
         // Probably a compiler bug.
@@ -318,7 +318,7 @@ public:
             // Copy events, func, value tuple (note: 2x copy)
             [storedFunc,storedEvents,storedValues] () mutable
             {
-                apply(
+                REACT_IMPL::apply(
                     [&storedFunc,&storedEvents] (const TDepValues& ... vals)
                     {
                         storedFunc(EventRange<E>( storedEvents ), vals ...);

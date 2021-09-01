@@ -249,7 +249,7 @@ public:
     {
         Engine::OnNodeDetach(*this, *events_);
 
-        apply(
+        REACT_IMPL::apply(
             DetachFunctor<D,SyncedIterateNode,
                 std::shared_ptr<SignalNode<D,TDepValues>>...>( *this ),
             deps_);
@@ -274,7 +274,7 @@ public:
             using TimerT = typename SyncedIterateNode::ScopedUpdateTimer;
             TimerT scopedTimer( *this, events_->Events().size() );
             
-            S newValue = apply(
+            S newValue = REACT_IMPL::apply(
                 [this] (const std::shared_ptr<SignalNode<D,TDepValues>>& ... args)
                 {
                     return func_(EventRange<E>( events_->Events() ), this->value_, args->ValueRef() ...);
@@ -343,7 +343,7 @@ public:
     {
         Engine::OnNodeDetach(*this, *events_);
 
-        apply(
+        REACT_IMPL::apply(
             DetachFunctor<D,SyncedIterateByRefNode,
                 std::shared_ptr<SignalNode<D,TDepValues>>...>( *this ),
             deps_);
@@ -368,7 +368,7 @@ public:
             using TimerT = typename SyncedIterateByRefNode::ScopedUpdateTimer;
             TimerT scopedTimer( *this, events_->Events().size() );
 
-            apply(
+            REACT_IMPL::apply(
                 [this] (const std::shared_ptr<SignalNode<D,TDepValues>>& ... args)
                 {
                     func_(EventRange<E>( events_->Events() ), this->value_, args->ValueRef() ...);

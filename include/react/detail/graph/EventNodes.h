@@ -180,13 +180,13 @@ public:
     template <typename TTurn, typename TCollector>
     void Collect(const TTurn& turn, const TCollector& collector) const
     {
-        apply(CollectFunctor<TTurn, TCollector>( turn, collector ), this->deps_);
+        REACT_IMPL::apply(CollectFunctor<TTurn, TCollector>( turn, collector ), this->deps_);
     }
 
     template <typename TTurn, typename TCollector, typename TFunctor>
     void CollectRec(const TFunctor& functor) const
     {
-        apply(reinterpret_cast<const CollectFunctor<TTurn,TCollector>&>(functor), this->deps_);
+        REACT_IMPL::apply(reinterpret_cast<const CollectFunctor<TTurn,TCollector>&>(functor), this->deps_);
     }
 
 private:
@@ -580,7 +580,7 @@ public:
     {
         Engine::OnNodeDetach(*this, *source_);
 
-        apply(
+        REACT_IMPL::apply(
             DetachFunctor<D,SyncedEventTransformNode,
                 std::shared_ptr<SignalNode<D,TDepValues>>...>( *this ),
             deps_);
@@ -608,7 +608,7 @@ public:
             TimerT scopedTimer( *this, source_->Events().size() );
 
             for (const auto& e : source_->Events())
-                this->events_.push_back(apply(
+                this->events_.push_back(REACT_IMPL::apply(
                         [this, &e] (const std::shared_ptr<SignalNode<D,TDepValues>>& ... args)
                         {
                             return func_(e, args->ValueRef() ...);
@@ -671,7 +671,7 @@ public:
     {
         Engine::OnNodeDetach(*this, *source_);
 
-        apply(
+        REACT_IMPL::apply(
             DetachFunctor<D,SyncedEventFilterNode,
                 std::shared_ptr<SignalNode<D,TDepValues>>...>( *this ),
             deps_);
@@ -699,7 +699,7 @@ public:
             TimerT scopedTimer( *this, source_->Events().size() );
 
             for (const auto& e : source_->Events())
-                if (apply(
+                if (REACT_IMPL::apply(
                         [this, &e] (const std::shared_ptr<SignalNode<D,TDepValues>>& ... args)
                         {
                             return filter_(e, args->ValueRef() ...);
@@ -838,7 +838,7 @@ public:
     {
         Engine::OnNodeDetach(*this, *source_);
 
-        apply(
+        REACT_IMPL::apply(
             DetachFunctor<D,SyncedEventProcessingNode,
                 std::shared_ptr<SignalNode<D,TDepValues>>...>( *this ),
             deps_);
@@ -865,7 +865,7 @@ public:
             using TimerT = typename SyncedEventProcessingNode::ScopedUpdateTimer;
             TimerT scopedTimer( *this, source_->Events().size() );
 
-            apply(
+            REACT_IMPL::apply(
                 [this] (const std::shared_ptr<SignalNode<D,TDepValues>>& ... args)
                 {
                     func_(
@@ -923,7 +923,7 @@ public:
 
     ~EventJoinNode()
     {
-        apply(
+        REACT_IMPL::apply(
             [this] (Slot<TValues>& ... slots) {
                 REACT_EXPAND_PACK(Engine::OnNodeDetach(*this, *slots.Source));
             },
@@ -948,7 +948,7 @@ public:
             TimerT scopedTimer( *this, count );
 
             // Move events into buffers
-            apply(
+            REACT_IMPL::apply(
                 [this, &turn] (Slot<TValues>& ... slots) {
                     REACT_EXPAND_PACK(fetchBuffer(turn, slots));
                 },
@@ -959,7 +959,7 @@ public:
                 bool isReady = true;
 
                 // All slots ready?
-                apply(
+                REACT_IMPL::apply(
                     [this,&isReady] (Slot<TValues>& ... slots) {
                         // Todo: combine return values instead
                         REACT_EXPAND_PACK(checkSlot(slots, isReady));
@@ -970,7 +970,7 @@ public:
                     break;
 
                 // Pop values from buffers and emit tuple
-                apply(
+                REACT_IMPL::apply(
                     [this] (Slot<TValues>& ... slots) {
                         this->events_.emplace_back(slots.Buffer.front() ...);
                         REACT_EXPAND_PACK(slots.Buffer.pop_front());

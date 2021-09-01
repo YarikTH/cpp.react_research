@@ -308,7 +308,7 @@ public:
                 using TimerT = typename SyncedObserverNode::ScopedUpdateTimer;
                 TimerT scopedTimer( *this, p->Events().size() );
             
-                shouldDetach = apply(
+                shouldDetach = REACT_IMPL::apply(
                     [this, &p] (const std::shared_ptr<SignalNode<D,TDepValues>>& ... args)
                     {
                         return func_(EventRange<E>( p->Events() ), args->ValueRef() ...);
@@ -346,7 +346,7 @@ private:
         {
             Engine::OnNodeDetach(*this, *p);
 
-            apply(
+            REACT_IMPL::apply(
                 DetachFunctor<D,SyncedObserverNode,
                     std::shared_ptr<SignalNode<D,TDepValues>>...>( *this ),
                 deps_);

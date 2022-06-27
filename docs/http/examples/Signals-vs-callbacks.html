@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Signals vs. callbacks | C++React</title>
+  <link rel="icon" type="image/png" href="../media/favicon.png">
+  <link rel="stylesheet" href="../styles/design.css">
+  <link rel="stylesheet" href="../styles/syntax.css">
+  <script src="../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Token.html"><img class="entity_icon" src="../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Events.html"><img class="entity_icon" src="../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventSource.html"><img class="entity_icon" src="../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventRange.html"><img class="entity_icon" src="../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Merge.html"><img class="entity_icon" src="../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Filter.html"><img class="entity_icon" src="../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Transform.html"><img class="entity_icon" src="../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Process.html"><img class="entity_icon" src="../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Join.html"><img class="entity_icon" src="../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observer.html"><img class="entity_icon" src="../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observe.html"><img class="entity_icon" src="../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/Signal.html"><img class="entity_icon" src="../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/With.html"><img class="entity_icon" src="../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../index.html">Home</a> &#8640;
+
+      <a href="../index.html">Examples</a> &#8640;
+
+
+      Signals vs. callbacks
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Signals vs. callbacks <span class="type_tag"></span></h1>
+
+    
+    <ul>
+  <li><a href="Signals-vs-callbacks.html#problem-statement">Problem statement</a></li>
+  <li><a href="Signals-vs-callbacks.html#solution-1-simple-member-function">Solution 1: Simple member function</a></li>
+  <li><a href="Signals-vs-callbacks.html#solution-2-manually-triggered-re-calculation">Solution 2: Manually triggered re-calculation</a></li>
+  <li><a href="Signals-vs-callbacks.html#solution-3-callbacks">Solution 3: Callbacks</a></li>
+  <li><a href="Signals-vs-callbacks.html#final-solution-signals">Final solution: Signals</a></li>
+</ul>
+
+<p>This basic example explains the motivation behind signals by comparing them to some alternative approaches.</p>
+
+<h2 id="problem-statement">Problem statement</h2>
+<p>Here’s a class <code>Shape</code> with two dimensions <code>Width</code> and <code>Height</code>:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Shape</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="kt">int</span> <span class="n">Width</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">Height</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span></code></pre></div>
+
+<p>The size of the shape should be calculated accordingly:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="kt">int</span> <span class="nf">calculateSize</span><span class="p">(</span><span class="kt">int</span> <span class="n">width</span><span class="p">,</span> <span class="kt">int</span> <span class="n">height</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span><span class="p">;</span> <span class="p">}</span></code></pre></div>
+
+<p>We want to add a method to calculate size for our shape class.</p>
+
+<h2 id="solution-1-simple-member-function">Solution 1: Simple member function</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Shape</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="kt">int</span> <span class="n">Width</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">Height</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">Size</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">Width</span> <span class="o">*</span> <span class="n">Height</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">};</span></code></pre></div>
+
+<p>This gets the job done, but whenever <code>Size()</code> is called, the calculation is repeated, even if the the shape’s dimensions did not change after the previous call.
+For this simple example that’s fine, but let’s assume calculating size would be an expensive operation.
+We rather want to re-calculate it once after width or height have been changed and just return that result in <code>Size()</code>.</p>
+
+<h2 id="solution-2-manually-triggered-re-calculation">Solution 2: Manually triggered re-calculation</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Shape</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="kt">int</span> <span class="n">Width</span><span class="p">()</span> <span class="k">const</span>   <span class="p">{</span> <span class="k">return</span> <span class="n">width_</span><span class="p">;</span> <span class="p">}</span>
+    <span class="kt">int</span> <span class="n">Height</span><span class="p">()</span> <span class="k">const</span>  <span class="p">{</span> <span class="k">return</span> <span class="n">height_</span><span class="p">;</span> <span class="p">}</span>
+    <span class="kt">int</span> <span class="n">Size</span><span class="p">()</span> <span class="k">const</span>    <span class="p">{</span> <span class="k">return</span> <span class="n">size_</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">SetWidth</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">width_</span> <span class="o">==</span> <span class="n">v</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+        <span class="n">width_</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+        <span class="n">updateSize</span><span class="p">();</span> 
+    <span class="p">}</span>
+    
+    <span class="kt">void</span> <span class="n">SetHeight</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">height_</span> <span class="o">==</span> <span class="n">v</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+        <span class="n">height_</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+        <span class="n">updateSize</span><span class="p">();</span>
+    <span class="p">}</span>
+
+<span class="k">private</span><span class="o">:</span>
+    <span class="kt">void</span> <span class="n">updateSize</span><span class="p">()</span>   <span class="p">{</span> <span class="n">size_</span> <span class="o">=</span> <span class="n">width_</span> <span class="o">*</span> <span class="n">height_</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="kt">int</span> <span class="n">width_</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">height_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">size_</span>   <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Shape</span> <span class="n">myShape</span><span class="p">;</span>
+
+<span class="c1">// Set dimensions</span>
+<span class="n">myShape</span><span class="p">.</span><span class="n">SetWidth</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
+<span class="n">myShape</span><span class="p">.</span><span class="n">SetHeight</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
+
+<span class="c1">// Get size</span>
+<span class="k">auto</span> <span class="n">curSize</span> <span class="o">=</span> <span class="n">myShape</span><span class="p">.</span><span class="n">Size</span><span class="p">();</span></code></pre></div>
+
+<p>We’ve declared the data fields as private members and exposed them through getter and setter functions,
+so we can call <code>updateSize()</code> internally, after width or height have been changed.</p>
+
+<p>When considering where we started from, this adds quite a bit of boilerplate code, and as usual when having to do things manually, we can make mistakes.</p>
+
+<p>What if more dependent attributes should be added?
+Using the current approach, updates are manually triggered from the dependencies.</p>
+
+<p>This requires changing all dependencies when adding a new dependent values, which gets increasingly complex.
+More importantly, it’s not an option, if the dependent values are not known yet or could be added and removed dynamically.
+A common approach to enable this are callbacks.</p>
+
+<h2 id="solution-3-callbacks">Solution 3: Callbacks</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Shape</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">using</span> <span class="n">CallbackT</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+
+    <span class="kt">int</span> <span class="n">Width</span><span class="p">()</span> <span class="k">const</span>   <span class="p">{</span> <span class="k">return</span> <span class="n">width_</span><span class="p">;</span> <span class="p">}</span>
+    <span class="kt">int</span> <span class="n">Height</span><span class="p">()</span> <span class="k">const</span>  <span class="p">{</span> <span class="k">return</span> <span class="n">height_</span><span class="p">;</span> <span class="p">}</span>
+    <span class="kt">int</span> <span class="n">Size</span><span class="p">()</span> <span class="k">const</span>    <span class="p">{</span> <span class="k">return</span> <span class="n">size_</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">SetWidth</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">width_</span> <span class="o">==</span> <span class="n">v</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+        <span class="n">width_</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+        <span class="n">updateSize</span><span class="p">();</span> 
+    <span class="p">}</span>
+    
+    <span class="kt">void</span> <span class="n">SetHeight</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">height_</span> <span class="o">==</span> <span class="n">v</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+        <span class="n">height_</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+        <span class="n">updateSize</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">AddSizeChangeCallback</span><span class="p">(</span><span class="k">const</span> <span class="n">CallbackT</span><span class="o">&amp;</span> <span class="n">f</span><span class="p">)</span>   <span class="p">{</span> <span class="n">sizeCallbacks_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">f</span><span class="p">);</span> <span class="p">}</span>
+
+<span class="k">private</span><span class="o">:</span>
+    <span class="kt">void</span> <span class="n">updateSize</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">auto</span> <span class="n">oldSize</span> <span class="o">=</span> <span class="n">size_</span><span class="p">;</span>
+        <span class="n">size_</span> <span class="o">=</span> <span class="n">width_</span> <span class="o">*</span> <span class="n">height_</span><span class="p">;</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">oldSize</span> <span class="o">!=</span> <span class="n">size_</span><span class="p">)</span>
+            <span class="n">notifySizeCallbacks</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">notifySizeCallbacks</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="nl">f</span> <span class="p">:</span> <span class="n">sizeCallbacks_</span><span class="p">)</span>
+            <span class="n">f</span><span class="p">(</span><span class="n">size_</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kt">int</span> <span class="n">width_</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">height_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">size_</span>   <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">CallbackT</span><span class="o">&gt;</span> <span class="n">sizeCallbacks_</span><span class="p">;</span>
+<span class="p">};</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Shape</span> <span class="n">myShape</span><span class="p">;</span>
+
+<span class="c1">// Callback on change</span>
+<span class="n">myShape</span><span class="p">.</span><span class="n">AddSizeChangeCallback</span><span class="p">([]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">newSize</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">redraw</span><span class="p">();</span>
+<span class="p">});</span></code></pre></div>
+
+<p>For brevity, this example includes callbacks for size changes, but not for width and height.
+Nonetheless, it adds even more boilerplate.
+Instead of implementing the callback mechanism ourselves, we can use external libraries for that, for example <code>boost::signals2</code>, which handles storage and batch invocation of callbacks;
+but overall, it has no impact on the design.</p>
+
+<p>To summarize some of the pressing issues with the solutions shown so far:</p>
+
+<ul>
+  <li>Error-proneness: There is no guarantee that <code>size == width * height</code>. It’s only true as long as we don’t forget to call <code>updateSize()</code> after changes.</li>
+  <li>Boilerplate: Check against previous value, trigger update of dependent internal values, trigger callback notification, register callbacks, …</li>
+  <li>Complexity: Adding new dependent attributes requires changes in existing functions and potentially adding additional callback holders.</li>
+</ul>
+
+<p>What it boils down to, is that the change propagation must be handled by hand.
+The next example shows how signals can be used for this scenario.</p>
+
+<h2 id="final-solution-signals">Final solution: Signals</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="cp">#include &quot;react/Domain.h&quot;</span>
+<span class="cp">#include &quot;react/Signal.h&quot;</span>
+<span class="cp">#include &quot;react/Observer.h&quot;</span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">react</span><span class="p">;</span>
+
+<span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Shape</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">Width</span>   <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">Height</span>  <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>    <span class="n">Size</span>    <span class="o">=</span> <span class="n">Width</span> <span class="o">*</span> <span class="n">Height</span><span class="p">;</span>
+<span class="p">};</span></code></pre></div>
+
+<p><code>Size</code> now behaves like a function of <code>Width</code> and <code>Height</code>, similar to Solution 1.
+But behind the scenes, it works like Solution 2, i.e. size is only only re-calculated when width or height change.</p>
+
+<p>The following code shows how to interact with these signals:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Shape</span> <span class="n">myShape</span><span class="p">;</span>
+
+<span class="c1">// Set dimensions</span>
+<span class="n">myShape</span><span class="p">.</span><span class="n">Width</span><span class="p">.</span><span class="n">Set</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
+<span class="n">myShape</span><span class="p">.</span><span class="n">Height</span><span class="p">.</span><span class="n">Set</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
+
+<span class="c1">// Get size</span>
+<span class="k">auto</span> <span class="n">curSize</span> <span class="o">=</span> <span class="n">myShape</span><span class="p">.</span><span class="n">Size</span><span class="p">();</span> <span class="c1">// Or more verbose: myShape.Size.Value()</span></code></pre></div>
+
+<p>Every reactive value automatically supports registration of callbacks (they are called observers):</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="c1">// Callback on change</span>
+<span class="n">Observe</span><span class="p">(</span><span class="n">myShape</span><span class="p">.</span><span class="n">Size</span><span class="p">,</span> <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">newSize</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">redraw</span><span class="p">();</span>
+<span class="p">});</span>
+
+<span class="c1">// Those would work, too</span>
+<span class="n">Observe</span><span class="p">(</span><span class="n">myShape</span><span class="p">.</span><span class="n">Width</span><span class="p">,</span> <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">newWidth</span><span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">});</span>
+<span class="n">Observe</span><span class="p">(</span><span class="n">myShape</span><span class="p">.</span><span class="n">Height</span><span class="p">,</span> <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">newHeight</span><span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">});</span></code></pre></div>
+
+  </div>
+</div>
+
+</body>
+
+</html>

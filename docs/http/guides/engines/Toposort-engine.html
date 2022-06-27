@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Toposort engine | C++React</title>
+  <link rel="icon" type="image/png" href="../../media/favicon.png">
+  <link rel="stylesheet" href="../../styles/design.css">
+  <link rel="stylesheet" href="../../styles/syntax.css">
+  <script src="../../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../../reference/Event.h/Token.html"><img class="entity_icon" src="../../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Event.h/Events.html"><img class="entity_icon" src="../../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/EventSource.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/EventRange.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Merge.html"><img class="entity_icon" src="../../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Filter.html"><img class="entity_icon" src="../../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Transform.html"><img class="entity_icon" src="../../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Process.html"><img class="entity_icon" src="../../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Join.html"><img class="entity_icon" src="../../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Observer.h/Observer.html"><img class="entity_icon" src="../../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Observer.h/Observe.html"><img class="entity_icon" src="../../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Signal.h/Signal.html"><img class="entity_icon" src="../../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/With.html"><img class="entity_icon" src="../../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../../index.html">Home</a> &#8640;
+
+      <a href="../index.html">Guides</a> &#8640;
+
+      <a href="index.html">Propagation engines</a> &#8640;
+
+
+      Toposort engine
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Toposort engine <span class="type_tag"></span></h1>
+
+    
+    <ul>
+  <li><a href="Toposort-engine.html#motivation">Motivation</a></li>
+  <li><a href="Toposort-engine.html#concept">Concept</a></li>
+  <li><a href="Toposort-engine.html#sequential-algorithm">Sequential algorithm</a></li>
+  <li><a href="Toposort-engine.html#parallel-algorithm">Parallel algorithm</a></li>
+  <li><a href="Toposort-engine.html#issues">Issues</a></li>
+  <li><a href="Toposort-engine.html#conclusion">Conslusion</a></li>
+</ul>
+
+<h2 id="motivation">Motivation</h2>
+
+<p>Topological sorting of the graph nodes to decide on the update order is a common strategy among reactive programming implementations.
+It can guarantee glitch freedom and update minimality.
+The algorithm can easily be adapted to support parallel updating, too.</p>
+
+<h2 id="concept">Concept</h2>
+
+<p>To apply the topological sorting, each node is assigned a level, which is the maximum level of its predecessors plus 1. Nodes without any predecessors are at level 0.</p>
+
+<p>This figure shows how the update propagation proceeds in level iterations after a node has been changed:</p>
+
+<p><img src="../../media/toposort1.png" alt="Drawing" width="600px" /></p>
+
+<h2 id="sequential-algorithm">Sequential algorithm</h2>
+
+<p>Sequential toposort executes updates in the same thread that triggered the input.
+It can be implemented with a priority queue that’s ordered by node level, but to reduce the number of swaps, an improved algorithm is used:</p>
+
+<div class="highlight"><pre><code class="language-text" data-lang="text">Q = Successors of changed input nodes
+
+While Q is not empty:
+  P = {}
+  Find minimum level m in Q
+  Move nodes with level m from Q to P
+  Update nodes in P
+  add successors of changed nodes to Q</code></pre></div>
+
+<p><code>Q</code> contains all nodes that are scheduled to be updated eventually. <code>P</code> contains all nodes with the same level that are to be updated next. Selecting and moving nodes from <code>Q</code> to <code>P</code> can be done efficiently by partitioning <code>Q</code>, which only has to be done once per iteration.</p>
+
+<h2 id="parallel-algorithm">Parallel algorithm</h2>
+
+<p>Parallel toposort allows to update nodes on the same level in parallel, i.e. by doing a <code>parallel_for</code> over <code>P</code>. This means that multiple threads might add successors of changed nodes to <code>Q</code>. To avoid contention, a thread-local data structure holds a buffer <code>Q[t]</code> and keeps track of its own minimum level. The algorithm is summarized here:</p>
+
+<div class="highlight"><pre><code class="language-text" data-lang="text">Q[t] = Successors of changed input nodes
+
+While any Q[t] is not empty:
+  P = {}
+  Find global minimum level m over all Q[t]
+  Move nodes with level m from each Q[t] to P
+  Map nodes in P to tasks and update them in parallel
+  add successors of changed nodes to Q[t]</code></pre></div>
+
+<p>The <code>parallel_for</code> over <code>P</code> maps the total range of nodes to tasks based on node weights, which indicates how computationally expensive their update is. The range is recursively split as shown in this example:</p>
+
+<p><img src="../../media/toposort2.png" alt="Drawing" width="500px" /></p>
+
+<p>If a range does not exceed a certain weight threshold and is thus not splittable, there is no need to spawn additional tasks.</p>
+
+<p>The following image shows the actual thread mapping of a synthetic graph, consisting of lightweight nodes only:</p>
+
+<p><img src="../../media/partoposort.png" alt="Drawing" width="250px" /></p>
+
+<p>Changes are propagated from top to bottom. and the unique colors indicate which thread a node was updated by.
+Each node has weight 1 and a range of nodes is splittable when its total weight exceeds 8.
+Note that as soon the parallelization starts, nodes that are next to each other in the image are not necessarily next to each other in the range.</p>
+
+<h2 id="issues">Issues</h2>
+
+<p>Parallel toposort can only advance to the next level after all updates of the current level are done. This can introduce unnecessary waiting, which results in sub-optimal parallel utilization. The following example shows this:</p>
+
+<p><img src="../../media/toposort3.png" alt="Drawing" width="180px" /></p>
+
+<p><code>op2</code> represents a computationally expensive operation, while <code>op1</code> finishes quickly. Nonetheless, the successor of <code>op1</code> can not be updated unless <code>op2</code> has completed as well, even though there’s no dependency relation between the two.</p>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>Single-threaded Toposort provides glitch freedom and update minimality with low overhead.</p>
+
+<p>The parallel variant is an option when dealing wide and shallow graphs, but less so for deep graphs with multiple layers of heterogeneous nodes.
+For this reason, other propagation engines should be preferred when it comes to parallelization.</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

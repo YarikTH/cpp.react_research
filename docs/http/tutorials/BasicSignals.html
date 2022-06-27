@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Signals | C++React</title>
+  <link rel="icon" type="image/png" href="../media/favicon.png">
+  <link rel="stylesheet" href="../styles/design.css">
+  <link rel="stylesheet" href="../styles/syntax.css">
+  <script src="../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Token.html"><img class="entity_icon" src="../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Events.html"><img class="entity_icon" src="../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventSource.html"><img class="entity_icon" src="../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventRange.html"><img class="entity_icon" src="../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Merge.html"><img class="entity_icon" src="../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Filter.html"><img class="entity_icon" src="../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Transform.html"><img class="entity_icon" src="../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Process.html"><img class="entity_icon" src="../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Join.html"><img class="entity_icon" src="../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observer.html"><img class="entity_icon" src="../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observe.html"><img class="entity_icon" src="../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/Signal.html"><img class="entity_icon" src="../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/With.html"><img class="entity_icon" src="../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../index.html">Home</a> &#8640;
+
+      <a href="index.html">Tutorials</a> &#8640;
+
+
+      Signals
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Signals <span class="type_tag"></span></h1>
+
+    
+    <ul>
+  <li><a href="BasicSignals.html#defining-a-domain">Defining a domain</a></li>
+  <li><a href="BasicSignals.html#hello-world">Hello world</a></li>
+  <li><a href="BasicSignals.html#reacting-to-value-changes">Reacting to value changes</a></li>
+  <li><a href="BasicSignals.html#changing-multiple-inputs">Changing multiple inputs</a></li>
+  <li><a href="BasicSignals.html#modifying-inputs-in-place">Modifying inputs in-place</a></li>
+</ul>
+
+<h2 id="defining-a-domain">Defining a domain</h2>
+
+<p>Each reactive value belongs to a logical domain. The purpose of a domain is</p>
+
+<ul>
+  <li>grouping related reactive values together and encapsulating them;</li>
+  <li>allowing different concurrency policies for separate domains;</li>
+  <li>simplifying management of dependency relations by splitting up the dependency graph into smaller parts.</li>
+</ul>
+
+<p>Hence, the first thing we do is defining a domain:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="cp">#include &quot;react/Domain.h&quot;</span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">react</span><span class="p">;</span>
+
+<span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">MyDomain</span><span class="p">,</span> <span class="n">sequential</span><span class="p">)</span></code></pre></div>
+
+<p>The first parameter of the <code>REACTIVE_DOMAIN</code> macro is the domain name.
+Technically, a domain is a type, so it can be aliased or used as a type parameter for templates.
+Think of it as being declared as <code>class MyDomain : /*...*/</code>.</p>
+
+<p>The second parameter specifies the concurrency policy, which controls</p>
+
+<ul>
+  <li>concurrent input, and</li>
+  <li>parallel updating.</li>
+</ul>
+
+<p>For this tutorial, neither is relevant, so we use <code>sequential</code>.</p>
+
+<h2 id="hello-world">Hello world</h2>
+
+<p>Next, we create a simple signal that holds the string <code>"Hello world"</code>:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="cp">#include &quot;react/Domain.h&quot;</span>
+<span class="cp">#include &quot;react/Signal.h&quot;</span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">react</span><span class="p">;</span>
+
+<span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">sequential</span><span class="p">)</span>
+
+<span class="n">VarSignal</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">myString</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="n">string</span><span class="p">(</span> <span class="s">&quot;Hello world&quot;</span> <span class="p">));</span></code></pre></div>
+
+<p><code>D</code> is used as the domain name for its shortness, as it will be for the remainder of this tutorial.</p>
+
+<p>Conceptionally, an instance of type <code>Signal&lt;D,S&gt;</code> is a reactive container that holds a single value of type <code>S</code> and belongs to domain <code>D</code>.
+<code>myString</code> is declared as a <code>VarSignal</code>, which allows us to modify its value later; declaring it as <code>Signal</code> would’ve made it read-only.</p>
+
+<p>The <code>MakeVar&lt;D&gt;</code> function takes a value of type <code>S</code> and returns a new <code>VarSignal&lt;D,S&gt;</code>, which initially holds the given value.</p>
+
+<p><code>myString</code> is similar to an ordinary variable; its value can be read imperatively with <code>Value()</code> and changed with <code>Set(x)</code>.
+An alternative to <code>myString.Set(x)</code> is the overloaded <code>&lt;&lt;=</code> operator, i.e. <code>myString &lt;&lt;= x</code>.
+This should not be mixed up with the assignment operator, which is reserved to assign the signal itself, not the inner value.</p>
+
+<p>So far that’s not very reactive - let’s make it more interesting.
+First, we define a helper function to concatenate two strings and add whitespace in between:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">string</span> <span class="nf">concatFunc</span><span class="p">(</span><span class="n">string</span> <span class="n">first</span><span class="p">,</span> <span class="n">string</span> <span class="n">second</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">first</span> <span class="o">+</span> <span class="n">string</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">second</span><span class="p">;</span>
+<span class="p">};</span></code></pre></div>
+
+<p>With this, we replace the <code>myString</code> definition from the previous example with the following:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+<span class="c1">// The two words</span>
+<span class="n">VarSignalT</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">firstWord</span>  <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="n">string</span><span class="p">(</span> <span class="s">&quot;Change&quot;</span> <span class="p">));</span>
+<span class="n">VarSignalT</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">secondWord</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="n">string</span><span class="p">(</span> <span class="s">&quot;me!&quot;</span> <span class="p">));</span>
+ 
+<span class="c1">// A signal that concatenates both words</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">bothWords</span> <span class="o">=</span>
+    <span class="n">MakeSignal</span><span class="p">(</span>
+        <span class="n">With</span><span class="p">(</span><span class="n">firstWord</span><span class="p">,</span><span class="n">secondWord</span><span class="p">),</span>
+        <span class="n">concatFunc</span><span class="p">);</span></code></pre></div>
+
+<p>The macro <code>USING_REACTIVE_DOMAIN(name)</code> defines aliases for reactive types of the given domain in the current scope.
+This allows us to use <code>VarSignalT&lt;S&gt;</code> instead of <code>VarSignal&lt;D,S&gt;</code>.</p>
+
+<p><code>MakeSignal</code> connects the values of the signals in the <code>With(...)</code> expression to the function arguments of <code>concatFunc</code>.
+The value type of the created signal matches the return type of the function.
+It’s set by implicitly calling <code>concatFunc(firstWord.Value(), secondWord.Value())</code>. This happens</p>
+
+<ul>
+  <li>to set the initial value upon initialization of <code>bothWords</code>, and</li>
+  <li>when <code>firstWord</code> or <code>secondWord</code> have been changed.</li>
+</ul>
+
+<p>Here’s a demonstration:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">bothWords</span><span class="p">.</span><span class="n">Value</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> <span class="c1">// output: &quot;Change me!&quot;</span>
+
+<span class="n">firstWord</span>  <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;Hello&quot;</span> <span class="p">);</span>
+<span class="n">secondWord</span> <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;world&quot;</span> <span class="p">);</span>
+
+<span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">bothWords</span><span class="p">.</span><span class="n">Value</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> <span class="c1">// output: &quot;Hello world&quot;</span></code></pre></div>
+
+<p><code>MakeSignal</code> accepts any type of function, including lambdas or <code>std::bind</code> expressions:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">SignalT</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">bothWords</span> <span class="o">=</span>
+    <span class="n">MakeSignal</span><span class="p">(</span>
+        <span class="n">With</span><span class="p">(</span><span class="n">firstWord</span><span class="p">,</span> <span class="n">secondWord</span><span class="p">),</span>
+        <span class="p">[]</span> <span class="p">(</span><span class="n">string</span> <span class="n">first</span><span class="p">,</span> <span class="n">string</span> <span class="n">second</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">first</span> <span class="o">+</span> <span class="n">string</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">second</span><span class="p">;</span>
+        <span class="p">});</span></code></pre></div>
+
+<p>The <code>With</code> utility function creates a <code>SignalPack</code> from a variable number of given signals.
+A single signal can be used directly as the first argument, but multiple signals are wrapped by <code>With</code> instead of passing them directly.</p>
+
+<p>The example can be made more concise, because the body of <code>concatFunc</code> consists of operators only:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">SignalT</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">bothWords</span> <span class="o">=</span> <span class="n">firstWord</span> <span class="o">+</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot; &quot;</span> <span class="p">)</span> <span class="o">+</span> <span class="n">secondWord</span><span class="p">;</span></code></pre></div>
+
+<p>The definition of <code>bothWords</code> now essentially is the body of the function used to calculate it.
+Most unary and binary operators are overloaded to automatically lift expressions with a signal operand to create new signals.</p>
+
+<p>Would this work, too?</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">bothWords</span> <span class="o">&lt;&lt;=</span> <span class="s">&quot;Hello world?&quot;</span><span class="p">;</span></code></pre></div>
+
+<p>No, it wouldn’t, because <code>bothWords</code> is of type <code>Signal</code> and not <code>VarSignal</code>.
+Either the value of a signal represents a function result, or its value is set imperatively, but it can’t be both.</p>
+
+<h2 id="reacting-to-value-changes">Reacting to value changes</h2>
+
+<p>In the previous example, new values were pushed with <code>&lt;&lt;=</code>, then the result was pulled with <code>Value()</code>.
+There are some issues with this approach:</p>
+
+<ul>
+  <li>Concurrent pushes and pulls are not thread-safe, so they have to be coordinated somehow;</li>
+  <li><code>Value()</code> provides no means to react to value changes (unless you count in polling).</li>
+</ul>
+
+<p>There can be situations where the use of <code>Value()</code> is appropriate and we used it in the initial examples to demonstrate the basic idea behind signals.
+However, in most cases a push-based approach should be preferred.</p>
+
+<p>To demonstrate how this works, let’s modify the previous example so it prints out the value of <code>bothWords</code> whenever it changes.</p>
+
+<p>Technically, we could add the output during the computation itself:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="c1">// Note: Don&#39;t actually do this.</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">bothWords</span> <span class="o">=</span>
+    <span class="n">MakeSignal</span><span class="p">(</span>
+        <span class="n">With</span><span class="p">(</span><span class="n">firstWord</span><span class="p">,</span> <span class="n">secondWord</span><span class="p">),</span>
+        <span class="p">[]</span> <span class="p">(</span><span class="n">string</span> <span class="n">first</span><span class="p">,</span> <span class="n">string</span> <span class="n">second</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">first</span> <span class="o">+</span> <span class="n">string</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">second</span><span class="p">;</span>
+            <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">result</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+        <span class="p">});</span></code></pre></div>
+
+<p>This is problematic, because now the function to compute <code>bothWords</code> is no longer a pure function.
+In general, a function used to calculate a signal value should do only that; it should not cause side effects or depend on values other than its arguments.
+This makes it easier to reason about the program behavior, and more importantly, calculations can be parallelized without having to worry about data races.</p>
+
+<p>The proper way of applying side effects is to create an <code>Observer</code>, which is essentially a callback function that is invoked whenever its subject changes:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="cp">#include &quot;Observer.h&quot;</span>
+
+<span class="n">Observe</span><span class="p">(</span><span class="n">bothWords</span><span class="p">,</span> <span class="p">[]</span> <span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">s</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">});</span></code></pre></div>
+
+<p>The new value is passed as an argument to the callback function.
+Observers are meant to cause side effects. They don’t return any value, so it’s in fact all they can do.</p>
+
+<p>Testing this example is going to yield the following results:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">firstWord</span>  <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;Hello&quot;</span> <span class="p">);</span>
+<span class="c1">// output: &quot;Hello me!&quot;</span>
+
+<span class="n">secondWord</span> <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;world&quot;</span> <span class="p">);</span>
+<span class="c1">// output: &quot;Hello world&quot;</span>
+
+<span class="n">secondWord</span> <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;universe&quot;</span> <span class="p">);</span>
+<span class="c1">// output: &quot;Hello universe&quot;</span>
+
+<span class="n">firstWord</span> <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;Hello&quot;</span> <span class="p">);</span>
+<span class="c1">// no output, bothWords is still &quot;Hello universe&quot; and the callback is only invoked on changes</span></code></pre></div>
+
+<p>By default, the lifetime of an observer is attached to its observed subject (in this case, that’s <code>bothWords</code>).
+It’s also possible to detach observers manually, but this topic is covered in another tutorial.</p>
+
+<h2 id="changing-multiple-inputs">Changing multiple inputs</h2>
+
+<p>In the previous example, <code>firstWord</code> and <code>secondWord</code> were changed separately, which resulted in an output for each change.</p>
+
+<p>To explore this behaviour further, let’s have a look at another example:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">b</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>     <span class="n">x</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>     <span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>     <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">;</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Observe</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">newValue</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;z changed to &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">newValue</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">});</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">a</span> <span class="o">&lt;&lt;=</span> <span class="mi">2</span><span class="p">;</span></code></pre></div>
+
+<p>How many outputs does this generate?</p>
+
+<p>When <code>a</code> is changed, the new value is propagated to <code>x</code> and <code>y</code>.
+<code>z</code> depends on both of them, so it could be updated twice.
+But there is just going to be a single observable output: z changed to 6.</p>
+
+<p>Here’s why:
+After each input (e.g. <code>a &lt;&lt;= 2</code>), the resulting changes are propagated to all dependent signals until all values are consistent again.
+This process is called a <code>turn</code>.
+Propagation is guaranteed to be <em>update-minimal</em>, which means that during a <strong>single</strong> turn, no value is going to be re-calculated more than once.
+This includes that no observer is going be called more than once.</p>
+
+<p>Returning to the previous example, we can see that changing both inputs separately results in two turns:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">firstWord</span>  <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;Hello&quot;</span> <span class="p">);</span> <span class="c1">// Turn #1</span>
+<span class="n">secondWord</span> <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;world&quot;</span> <span class="p">);</span> <span class="c1">// Turn #2</span></code></pre></div>
+
+<p>To combine those in a single turn, we can wrap them in a transaction: </p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">DoTransaction</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">([]</span> <span class="p">{</span>
+    <span class="n">firstWord</span>  <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;Hello&quot;</span> <span class="p">);</span>
+    <span class="n">secondWord</span> <span class="o">&lt;&lt;=</span> <span class="n">string</span><span class="p">(</span> <span class="s">&quot;world&quot;</span> <span class="p">);</span>
+<span class="p">});</span>
+<span class="c1">// Turn #1, output: Hello world</span></code></pre></div>
+
+<p>Input inside the function passed to <code>DoTransaction</code> does not immediately start a turn, but rather waits until the function returns.
+Then, the changes of all inputs are propagated in a single turn.
+Besides avoiding redundant calculations, this allows to process related inputs together.</p>
+
+<p>If there are multiple inputs to the same signal in a single transaction, only the last one is applied:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+<span class="n">DoTransaction</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">([]</span> <span class="p">{</span>
+    <span class="n">a</span> <span class="o">&lt;&lt;=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">a</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span> 
+<span class="p">});</span>
+<span class="c1">// still 1, no change and no turn</span></code></pre></div>
+
+<h2 id="modifying-inputs-in-place">Modifying inputs in-place</h2>
+
+<p><code>VarSignals</code> require imperative input.
+So far, we’ve used <code>Set</code> (or the <code>&lt;&lt;=</code> equivalent notation) to do that, but there might be situations where we want to modify the current signal value rather than replacing it:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">VarSignalT</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;&gt;</span> <span class="n">data</span> <span class="o">=</span> 
+    <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span> <span class="p">});</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">auto</span> <span class="n">v</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">Value</span><span class="p">();</span> <span class="c1">// Copy</span>
+<span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">);</span>  <span class="c1">// Change</span>
+<span class="n">data</span> <span class="o">&lt;&lt;=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">v</span><span class="p">);</span> <span class="c1">// Replace (using move to avoid the extra copy)</span></code></pre></div>
+
+<p>Using this method, the new and old values will be compared internally, so in summary thats one copy, one comparison and two moves (one for the input, one after the comparison to apply the new value).</p>
+
+<p>The following method allows us to eliminate these intermediate steps by modifying the current value in-place:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">data</span><span class="p">.</span><span class="n">Modify</span><span class="p">([]</span> <span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;&amp;</span> <span class="n">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="n">data</span><span class="p">.</span><span class="n">Modify</span><span class="p">([]</span> <span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;&amp;</span> <span class="n">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">data</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="s">&quot;world&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="nl">s</span> <span class="p">:</span> <span class="n">data</span><span class="p">.</span><span class="n">Value</span><span class="p">())</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">s</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="c1">// output: Hello world</span></code></pre></div>
+
+<p>The drawback is that since we can not compare the old and new values, we loose the ability to detect whether the data was actually changed.
+We always have to assume that it did and re-calculate dependent signals.</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

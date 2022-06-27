@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Propagation engines | C++React</title>
+  <link rel="icon" type="image/png" href="../../media/favicon.png">
+  <link rel="stylesheet" href="../../styles/design.css">
+  <link rel="stylesheet" href="../../styles/syntax.css">
+  <script src="../../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../../reference/Event.h/Token.html"><img class="entity_icon" src="../../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Event.h/Events.html"><img class="entity_icon" src="../../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/EventSource.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/EventRange.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Merge.html"><img class="entity_icon" src="../../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Filter.html"><img class="entity_icon" src="../../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Transform.html"><img class="entity_icon" src="../../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Process.html"><img class="entity_icon" src="../../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Join.html"><img class="entity_icon" src="../../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Observer.h/Observer.html"><img class="entity_icon" src="../../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Observer.h/Observe.html"><img class="entity_icon" src="../../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Signal.h/Signal.html"><img class="entity_icon" src="../../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/With.html"><img class="entity_icon" src="../../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../../index.html">Home</a> &#8640;
+
+      <a href="../index.html">Guides</a> &#8640;
+
+
+      Propagation engines
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Propagation engines <span class="type_tag"></span></h1>
+
+    
+    <p>The update propagation strategy is implemented by a propagation engine.
+There are different algorithms available, which are described in detail in the following articles:</p>
+
+<h3 id="toposort-enginecppreactguidesenginestoposort-enginehtml"><a href="Toposort-engine.html">Toposort engine</a></h3>
+
+<blockquote>
+  <p>Single-threaded propagation with minimum overhead. Also supports parallelization.</p>
+</blockquote>
+
+<h3 id="pulsecount-enginecppreactguidesenginespulsecount-enginehtml"><a href="Pulsecount-engine.html">Pulsecount engine</a></h3>
+
+<blockquote>
+  <p>Scalable parallel updating at the cost of additional overhead.</p>
+</blockquote>
+
+<h3 id="subtree-enginecppreactguidesenginessubtree-enginehtml"><a href="Subtree-engine.html">Subtree engine</a></h3>
+
+<blockquote>
+  <p>A hybrid approach between single-threaded Toposort and Pulsecount to balance overhead and parallel utilization.</p>
+</blockquote>
+
+<hr />
+
+<h1 id="quick-comparison">Quick comparison</h1>
+
+<p>We’ll show how the engines behave based on two examples.</p>
+
+<h2 id="example-1">Example 1</h2>
+
+<p>A 100x100 matrix of signals, where <code>A[i][j] = A[i-1][j] + A[i][j-1]</code>. Out-of-bounds cells are replaced by zero.
+<code>A[0][0]</code> is the single input node that can be manipulated imperatively.</p>
+
+<p>We measure the execution time (seconds) of <code>A[0][0] &lt;- 1 ... 10000</code>, i.e. 10K updates of the whole graph, on 8 CPUs.</p>
+
+<h3 id="results">Results</h3>
+
+<pre><code>    Sequential Toposort
+    1.65093
+    
+    Parallel Toposort
+    4.6614 
+    
+    Subtree
+    2.7457 (= CPU time)
+    
+    Pulsecount
+    2.3803 (CPU time: ~ 8x on 8 CPUs)
+</code></pre>
+
+<p>In cases where the workload per node is minimal - i.e. a single addition - the parallelization overhead will outweight its benefits.
+This is not necessarily surprising, because both the updating itself and sequential Toposort are fairly lightweight;
+it’s hard to beat them with the kind of high-level parallelization this library provides.</p>
+
+<p>Among the parallel algorithms, Pulsecount is the fastest, but only by fully utilizing all available parallel ressources.
+Subtree supports on-demand parallelism for heavyweight nodes, so in this scenario, it reverts to purely single-threaded updating.
+It does so less efficiently than the purely single-threaded algorithm, but in terms of combined CPU time, it is still much more efficient than Pulsecount.</p>
+
+<h2 id="example-2">Example 2</h2>
+
+<p>A synthetic 20x10 graph with a parallelizable base structure and random additional edges.
+20% of the nodes are heavyweight (~1ms busy waiting per update), others are trivial arithmetic operations.</p>
+
+<p>We measure the execution time (seconds) of 100 updates of the whole graph on 8 CPUs.</p>
+
+<h3 id="results-1">Results</h3>
+
+<pre><code>    Sequential Toposort
+    3.9997
+    
+    Parallel Toposort
+    1.049
+    
+    Subtree
+    0.7666
+    
+    Pulsecount
+    0.6458
+</code></pre>
+
+<p>The execution time is dominated by heavyweight updates and the parallel strategies provide a performance gain.</p>
+
+<p>The agglomeration patterns for the graph, extended to 40x10 nodes, can be seen here (color indicates the updating thread):</p>
+
+<p><strong>Parallel Toposort:</strong></p>
+
+<p><img src="../../media/CompToposort.png" alt="Drawing" width="600px" /></p>
+
+<p>The algorithm divides the graph in horizontal layers and parallelizes each layer with a <code>parallel_for</code>.</p>
+
+<p><strong>Pulsecount:</strong></p>
+
+<p><img src="../../media/CompPulsecount.png" alt="Drawing" width="600px" /></p>
+
+<p>The graph is divided into chunks; lightweight nodes form larger chunks.</p>
+
+<p><strong>Subtree:</strong></p>
+
+<p><img src="../../media/CompSubtree.png" alt="Drawing" width="600px" /></p>
+
+<p>In a first pass, lightweight nodes are updated sequentially and subtrees with heavyweight nodes are marked and ignored.
+Then, the heavyweight subtrees are updated in parallel.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>For strictly lightweight operations, sequential Toposort is usually the best choice.</p>
+
+<p>Pulsecount uses the most effective parallelization scheme, but it requires a certain number of heavyweight nodes for it to pay off.</p>
+
+<p>Subtree first tries to apply sequential Toposort for all lightweight nodes, then uses the Pulsecount algorithm for the rest.
+There are cases where each purebreed strategy beats the hybrid one, but the latter generally provides a good balance for most scenarios.</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

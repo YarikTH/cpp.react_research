@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Concurrency model | C++React</title>
+  <link rel="icon" type="image/png" href="../media/favicon.png">
+  <link rel="stylesheet" href="../styles/design.css">
+  <link rel="stylesheet" href="../styles/syntax.css">
+  <script src="../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Token.html"><img class="entity_icon" src="../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Events.html"><img class="entity_icon" src="../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventSource.html"><img class="entity_icon" src="../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventRange.html"><img class="entity_icon" src="../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Merge.html"><img class="entity_icon" src="../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Filter.html"><img class="entity_icon" src="../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Transform.html"><img class="entity_icon" src="../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Process.html"><img class="entity_icon" src="../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Join.html"><img class="entity_icon" src="../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observer.html"><img class="entity_icon" src="../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observe.html"><img class="entity_icon" src="../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/Signal.html"><img class="entity_icon" src="../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/With.html"><img class="entity_icon" src="../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../index.html">Home</a> &#8640;
+
+      <a href="index.html">Guides</a> &#8640;
+
+
+      Concurrency model
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Concurrency model <span class="type_tag"></span></h1>
+
+    
+    <ul>
+  <li><a href="Concurrency.html#goals">Goals</a></li>
+  <li><a href="Concurrency.html#parallel-updating">Parallel updating</a></li>
+  <li><a href="Concurrency.html#concurrent-input">Concurrent input</a></li>
+  <li><a href="Concurrency.html#conclusions">Conclusions</a></li>
+</ul>
+
+<h2 id="goals">Goals</h2>
+
+<p>The goal of C++React is to enable implicit parallelism for the previously defined <a href="Dataflow-model.html">dataflow model</a>.
+Implicit parallelism means that code is automatically executed in parallel, if the structure of the computations allows for it.
+This is to avoid the complexity that comes with managing parallelism manually, in particular when combined with callbacks.</p>
+
+<p>Another goal is to support concurrent input to the reactive system from multiple threads, both synchronously and asynchronously, in a scalable manner.</p>
+
+<p>Lastly, the common C++ principle of “you don’t pay for what you don’t use” should be adhered to,
+so the programmer can decide for which domains parallel updating and concurrenct input should be enabled.</p>
+
+<h2 id="parallel-updating">Parallel updating</h2>
+
+<p>The <a href="Dataflow-model.html">Dataflow model guide</a> showed, how interdependent reactive values can be represented as graphs.
+It further showed, how inputs are grouped into transactions and processed in turns that propagate changes through the graph.
+Based on this dataflow model, we can immediately devise a scheme to parallelize the updating process:
+When there are more than two outgoing edges, both paths can be traversed in parallel by different threads.
+Coupled with the requirement for update minimality, if a node has multiple predecessors, only the last arriving thread coming from a predecessor may proceed.</p>
+
+<p>In other words, threads are forked and joined analogously to the paths in the graph.
+Instead of using threads directly, C++React utilizes TBB’s task interface.
+Tasks are units of computation that are automatically mapped to a thread pool.
+The following figure shows an example of how node updates could be parallelized:</p>
+
+<p><img src="../media/conc1.png" alt="Drawing" width="500px" /></p>
+
+<p>Propagation is inherently parallelizable and synchronization can be realized efficiently with on atomic counters, though details depend on the implementation.
+There exist different concrete algorithms, which can be selected as part of the concurrency policy of a domain.
+This includes the option of sequential updating, which disables automatic parallelization.</p>
+
+<h3 id="trivial-node-updates">Trivial node updates</h3>
+
+<p>One particular challenge are graphs that consist of mostly trivial operations, because tasks require a certain workload to outweight the induced overhead.
+Thus, processing such trivial nodes in a dedicated task is not worth it.
+The different propagation strategies account for that with various methods,
+for example by dynamically agglomerating several lightweight nodes into a single task, or by selectively enabling parallel updating for heavyweight nodes only.</p>
+
+<p>The problem is especially relevant when using overloaded operators to lift reactive expressions.
+An expression like <code>SignalT&lt;int&gt; x = a * 10 + b * 20 - c</code>, with <code>a,b,c</code> being signals as well, could result in 4 nodes - one for each binary operand.
+To reduce the overhead, a template-based technique to merge r-value expressions is applied.
+At the cost of a small overhead at creation time, the presented expression only results in a single node.</p>
+
+<p>Nonetheless, parallelizing trivial updates remains challenging as the overall implementation becomes more optimized.
+That is, because by removing overhead, the workload per task is reduced as well.</p>
+
+<h3 id="limitations">Limitations</h3>
+
+<p>The kind of implicit parallelism that has been presented is inherently tied to the underlying dataflow model.
+Furthermore, the dataflow model is declarative, based on acyclic graphs, and push-based.
+This means that C++React is not suited to create parallel algorithms, unless they fit those constraints.</p>
+
+<p>A common example to demonstrate parallelization primitives is the calculation of Fibonacci numbers, which are defined as <code>Fib(0) = 1, Fib(1) = 1, Fib(n) = Fib(n-1) + Fib(n-2)</code>.
+We could generate a graph that represents the unfolded recursive structure of a specific Fibonacci number, but that would certainly not be an effective way to go about it;
+graph creation is also not parallel.
+If, on the other hand, we have some data <code>x</code>, and we want to run several calculations on it, among them being <code>Fib(x)</code>, then we can automatically parallelize that.</p>
+
+<h2 id="concurrent-input">Concurrent input</h2>
+
+<p>While parallelization of updates in the same turn comes naturally, there is rather substantial downside:
+All reactive values of a domain are eventually “connected”; even if seemingly unrelated input nodes are changed, their propagation paths might cross at some point.</p>
+
+<p>In worst case, this means that each domain can only process a single transaction at a time.
+There are multiple ways to address this; the first is to drop update minimality and glitch freedom.
+Coordinated updating becomes synchronized updating/flooding.</p>
+
+<p>Another approach would be to divide the graph into disjoint regions, either based on static topology, or by having turns acquire locks on the nodes they might update beforehand.
+The following image visualizes this:</p>
+
+<p><img src="../media/conc2.png" alt="Drawing" width="500px" /></p>
+
+<p>The problem, however, are dynamic nodes. The nature of dynamic nodes is that they change the topology as part of being updated; we do not know in which way until after the update.
+Thus, in the presence of dynamic node, regions may shift dynamically.
+This can lead to scenarios where several turns have already started and cannot continue, unless they start rolling back already committed updates.</p>
+
+<p>Such a rollback of updates would not be impossible, but for this library it was considered too expensive.
+Since giving up update minimality and glitch freedom was not desirable either, we use a different approach.</p>
+
+<h3 id="transaction-merging">Transaction merging</h3>
+
+<p>So far, we defined two dimensions relevant for utilization of parallel hardware:</p>
+
+<ul>
+  <li>horizontal: running updates of the same turn in parallel;</li>
+  <li>vertical: running multiple turns concurrently.</li>
+</ul>
+
+<p>Supporting the latter is difficult, but we can indirectly enable it by merging multiple transactions into a single turn.
+Here’s how that works:</p>
+
+<ul>
+  <li>Normally, transactions are processed in a dedicated turn.</li>
+  <li>Each turn has exclusive access to the whole graph.</li>
+  <li>If a transaction arrives while another turn is active, the transaction is queued.</li>
+  <li>Successive transactions in the queue that are mergeable will be merged. Their inputs are applied in FIFO order.</li>
+  <li>Merged transactions are processed in a single turn.</li>
+</ul>
+
+<p>Each turn still has exclusive access to the whole graph, but the workload per turn is increased.
+Instead of adding another dimension, we attempt to extend the existing one.
+The following figure depicts this graphically:</p>
+
+<p><img src="../media/conc3.png" alt="Drawing" width="500px" /></p>
+
+<p>The intended effects are:</p>
+
+<ul>
+  <li>More changed input nodes per turn ⇒ more nodes of the graph are reached ⇒ more opportunity for horizontal parallelization.</li>
+  <li>More workload per node ⇒ move effective processing and parallelization as overhead becomes less significant.</li>
+  <li>Less turns ⇒ less overhead.</li>
+</ul>
+
+<p>The benefits w.r.t. reduced overhead do always apply, but to gain increased horizontal parallelization, the graph topology must allow for it.
+To put this into perspective with some numbers, for a single event source with an observer, processing one million events takes 0.552s.
+With merging enabled, the time is halved to 0.275s.</p>
+
+<p>There is one noteworthy caveat: If the value of a signal is changed multiple times during a transaction, only the final value is propagated as a change.
+The reasoning behind this is that unlike for event streams, where every single event should be registered,
+for signals we only care about the most recent value.
+If a value is already known to be outdated, there is no need to process it.
+This rule is extended to merged transactions, which only apply the most recent value for each changed input signal.</p>
+
+<p>There might also be cases where certain invariants exist between inputs of the same transaction, which would be violated if transactions are merged.
+For these reasons, transaction merging is not enabled by default, but has to be allowed explicitly.</p>
+
+<h3 id="asynchronous-transactions">Asynchronous transactions</h3>
+
+<p>The queueing scheme is detailed in this figure:</p>
+
+<p><img src="../media/conc4.png" alt="Drawing" width="500px" /></p>
+
+<p>There is a main queue, used to synchronize exclusive access to the graph. Each entry in this queue represents a thread.
+While synchronous transactions run in dedicated threads, there also exists a mechanism for asynchronous transactions.
+They are useful, if the initiating thread should not be blocked, or for batch processing of multiple transactions.
+Asynchronous transactions are stored in a high-performance thread-safe queue and executed sequentially by a dedicated worker thread.
+To synchronize this worker thread with synchronous transactions, it uses the main queue to gain access to the graph.
+Transaction merging happens transparently between synchronous and asynchronous transactions.</p>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>By using reactive types like signals, events and observers, we automatically get the option of running updates in parallel without having to change our code.
+This does not target the fine-grained algorithmic level, but rather enables implicit parallelism for the composition of algorithms.
+While hand-crafted parallel algorithms might be preferable in some cases anyway, as they can benefit from an intelligent approach,
+managing the complexity of inter-dependent parallel pieces is purely mechanical and exactly the kind of task that should be automated.</p>
+
+<p>Concurrent input is supported as well, including asynchronous transactions.
+We presented transaction merging as a method to improve scalability for highly contented inputs, without giving up glitch freedom and keeping the implementation lightweight and predictable.</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

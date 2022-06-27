@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Signal | C++React</title>
+  <link rel="icon" type="image/png" href="../../media/favicon.png">
+  <link rel="stylesheet" href="../../styles/design.css">
+  <link rel="stylesheet" href="../../styles/syntax.css">
+  <script src="../../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Algorithm.h/Hold.html"><img class="entity_icon" src="../../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Monitor.html"><img class="entity_icon" src="../../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Iterate.html"><img class="entity_icon" src="../../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Snapshot.html"><img class="entity_icon" src="../../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Pulse.html"><img class="entity_icon" src="../../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Changed.html"><img class="entity_icon" src="../../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../Domain.h/WeightHint.html"><img class="entity_icon" src="../../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../Domain.h/Continuation.html"><img class="entity_icon" src="../../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../Domain.h/TransactionStatus.html"><img class="entity_icon" src="../../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Domain.h/DoTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../Domain.h/MakeContinuation.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../Event.h/Token.html"><img class="entity_icon" src="../../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../Event.h/Events.html"><img class="entity_icon" src="../../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../Event.h/EventSource.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../Event.h/TempEvents.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../Event.h/EventRange.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Event.h/MakeEventSource.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../Event.h/Merge.html"><img class="entity_icon" src="../../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../Event.h/Filter.html"><img class="entity_icon" src="../../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../Event.h/Transform.html"><img class="entity_icon" src="../../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../Event.h/Process.html"><img class="entity_icon" src="../../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../Event.h/Join.html"><img class="entity_icon" src="../../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../Event.h/Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../Event.h/Tokenize.html"><img class="entity_icon" src="../../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../Observer.h/ObserverAction.html"><img class="entity_icon" src="../../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../Observer.h/Observer.html"><img class="entity_icon" src="../../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../Observer.h/ScopedObserver.html"><img class="entity_icon" src="../../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Observer.h/Observe.html"><img class="entity_icon" src="../../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../Reactor.h/Reactor.html"><img class="entity_icon" src="../../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Reactor.h/MakeReactor.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="Signal.html"><img class="entity_icon" src="../../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="VarSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="TempSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="SignalPack.html"><img class="entity_icon" src="../../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="MakeVar.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="MakeSignal.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="With.html"><img class="entity_icon" src="../../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="REACTIVE_PTR.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="REACTIVE_REF.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../../index.html">Home</a> &#8640;
+
+      <a href="../index.html">Reference</a> &#8640;
+
+      <a href="../Signal.h.html">Signal.h</a> &#8640;
+
+
+      Signal
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Signal <span class="type_tag">class</span></h1>
+
+    
+    <p>A signal is a reactive variable that can propagate its changes to dependents and react to changes of its dependencies.</p>
+
+<p>Instances of this class act as a proxies to  signal nodes.
+It takes shared ownership of the node, so while it exists, the node will not be destroyed.
+Copy, move and assignment semantics are similar to <code>std::shared_ptr</code>.</p>
+
+<p>Signals are created by constructor functions, i.e. <a href="MakeSignal.html">MakeSignal</a>.</p>
+
+<h2 id="synopsis">Synopsis</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">template</span>
+<span class="o">&lt;</span>
+    <span class="k">typename</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">S</span>
+<span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">Signal</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">using</span> <span class="n">DomainT</span> <span class="o">=</span> <span class="n">D</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">value_t</span> <span class="o">=</span> <span class="n">S</span><span class="p">;</span>
+
+    <span class="c1">// Constructor</span>
+    <span class="n">Signal</span><span class="p">();</span>
+    <span class="n">Signal</span><span class="p">(</span><span class="k">const</span> <span class="n">Signal</span><span class="o">&amp;</span><span class="p">);</span>  <span class="c1">// Copy</span>
+    <span class="n">Signal</span><span class="p">(</span><span class="n">Signal</span><span class="o">&amp;&amp;</span><span class="p">);</span>       <span class="c1">// Move</span>
+
+    <span class="c1">// Assignment</span>
+    <span class="n">Signal</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">Signal</span><span class="o">&amp;</span><span class="p">);</span>   <span class="c1">// Copy</span>
+    <span class="n">Signal</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">Signal</span><span class="o">&amp;&amp;</span> <span class="n">other</span><span class="p">);</span>  <span class="c1">// Move</span>
+
+    <span class="c1">// Tests if two Signal instances are equal</span>
+    <span class="kt">bool</span> <span class="n">Equals</span><span class="p">(</span><span class="k">const</span> <span class="n">Signal</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span>
+
+    <span class="c1">// Tests if this instance is linked to a node</span>
+    <span class="kt">bool</span> <span class="n">IsValid</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+
+    <span class="c1">// Sets weight override for linked node</span>
+    <span class="kt">void</span> <span class="nf">SetWeightHint</span><span class="p">(</span><span class="n">WeightHint</span> <span class="n">hint</span><span class="p">);</span>
+
+    <span class="c1">// Returns the current signal value</span>
+    <span class="k">const</span> <span class="n">S</span><span class="o">&amp;</span> <span class="n">Value</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+    <span class="k">const</span> <span class="n">S</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">()()</span> <span class="k">const</span><span class="p">;</span>
+
+    <span class="c1">// Equivalent to react::Flatten(*this)</span>
+    <span class="n">S</span> <span class="n">Flatten</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+<span class="p">};</span></code></pre></div>
+
+<h2 id="template-parameters">Template parameters</h2>
+<table class="wide_table">
+    <tr>
+        <td class="descriptor_cell">D</td>
+        <td>The domain this signal belongs to. Aliases as member type <code>DomainT</code>.</td>
+    </tr>
+    <tr>
+        <td class="descriptor_cell">E</td>
+        <td>
+            Signal value type. Aliased as member type <code>value_t</code>.<br />
+            Should be <code>DefaultConstructible</code>, <code>CopyConstructible</code> and <code>CopyAssignable</code>.<br />
+            Can be <code>MoveConstructible</code> and <code>MoveAssignable</code> to avoid copying when possible.
+        </td>
+    </tr>
+</table>
+
+<hr />
+
+<h1>Constructor <span class="type_tag">member function</span></h1>
+
+<h2 id="syntax">Syntax</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Signal</span><span class="p">();</span>                    <span class="c1">// (1)</span>
+<span class="n">Signal</span><span class="p">(</span><span class="k">const</span> <span class="n">Signal</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">);</span> <span class="c1">// (2)</span>
+<span class="n">Signal</span><span class="p">(</span><span class="n">Signal</span><span class="o">&amp;&amp;</span> <span class="n">other</span><span class="p">);</span>      <span class="c1">// (3)</span></code></pre></div>
+
+<h2 id="semantics">Semantics</h2>
+<p>(1) Creates an invalid signal that is not linked to a signal node.</p>
+
+<p>(2) Creates a signal that links to the same signal node as <code>other</code>.</p>
+
+<p>(3) Creates a signal that moves shared ownership of the signal node from <code>other</code> to <code>this</code>.
+As a result, <code>other</code> becomes invalid.</p>
+
+<p><strong>Note:</strong> The default constructor creates an invalid proxy, which is equivalent to <code>std::shared_ptr(nullptr)</code>.</p>
+
+<hr />
+
+<h1>operator= <span class="type_tag">member function</span></h1>
+
+<h2 id="syntax-1">Syntax</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Signal</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">Signal</span><span class="o">&amp;</span><span class="p">);</span>   <span class="c1">// (1)</span>
+<span class="n">Signal</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">Signal</span><span class="o">&amp;&amp;</span> <span class="n">other</span><span class="p">);</span>  <span class="c1">// (2)</span></code></pre></div>
+
+<h2 id="semantics-1">Semantics</h2>
+<p>(1) Links <code>this</code> to the same node as <code>other</code>. If <code>this</code> was already linked to another node, it releases its previous ownership.</p>
+
+<p>(2) Transfers shared ownership of the linked node from <code>other</code> to <code>this</code>.
+If <code>this</code> was already linked to another node, it release its previous ownership.
+As a result, <code>other</code> becomes invalid.</p>
+
+<hr />
+
+<h1>Equals <span class="type_tag">member function</span></h1>
+
+<h2 id="syntax-2">Syntax</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="kt">bool</span> <span class="n">Equals</span><span class="p">(</span><span class="k">const</span> <span class="n">Signal</span><span class="o">&amp;</span> <span class="n">other</span><span class="p">)</span> <span class="k">const</span><span class="p">;</span></code></pre></div>
+
+<h2 id="semantics-2">Semantics</h2>
+<p>Returns true, if both <code>this</code> and <code>other</code> link to the same signal node.
+This function is used to compare two signals, because <code>==</code> is used as a combination operator instead.</p>
+
+<hr />
+
+<h1>IsValid <span class="type_tag">member function</span></h1>
+
+<h2 id="syntax-3">Syntax</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="kt">bool</span> <span class="n">IsValid</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span></code></pre></div>
+
+<h2 id="semantics-3">Semantics</h2>
+<p>Returns true, if <code>this</code> is linked to a signal node.</p>
+
+<hr />
+
+<h1>Value, operator() <span class="type_tag">member function</span></h1>
+
+<h2 id="syntax-4">Syntax</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">const</span> <span class="n">S</span><span class="o">&amp;</span> <span class="n">Value</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+<span class="k">const</span> <span class="n">S</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">()()</span> <span class="k">const</span><span class="p">;</span></code></pre></div>
+
+<h2 id="semantics-4">Semantics</h2>
+<p>Returns a const reference to the current signal value.</p>
+
+<hr />
+
+<h1>Flatten <span class="type_tag">member function</span></h1>
+
+<h2 id="syntax-5">Syntax</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">S</span> <span class="n">Flatten</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span></code></pre></div>
+
+<h2 id="semantics-5">Semantics</h2>
+<p>Semantically equivalent to the respective free function in namespace <code>react</code>.</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

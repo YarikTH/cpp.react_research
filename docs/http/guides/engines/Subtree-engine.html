@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Subtree engine | C++React</title>
+  <link rel="icon" type="image/png" href="../../media/favicon.png">
+  <link rel="stylesheet" href="../../styles/design.css">
+  <link rel="stylesheet" href="../../styles/syntax.css">
+  <script src="../../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../../reference/Event.h/Token.html"><img class="entity_icon" src="../../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Event.h/Events.html"><img class="entity_icon" src="../../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/EventSource.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/EventRange.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Merge.html"><img class="entity_icon" src="../../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Filter.html"><img class="entity_icon" src="../../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Transform.html"><img class="entity_icon" src="../../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Process.html"><img class="entity_icon" src="../../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Join.html"><img class="entity_icon" src="../../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Observer.h/Observer.html"><img class="entity_icon" src="../../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Observer.h/Observe.html"><img class="entity_icon" src="../../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../../reference/Signal.h/Signal.html"><img class="entity_icon" src="../../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/With.html"><img class="entity_icon" src="../../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../../index.html">Home</a> &#8640;
+
+      <a href="../index.html">Guides</a> &#8640;
+
+      <a href="index.html">Propagation engines</a> &#8640;
+
+
+      Subtree engine
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Subtree engine <span class="type_tag"></span></h1>
+
+    
+    <ul>
+  <li><a href="Subtree-engine.html#motivation">Motivation</a></li>
+  <li><a href="Subtree-engine.html#concept">Concept</a></li>
+  <li><a href="Subtree-engine.html#issues">Issues</a></li>
+  <li><a href="Subtree-engine.html#conclusions">Conclusions</a></li>
+</ul>
+
+<h2 id="motivation">Motivation</h2>
+
+<p>If a graph mostly consists of nodes representing lightweight operations, parallelization with Pulsecount is not economic w.r.t. used CPU time.
+Sequential toposort, on the other hand, has excellent metrics in this regard, but if there are heavyweight nodes, we waste potential by not parallelizing.
+The goal of the Subtree engine is to provide a balance between these two approaches by parallelizing only when encountering heavyweight nodes.</p>
+
+<h2 id="concept">Concept</h2>
+
+<p>The Subtree engine combines sequential Toposort with the initial graph marking phase of Pulsecount.</p>
+
+<p>During the toposort phase, it tries to update as many lightweight nodes as possible.
+If it encounters a heavyweight node, it marks the subtree with the former as root.
+Nodes within a marked subtree are ignored in phase 1.</p>
+
+<p>In phase 2, the Pulsecount algorithm is used to update the heavyweight subtrees.</p>
+
+<h2 id="issues">Issues</h2>
+
+<p>TODO</p>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>TODO</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

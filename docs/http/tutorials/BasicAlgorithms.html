@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Algorithms | C++React</title>
+  <link rel="icon" type="image/png" href="../media/favicon.png">
+  <link rel="stylesheet" href="../styles/design.css">
+  <link rel="stylesheet" href="../styles/syntax.css">
+  <script src="../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Token.html"><img class="entity_icon" src="../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Events.html"><img class="entity_icon" src="../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventSource.html"><img class="entity_icon" src="../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventRange.html"><img class="entity_icon" src="../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Merge.html"><img class="entity_icon" src="../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Filter.html"><img class="entity_icon" src="../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Transform.html"><img class="entity_icon" src="../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Process.html"><img class="entity_icon" src="../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Join.html"><img class="entity_icon" src="../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observer.html"><img class="entity_icon" src="../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observe.html"><img class="entity_icon" src="../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/Signal.html"><img class="entity_icon" src="../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/With.html"><img class="entity_icon" src="../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../index.html">Home</a> &#8640;
+
+      <a href="index.html">Tutorials</a> &#8640;
+
+
+      Algorithms
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Algorithms <span class="type_tag"></span></h1>
+
+    
+    <ul>
+  <li><a href="BasicAlgorithms.html#converting-between-events-and-signals">Converting between events and signals</a></li>
+  <li><a href="BasicAlgorithms.html#folding-event-streams-into-signals">Folding event streams into signals</a></li>
+  <li><a href="BasicAlgorithms.html#folding-event-streams-into-signals">Synchronized signal access</a></li>
+</ul>
+
+<h2 id="converting-between-events-and-signals">Converting between events and signals</h2>
+
+<p>So far, signals and event streams have been viewed separately, but it’s possible to combine them with a set of generic functions.</p>
+
+<p>First, we use <code>Hold</code> to store the most recent event as a signal value:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="cp">#include &quot;react/Algorithm.h&quot;</span>
+<span class="c1">// Note: Include other react headers as required</span>
+
+<span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">sequential</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Sensor</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="n">EventSourceT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">Samples</span>     <span class="o">=</span> <span class="n">MakeEventSource</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">();</span>
+    <span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>        <span class="n">LastSample</span>  <span class="o">=</span> <span class="n">Hold</span><span class="p">(</span><span class="n">Samples</span><span class="p">);</span>
+<span class="p">};</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Sensor</span> <span class="n">mySensor</span><span class="p">;</span>
+
+<span class="n">Observe</span><span class="p">(</span><span class="n">mySensor</span><span class="p">.</span><span class="n">LastSample</span><span class="p">,</span> <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">});</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">mySensor</span><span class="p">.</span><span class="n">Samples</span> <span class="o">&lt;&lt;</span> <span class="mi">20</span> <span class="o">&lt;&lt;</span> <span class="mi">21</span> <span class="o">&lt;&lt;</span> <span class="mi">21</span> <span class="o">&lt;&lt;</span> <span class="mi">22</span><span class="p">;</span>
+<span class="c1">// output: 20, 21, 22</span></code></pre></div>
+
+<p>Note that signal observers are only notified if the signal value changes, hence the second <code>21</code> event doesn’t produce output.</p>
+
+<p>If a stream emits multiple events during a single turn, only the last one is stored by <code>Hold</code>:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">DoTransaction</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+    <span class="n">mySensor</span><span class="p">.</span><span class="n">Samples</span> <span class="o">&lt;&lt;</span> <span class="mi">20</span> <span class="o">&lt;&lt;</span> <span class="mi">21</span> <span class="o">&lt;&lt;</span> <span class="mi">21</span> <span class="o">&lt;&lt;</span> <span class="mi">22</span><span class="p">;</span>
+<span class="p">});</span>
+<span class="c1">// output: 22</span></code></pre></div>
+
+<p>To convert in the opposite direction, <code>Monitor</code> generates an event stream from signal changes:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Entity</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">XPos</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">YPos</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+    <span class="n">EventsT</span><span class="o">&lt;&gt;</span>         <span class="n">DimensionChanged</span> <span class="o">=</span> <span class="n">Tokenize</span><span class="p">(</span><span class="n">Monitor</span><span class="p">(</span><span class="n">XPos</span><span class="p">)</span> <span class="o">|</span> <span class="n">Monitor</span><span class="p">(</span><span class="n">YPos</span><span class="p">));</span>
+<span class="p">};</span></code></pre></div>
+
+<p>This is similar to observing a signal, but by turning the changes into an event stream, we can process them further.</p>
+
+<h2 id="folding-event-streams-into-signals">Folding event streams into signals</h2>
+
+<p>While signals are stateful in the sense that they store their current value,
+all dependent signals (i.e. not <code>VarSignals</code>) could be expressed as pure functions of their predecessors.
+The <code>Iterate</code> function allows us to create signals that use their current state to calculate the next value.</p>
+
+<p>A simple application that makes use of this is a signal-based counter:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Counter</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="n">EventSourceT</span><span class="o">&lt;&gt;</span>  <span class="n">Increment</span> <span class="o">=</span> <span class="n">MakeEventSource</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">();</span>
+    
+    <span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">Count</span> <span class="o">=</span> <span class="n">Iterate</span><span class="p">(</span>
+        <span class="n">Increment</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="p">[]</span> <span class="p">(</span><span class="n">Token</span><span class="p">,</span> <span class="kt">int</span> <span class="n">oldCount</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">oldCount</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="p">});</span>
+<span class="p">};</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Counter</span> <span class="n">myCounter</span><span class="p">;</span>
+
+<span class="c1">// Note: Using function-style operator() instead of Emit() and Value()</span>
+
+<span class="n">myCounter</span><span class="p">.</span><span class="n">Increment</span><span class="p">();</span>
+<span class="n">myCounter</span><span class="p">.</span><span class="n">Increment</span><span class="p">();</span>
+<span class="n">myCounter</span><span class="p">.</span><span class="n">Increment</span><span class="p">();</span>
+
+<span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">myCounter</span><span class="p">.</span><span class="n">Count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+ <span class="c1">// output: 3</span></code></pre></div>
+
+<p><code>Iterate</code> is semantically equivalent to the higher order functions fold/reduce known from other functional languages.
+In this example, the signal is first initialized with zero;
+then, for every received increment event, the given iteration function is called with the event value (a token in this case) and the current value of the signal.
+The return value of the function is used as the new signal value.</p>
+
+<p>The event value can also be used in the computation. To show this, we calculate the sum of measured samples:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Sensor</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="n">EventSourceT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">Input</span> <span class="o">=</span> <span class="n">MakeEventSource</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">();</span>
+    
+    <span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">Sum</span> <span class="o">=</span> <span class="n">Iterate</span><span class="p">(</span>
+        <span class="n">Input</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">sum</span><span class="p">,</span> <span class="kt">int</span> <span class="n">input</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">input</span> <span class="o">+</span> <span class="n">sum</span><span class="p">;</span>
+        <span class="p">});</span>
+<span class="p">};</span></code></pre></div>
+
+<p><code>Iterate</code> could also be used to incrementally push event values into a <code>Signal&lt;std::vector&gt;</code>.</p>
+
+<p>However, when considering performance, this could be problematic.
+Updating a signal usually involves copying its current value, moving the copy into the passed function and comparing the result to the old value to decide whether it has been changed.
+For some types, e.g. <code>std::vector</code>, these operations are rather expensive as they result in allocations and repeated element-wise copying and comparing.</p>
+
+<p>To avoid this, <code>Iterate</code> also supports pass-by non-const reference. To enable this, we change the parameter type accordingly and return <code>void</code> instead of the new value:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Sensor</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="n">EventSourceT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">Input</span> <span class="o">=</span> <span class="n">MakeEventSource</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">();</span>
+    
+    <span class="n">SignalT</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">AllSamples</span> <span class="o">=</span> <span class="n">Iterate</span><span class="p">(</span>
+        <span class="n">Input</span><span class="p">,</span>
+        <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">{</span> <span class="p">},</span>
+        <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">input</span><span class="p">,</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+        <span class="p">});</span>
+
+    <span class="n">SignalT</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">CriticalSamples</span> <span class="o">=</span> <span class="n">Iterate</span><span class="p">(</span>
+        <span class="n">Input</span><span class="p">,</span>
+        <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">{</span> <span class="p">},</span>
+        <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">input</span><span class="p">,</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">input</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">)</span>
+                <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+        <span class="p">});</span>
+<span class="p">};</span></code></pre></div>
+
+<p>Similar to <code>Signal.Modify()</code>, the downside is that since the new and old values can no longer be compared, hence the signal will always assume a change.</p>
+
+<h2 id="synchronized-signal-access">Synchronized signal access</h2>
+
+<p>What if logic inside the <code>Iterate</code> function requires the current values of other signals?</p>
+
+<p>For example, the critical threshold from the last example could be a signal instead of a hardcoded value:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Sensor</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="n">EventSourceT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">Input</span>       <span class="o">=</span> <span class="n">MakeEventSource</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">();</span>
+    <span class="n">Signal</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>         <span class="n">Threshold</span>   <span class="o">=</span> <span class="n">MakeSignal</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+
+    <span class="c1">// ...</span>
+<span class="p">};</span></code></pre></div>
+
+<p>We could just use the <code>Value()</code> accessor of <code>Threadhold</code>:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="c1">// Note: This is potentially unsafe</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">CriticalSamples</span> <span class="o">=</span> <span class="n">Iterate</span><span class="p">(</span>
+    <span class="n">Input</span><span class="p">,</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">{},</span>
+    <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">input</span><span class="p">,</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">input</span> <span class="o">&gt;</span> <span class="n">Threshold</span><span class="p">.</span><span class="n">Value</span><span class="p">())</span>
+            <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+    <span class="p">});</span></code></pre></div>
+
+<p>This approach introduces two issues:</p>
+
+<ul>
+  <li>For single-threaded updating, even if <code>Threshold</code> were to change in the same turn, we might read the value too early. In other words, this is prone to glitches.</li>
+  <li>For multi-threaded updating, calling <code>Value()</code> leads to data-races.</li>
+</ul>
+
+<p>The proper way of accessing <code>Threshold</code> is by passing an additional signal pack to <code>Threshold</code>:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="c1">// Note: This is potentially unsafe</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">CriticalSamples</span> <span class="o">=</span> <span class="n">Iterate</span><span class="p">(</span>
+    <span class="n">Input</span><span class="p">,</span>
+    <span class="n">With</span><span class="p">(</span><span class="n">Threshold</span><span class="p">),</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">{</span> <span class="p">},</span>
+    <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">input</span><span class="p">,</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">v</span><span class="p">,</span> <span class="kt">int</span> <span class="n">threshold</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">input</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)</span>
+            <span class="n">v</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+    <span class="p">});</span></code></pre></div>
+
+<p>The current values of the signal pack constructed by <code>With(...)</code> are passed as additional arguments to the iteration function.
+Changes of the synchronized signals do <em>not</em> lead to calls to iteration function.
+It’s still events from the first event stream argument that triggers them (in this case, that would be <code>Input</code>).</p>
+
+<p>Besides <code>Iterate</code>, there are more functions that support synchronized access to signal values. Namely those are</p>
+
+<ul>
+  <li><code>Observe</code> for event streams,</li>
+  <li><code>Filter</code>, and</li>
+  <li><code>Transform</code>.</li>
+</ul>
+
+<p>Here’s another example for <code>Observe</code>:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="k">class</span> <span class="nc">Person</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="n">VarSignalT</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span>  <span class="n">Name</span><span class="p">;</span>
+    <span class="n">VarSignalT</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span>  <span class="n">Occupation</span><span class="p">;</span>
+    <span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>     <span class="n">Age</span><span class="p">;</span>
+
+    <span class="n">Person</span><span class="p">(</span><span class="n">string</span> <span class="n">name</span><span class="p">,</span> <span class="n">string</span> <span class="n">occupation</span><span class="p">,</span> <span class="kt">int</span> <span class="n">age</span><span class="p">)</span> <span class="o">:</span>
+        <span class="n">Name</span><span class="p">(</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="p">),</span>
+        <span class="n">Occupation</span><span class="p">(</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="n">occupation</span><span class="p">)</span> <span class="p">),</span>
+        <span class="n">Age</span><span class="p">(</span> <span class="n">MakeVar</span><span class="p">(</span><span class="n">age</span><span class="p">)</span> <span class="p">)</span>
+    <span class="p">{}</span>
+<span class="p">};</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Person</span> <span class="nf">joe</span><span class="p">(</span> <span class="s">&quot;Joe&quot;</span><span class="p">,</span> <span class="s">&quot;Plumber&quot;</span><span class="p">,</span> <span class="mi">42</span> <span class="p">);</span>
+
+<span class="k">auto</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">Observe</span><span class="p">(</span>
+    <span class="n">Monitor</span><span class="p">(</span><span class="n">joe</span><span class="p">.</span><span class="n">Age</span><span class="p">),</span>
+    <span class="n">With</span><span class="p">(</span><span class="n">joe</span><span class="p">.</span><span class="n">Name</span><span class="p">,</span> <span class="n">joe</span><span class="p">.</span><span class="n">Occupation</span><span class="p">),</span>
+    <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">age</span><span class="p">,</span> <span class="n">string</span> <span class="n">name</span><span class="p">,</span> <span class="n">string</span> <span class="n">occupation</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">name</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; the &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">occupation</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; turned &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">age</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+    <span class="p">});</span>
+
+<span class="n">joe</span><span class="p">.</span><span class="n">Age</span> <span class="o">&lt;&lt;=</span> <span class="n">joe</span><span class="p">.</span><span class="n">Age</span><span class="p">.</span><span class="n">Value</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+<span class="c1">// output: Joe the Plumber turned 43</span></code></pre></div>
+
+  </div>
+</div>
+
+</body>
+
+</html>

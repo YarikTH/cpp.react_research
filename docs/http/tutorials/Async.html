@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Asynchronous transactions and continuations | C++React</title>
+  <link rel="icon" type="image/png" href="../media/favicon.png">
+  <link rel="stylesheet" href="../styles/design.css">
+  <link rel="stylesheet" href="../styles/syntax.css">
+  <script src="../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Token.html"><img class="entity_icon" src="../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Events.html"><img class="entity_icon" src="../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventSource.html"><img class="entity_icon" src="../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventRange.html"><img class="entity_icon" src="../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Merge.html"><img class="entity_icon" src="../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Filter.html"><img class="entity_icon" src="../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Transform.html"><img class="entity_icon" src="../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Process.html"><img class="entity_icon" src="../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Join.html"><img class="entity_icon" src="../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observer.html"><img class="entity_icon" src="../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observe.html"><img class="entity_icon" src="../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/Signal.html"><img class="entity_icon" src="../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/With.html"><img class="entity_icon" src="../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../index.html">Home</a> &#8640;
+
+      <a href="index.html">Tutorials</a> &#8640;
+
+
+      Asynchronous transactions and continuations
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Asynchronous transactions and continuations <span class="type_tag"></span></h1>
+
+    
+    <ul>
+  <li><a href="Async.html#asynchronous-transactions">Asynchronous transactions</a></li>
+  <li><a href="Async.html#continuations">Continuations</a></li>
+</ul>
+
+<h2 id="asynchronous-transactions">Asynchronous transactions</h2>
+
+<p>Earlier tutorials showed the use of <code>DoTransaction</code>, which applies multiple inputs as a transaction.
+<code>DoTransaction</code> is synchronous, so it the propagation runs in the current thread.
+For concurrent input, this means that multiple threads have to synchronize, which includes potential waiting if the propagation engine is busy.</p>
+
+<p>If the calling thread has to return immediately, for example to ensure responsiveness, <code>AsyncTransaction</code> exists an asynchrounous, non-blocking alternative to <code>DoTransaction</code>.
+It follows a producer/consumer scheme by enqueuing the transaction function for another dedicated worker thread.</p>
+
+<p>Here’s an example:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="cp">#include &quot;react/Domain.h&quot;</span>
+<span class="cp">#include &quot;react/Event.h&quot;</span>
+<span class="cp">#include &quot;react/Observer.h&quot;</span>
+
+<span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">sequential_concurrent</span><span class="p">)</span>
+<span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+<span class="n">EventSourceT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">Samples</span>     <span class="o">=</span> <span class="n">MakeEventSource</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">();</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Observe</span><span class="p">(</span><span class="n">Samples</span><span class="p">,</span> <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="n">TransactionStatus</span> <span class="n">status</span><span class="p">;</span>
+
+<span class="n">AsyncTransaction</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+    <span class="n">Samples</span> <span class="o">&lt;&lt;</span> <span class="mi">30</span> <span class="o">&lt;&lt;</span> <span class="mi">31</span> <span class="o">&lt;&lt;</span> <span class="mi">31</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="n">AsyncTransaction</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+    <span class="n">Samples</span> <span class="o">&lt;&lt;</span> <span class="mi">40</span> <span class="o">&lt;&lt;</span> <span class="mi">41</span> <span class="o">&lt;&lt;</span> <span class="mi">51</span> <span class="o">&lt;&lt;</span> <span class="mi">62</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="c1">// Do other things...</span>
+
+<span class="c1">// Block the current thread until both transactions have been processed</span>
+<span class="n">status</span><span class="p">.</span><span class="n">Wait</span><span class="p">();</span></code></pre></div>
+
+<p>One thing that should be noted here is that concurrent input is not the same as concurrent execution; the transactions in this example will not be interleaved and they will be processed in the order they’ve been queued in.</p>
+
+<p>The <code>TransactionStatus</code> instance provides a handle that allows waiting for an asynchronous transaction.
+The same status can be used for multiple transactions, and it can be re-used after <code>Wait()</code>.</p>
+
+<h2 id="continuations">Continuations</h2>
+
+<p>Reactives from different domains cannot be combined - the static type checking of the domain tag prevents it. This, for example, is not possible:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D1</span><span class="p">,</span> <span class="n">sequential_concurrent</span><span class="p">)</span>
+<span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D2</span><span class="p">,</span> <span class="n">sequential_concurrent</span><span class="p">)</span>
+<span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D3</span><span class="p">,</span> <span class="n">sequential_concurrent</span><span class="p">)</span>
+
+<span class="n">D1</span><span class="o">::</span><span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">A</span> <span class="o">=</span> <span class="p">...;</span>
+<span class="n">D2</span><span class="o">::</span><span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">B</span> <span class="o">=</span> <span class="p">...;</span>
+
+<span class="n">D3</span><span class="o">::</span><span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">C</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span><span class="p">;</span> <span class="c1">// Domain mismatch between D1 and D2.</span>
+<span class="n">D3</span><span class="o">::</span><span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">D</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">A</span><span class="p">;</span> <span class="c1">// Domain mismatch between D1 and D3.</span></code></pre></div>
+
+<p>There is, however, nothing that prevents us from using imperative input enable inter-domain communication. For example:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="c1">// Note: Do not actually do this, it will deadlock.</span>
+<span class="n">D1</span><span class="o">::</span><span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">A</span> <span class="o">=</span> <span class="p">...;</span>
+<span class="n">D2</span><span class="o">::</span><span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>   <span class="n">B</span> <span class="o">=</span> <span class="p">...;</span>
+
+<span class="n">Observe</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">B</span><span class="p">.</span><span class="n">Set</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
+<span class="p">})</span>
+
+<span class="c1">// Or how about this one?</span>
+<span class="n">Observe</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">A</span><span class="p">.</span><span class="n">Set</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
+<span class="p">})</span></code></pre></div>
+
+<p>While this is possible, it is very easy to create situations where two transactions block each other and neither of them can make progress.
+The reason for this is that the new transaction is started from inside the observer, thus it may block until the called transaction completes.
+If the callee runs on the same domain as the caller - as it is the case for the latter example, where a domain targets its own input node - this would result in a deadlock.</p>
+
+<p>To avoid this, there exists a special reactive type <code>Continuation</code> to bridge between two domains (from source to target).
+Continuations are similar to observers, in the sense that they allow to attach callback functions to other reactive values.
+The difference is that these functions will be treated as if they had been passed to <code>AsyncTransaction</code> of the target domain.
+These asynchronous continuation transactions will be started after the initiating transaction has been processed and the engine has been released.
+If the initiating transaction is synchronous, it’ll wait for their result; this also extends to non-transactional input like <code>Set</code> or <code>push</code>.
+If the initiating transaction is asynchronous, it’ll pass on its own transaction status to the continuation transactions.</p>
+
+<p>This may sound more complicated than it is. Here’s an example:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">sequential_concurrent</span><span class="p">)</span>
+
+<span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">Counter</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="n">Continuation</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span> <span class="n">Cont</span> <span class="o">=</span> <span class="n">MakeContinuation</span><span class="p">(</span><span class="n">Counter</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">v</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">Counter</span> <span class="o">&lt;&lt;=</span> <span class="n">v</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">});</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">Counter</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="c1">// output: 1 2 3 4 5 6 7 8 9 10</span></code></pre></div>
+
+<p>Here, the continuation source and target domains are identical and we can add imperative input without deadlocks, while still being able to wait until all recursive continuations complete.</p>
+
+<p>Another example:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">sequential_concurrent</span><span class="p">)</span>
+<span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">sequential_concurrent</span><span class="p">)</span>
+
+
+<span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">CounterL</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">L</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">CounterR</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="n">Continuation</span><span class="o">&lt;</span><span class="n">L</span><span class="p">,</span><span class="n">R</span><span class="o">&gt;</span> <span class="n">ContL</span> <span class="o">=</span> <span class="n">MakeContinuation</span><span class="o">&lt;</span><span class="n">L</span><span class="p">,</span><span class="n">R</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">Monitor</span><span class="p">(</span><span class="n">CounterL</span><span class="p">),</span>
+    <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">,</span> <span class="kt">int</span> <span class="n">depL1</span><span class="p">,</span> <span class="kt">int</span> <span class="n">depL2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;L-&gt;R: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">v</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">srcR</span> <span class="o">&lt;&lt;=</span> <span class="n">v</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">});</span>
+
+<span class="n">Continuation</span><span class="o">&lt;</span><span class="n">R</span><span class="p">,</span><span class="n">L</span><span class="o">&gt;</span> <span class="n">ContR</span> <span class="o">=</span> <span class="n">MakeContinuation</span><span class="o">&lt;</span><span class="n">R</span><span class="p">,</span><span class="n">L</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">Monitor</span><span class="p">(</span><span class="n">CounterR</span><span class="p">),</span>
+    <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;R-&gt;L: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">v</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">srcL</span> <span class="o">&lt;&lt;=</span> <span class="n">v</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">});</span>
+<span class="p">}</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">TransactionStatus</span> <span class="n">status</span><span class="p">;</span>
+
+<span class="n">AsyncTransaction</span><span class="o">&lt;</span><span class="n">L</span><span class="o">&gt;</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+	<span class="n">CounterL</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">});</span>
+<span class="c1">// output: L-&gt;R 1, R-&gt;L 2, L-&gt;R 3, ... R-&gt;L 10</span>
+
+<span class="n">status</span><span class="p">.</span><span class="n">Wait</span><span class="p">();</span></code></pre></div>
+
+<p>Here, two domains bounce messages each off each other repeatedly. Continuations enable inter-domain communication without risk of deadlocks.
+It is, however, up to the programmer to ensure that there are no “infinite loops”.</p>
+
+<p>For complexity reasons, continuations should not be used to introduce strong coupling between domains, in particular w.r.t. to pre- and post conditions of inputs.</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

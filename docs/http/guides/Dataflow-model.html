@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Dataflow model | C++React</title>
+  <link rel="icon" type="image/png" href="../media/favicon.png">
+  <link rel="stylesheet" href="../styles/design.css">
+  <link rel="stylesheet" href="../styles/syntax.css">
+  <script src="../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Token.html"><img class="entity_icon" src="../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Events.html"><img class="entity_icon" src="../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventSource.html"><img class="entity_icon" src="../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventRange.html"><img class="entity_icon" src="../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Merge.html"><img class="entity_icon" src="../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Filter.html"><img class="entity_icon" src="../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Transform.html"><img class="entity_icon" src="../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Process.html"><img class="entity_icon" src="../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Join.html"><img class="entity_icon" src="../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observer.html"><img class="entity_icon" src="../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observe.html"><img class="entity_icon" src="../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/Signal.html"><img class="entity_icon" src="../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/With.html"><img class="entity_icon" src="../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../index.html">Home</a> &#8640;
+
+      <a href="index.html">Guides</a> &#8640;
+
+
+      Dataflow model
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Dataflow model <span class="type_tag"></span></h1>
+
+    
+    <ul>
+  <li><a href="Dataflow-model.html#graph-model">Graph model</a></li>
+  <li><a href="Dataflow-model.html#propagation-model">Propagation model</a></li>
+  <li><a href="Dataflow-model.html#conclusions">Conclusions</a></li>
+</ul>
+
+<h2 id="graph-model">Graph model</h2>
+
+<p>The dataflow between reactive values can be modeled (and visualized) as a directed acyclic graph (DAG).
+Such a graph can be constructed from the dependency relations; each entity is a node and directed edges denote data propagation paths.</p>
+
+<p>To give an example, let <code>a</code>, <code>b</code> and <code>c</code> be arbitrary signals.
+<code>x</code> is another signal that is calculated based on the former.
+Instead of invoking <code>MakeSignal</code> explicitly, the overloaded <code>+</code> operator is used to achieve the same result.</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">SignalT</span><span class="o">&lt;</span><span class="n">S</span><span class="o">&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span><span class="p">;</span></code></pre></div>
+
+<p>This is the matching dataflow graph:
+<br />
+<img src="../media/signals1.png" alt="Drawing" width="500px" /></p>
+
+<p>A similar example could’ve been constructed for event streams.
+From a dataflow perspective, what kind of data is propagated and what exactly happens to it in each node is not relevant.</p>
+
+<p>C++React does not expose the graph data structures directly to the user; instead, they are wrapped by lightweight proxies.
+Such a proxy is essentially a shared pointer to the heap-allocated node.
+Examples of proxy types are <code>Signal</code>, <code>Events</code>, <code>Observer</code>.
+The concrete type of the node is hidden behind the proxy.</p>
+
+<p>We show this scheme for the previous example:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">SignalT</span><span class="o">&lt;</span><span class="n">S</span><span class="o">&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="p">(...);</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="n">S</span><span class="o">&gt;</span> <span class="n">b</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="p">(...);</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="n">S</span><span class="o">&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="p">(...);</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="n">S</span><span class="o">&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span><span class="p">;</span></code></pre></div>
+
+<p>The <code>MakeVar</code> function allocates the respective node and links it to the returned proxy.
+Not all nodes in the graph are bound to a proxy; the temporary sub-expression <code>a + b</code> results in a node as well.
+If a new node is created, it takes shared ownership of its dependencies, because it needs them to calculate its own value.
+This prevents the <code>a + b</code> node from disappearing.</p>
+
+<p>The resulting reference graph is similar to the dataflow graph, but with reverse edges (and as such, a DAG as well): <br />
+<img src="../media/signals2.png" alt="Drawing" width="500px" /></p>
+
+<p>The number inside each node denotes its reference count. On the left are the proxy instances exposed by the API.
+Assuming the proxies for <code>a</code>, <code>b</code> and <code>c</code> would go out of scope, but <code>x</code> remains, the reference count of all nodes is still 1, until <code>x</code> disappears as well.
+Once that happens, the graph is deconstructed from the bottom up.</p>
+
+<h3 id="input-and-output-nodes">Input and output nodes</h3>
+
+<p>From now on, we refer to the set of inter-connected reactive values as a reactive system.
+A closed, self-contained reactive system would ultimately be useless, as there’s no way to get information in or out.
+In other words, mechanisms are required to</p>
+
+<ul>
+  <li>react to external input; and</li>
+  <li>propagate side effects to the outside.</li>
+</ul>
+
+<p>The outside refers to the larger context of the program the reactive system is part of.</p>
+
+<p>To address the first requirement, there exist designated <em>input nodes</em> at the root of the graph.
+They are the input interface of the reactive system and can be manipulated imperatively.
+This allows integration of a reactive system with an imperative program.</p>
+
+<p>Propagating changes to the outside world could happen at any place through side effects, since C++ does not provide any means to enforce functional purity.
+However, since side effects have certain implications on thread-safety and our ability to reason about program behaviour, by convention they’re moved them to designated <em>output nodes</em>.
+By definition, these nodes don’t have any successors. Analogously to input nodes, they are the output interface of the reactive system.</p>
+
+<p>In <a href="Introduction.html">Introduction to C++React</a> we’ve already seen examples of input nodes (<code>VarSignal</code>, <code>EventSource</code>) and output nodes (observers).</p>
+
+<h3 id="static-and-dynamic-nodes">Static and dynamic nodes</h3>
+
+<p>So far, the dependency relations between reactive values were static, because they were established declaratively and could not be changed afterwards.
+There exists another type of nodes, so-called dynamic nodes, where this is not the case.
+Characteristic for dynamic nodes is that they can change their predecessors as a result of being updated.
+This has no further implications on any propagation properties, other than complicating the implementation.</p>
+
+<h3 id="domains">Domains</h3>
+
+<p>Organizing all reactive values in a single graph would become increasingly difficult to manage.
+For this reason, we allow multiple graphs in the form of domains.
+Each domain is independent and groups related reactives.
+The implementation uses static type tags, so the compiler prevents combination of reactives from different domains at compile time.
+Since the domain tag is part of the type, <code>Signal&lt;S&gt;</code> becomes <code>Signal&lt;D,S&gt;</code>, where <code>D</code> is the domain name.
+To reduce the amount of typing, there exists a macro to define scoped aliases for a given domain name:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="c1">// Defines a domain name D with single-threaded/sequential propagation</span>
+<span class="n">REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">sequential</span><span class="p">)</span>
+
+<span class="c1">// Defines type aliases for Signal, Events, Observer etc.</span>
+<span class="n">USING_REACTIVE_DOMAIN</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+<span class="c1">// Creates a reactive value of domain D</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="n">S</span><span class="o">&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">(...);</span></code></pre></div>
+
+<p>Domains can communicate with each other by sending asynchrounous messages from special output nodes called continuations to input nodes of other domains, including themselves.
+The following figure outlines this model:<br />
+<img src="../media/domain1.png" alt="Drawing" width="500px" /></p>
+
+<h3 id="cycles">Cycles</h3>
+
+<p>For static nodes, all dependencies have to be passed upon initialization; this makes it impossible to construct cycles.
+Dynamic nodes, on the other hand, can change their dependencies after initialization.
+This means they can be attached to on of their predecessors.
+Creating cyclic graphs this way is not permitted and results in undefined behaviour.</p>
+
+<p>For inter-domain communcation, cyclic dependencies between domains are allowed.
+This means that two domains could bounce messages off each other infinitely.
+It is up to the programmer to ensure that such loops terminate eventually.</p>
+
+<h2 id="propagation-model">Propagation model</h2>
+
+<p>The process of data flowing through the graph can be summarized as follows:</p>
+
+<ol>
+  <li>The graph is an idle state, ready to accept imperative input through its input nodes.</li>
+  <li>Input arrives.</li>
+  <li>The targeted input nodes evaluate their input and decide, whether they have been changed. If they have been changed, they notify their successors.</li>
+  <li>Notified successors update themselves based on the current values of their predecessors. If they have been changed, they further notify their own successors, and so on.</li>
+  <li>After the changed portion of the graph has been updated, the graph returns to its idle state.</li>
+</ol>
+
+<p>This process of updating the graph as a result of input is called a <em>(propagation) turn</em>.
+An example is shown in the following figure:</p>
+
+<p><img src="../media/propagation.png" alt="Drawing" width="500px" /></p>
+
+<p>Here, the updated portion of the graph has been marked. It should be noted that not necessary the whole subset of reachable nodes from an input will be updated</p>
+
+<h3 id="transactions">Transactions</h3>
+
+<p>Input consists of a single value, targeted at a specific input node.
+The propagation model that has been described above is not limited to processing a single input per turn.
+To account for that, a <em>transaction</em> is defined as a sequence of inputs.
+For a consistent model, we define that all inputs result in transactions, even if they only contain a single element.</p>
+
+<p>Normally, each transaction is processed in a dedicated turn.
+If transactions arrive concurrently from multiple threads, there’s also the option of merging them, so they can be processed in a single turn.
+This happens under the condititions, that is has been explicitly allowed, and that the merged transactions have not been started yet, because they are waiting for an already active turn to complete.</p>
+
+<h3 id="properties">Properties</h3>
+
+<p>A turn can be represented as a sequence of node updates, each with a result (changed, unchanged).
+There are several guaranteed properties for such update sequences:</p>
+
+<ul>
+  <li><em>Consistency</em>: After a node has been changed, its successors will be updated.</li>
+  <li><em>Update minimality</em>: A node is only updated, if it has at least one changed predecessor. A node is only updated once per turn.</li>
+  <li><em>Glitch freedom</em>: A node is only updated after all its predecessors, that would be updated in the same turn, are done.
+Further, it does not use inconsistent value sets from other turns that might be running at the same time.</li>
+</ul>
+
+<p>Consistency describes the nature of change propagation, which must leave the whole graph in a consistent state afterwards.</p>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>The presented dataflow model can be summarized as follows:</p>
+
+<ul>
+  <li>Dependency relations between reactive values are formulated declaratively and structured as a DAG.
+Dataflow is handled implicitly and provides certain guarantees w.r.t. to ordering.</li>
+  <li>Inter-domain communciation uses asychronous messaging.
+Messages are dispatched imperatively without any constraints.</li>
+</ul>
+
+<p>From this persepctive, the semantics of the concrete reactive types are irrelevant, as signals, event streams and observers are all mapped onto the same graph.</p>
+
+<p>Transactions are used to group inputs together, and the relationship between inputs, transactions and turns can be expressed as</p>
+
+<blockquote>
+  <p><code>Input (N:1) Transaction (N:1) Turn</code>.</p>
+</blockquote>
+
+<p>Even though the graph data structures (nodes, connections) are not directly exposed, but rather implicitly represented, the underlying concepts should be understood;
+they provide a visual approach to designing the dataflow model, which is a task that remains in the hands of the programmer.</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

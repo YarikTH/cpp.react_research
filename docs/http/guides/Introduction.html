@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Introduction to C++React | C++React</title>
+  <link rel="icon" type="image/png" href="../media/favicon.png">
+  <link rel="stylesheet" href="../styles/design.css">
+  <link rel="stylesheet" href="../styles/syntax.css">
+  <script src="../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../reference/Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Algorithm.h/Hold.html"><img class="entity_icon" src="../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Monitor.html"><img class="entity_icon" src="../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Iterate.html"><img class="entity_icon" src="../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Snapshot.html"><img class="entity_icon" src="../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Pulse.html"><img class="entity_icon" src="../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/Changed.html"><img class="entity_icon" src="../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../reference/Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/WeightHint.html"><img class="entity_icon" src="../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/Continuation.html"><img class="entity_icon" src="../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/TransactionStatus.html"><img class="entity_icon" src="../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/DoTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/AsyncTransaction.html"><img class="entity_icon" src="../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/MakeContinuation.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Domain.h/REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="../reference/Domain.h/USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Token.html"><img class="entity_icon" src="../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/Events.html"><img class="entity_icon" src="../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventSource.html"><img class="entity_icon" src="../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/TempEvents.html"><img class="entity_icon" src="../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/EventRange.html"><img class="entity_icon" src="../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Event.h/MakeEventSource.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Merge.html"><img class="entity_icon" src="../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Filter.html"><img class="entity_icon" src="../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Transform.html"><img class="entity_icon" src="../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Process.html"><img class="entity_icon" src="../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Join.html"><img class="entity_icon" src="../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Event.h/Tokenize.html"><img class="entity_icon" src="../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/ObserverAction.html"><img class="entity_icon" src="../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observer.html"><img class="entity_icon" src="../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../reference/Observer.h/ScopedObserver.html"><img class="entity_icon" src="../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Observer.h/Observe.html"><img class="entity_icon" src="../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/Reactor.html"><img class="entity_icon" src="../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Reactor.h/MakeReactor.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/Signal.html"><img class="entity_icon" src="../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/VarSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/TempSignal.html"><img class="entity_icon" src="../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/SignalPack.html"><img class="entity_icon" src="../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/MakeVar.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/MakeSignal.html"><img class="entity_icon" src="../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/Flatten.html"><img class="entity_icon" src="../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/With.html"><img class="entity_icon" src="../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../reference/Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../reference/TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../index.html">Home</a> &#8640;
+
+      <a href="index.html">Guides</a> &#8640;
+
+
+      Introduction to C++React
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>Introduction to C++React <span class="type_tag"></span></h1>
+
+    
+    <ul>
+  <li><a href="Introduction.html#signals">Motivation</a></li>
+  <li><a href="Introduction.html#signals">Design outline</a></li>
+  <li><a href="Introduction.html#signals">Signals</a></li>
+  <li><a href="Introduction.html#event-streams">Event streams</a></li>
+  <li><a href="Introduction.html#observers">Observers</a></li>
+  <li><a href="Introduction.html#coordinated-change-propagation">Coordinated change propagation</a></li>
+  <li><a href="Introduction.html#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="motivation">Motivation</h2>
+
+<p>Reacting to events is a common task in modern applications, for example to respond to user input.
+Often events themselves are defined and triggered by a framework, but handled in client code.
+Callback mechanisms are typically used to implement this.
+They allow clients to register and unregister functions at runtime, and have these functions called when specific events occur.</p>
+
+<p>Conceptionally, there is nothing wrong with this approach, but problems can arise when distributing complex program logic across multiple callbacks.
+The three main reasons for this are:</p>
+
+<ul>
+  <li>The control flow is “scattered”; events may be occur at arbitrary times, callbacks may be added and removed on-the-fly, etc.</li>
+  <li>data is exchanged via shared state and side effects.</li>
+  <li>Callback execution is uncoordinated; callbacks may trigger other callbacks etc. and change propagation follows a “flooding” scheme.</li>
+</ul>
+
+<p>In combination, these factors make it increasingly difficult to reason about program behaviour and properties like correctness or algorithmic complexity.
+Further, debugging is hard and when adding concurrency to the mix, the situation gets worse.</p>
+
+<p>Decentralized control flow is inherent to the creation of interactive applications, but issues of shared state and uncoordinated execution can be addressed.
+This is what C++React does.</p>
+
+<h2 id="design-outline">Design outline</h2>
+
+<p>The issue of uncoordinated callback execution is handled by delegating this task to a dedicated entity - a so called <em>propagation engine</em>.
+This engine “intelligently” schedules callbacks that are ready to be executed, potentially using multiple threads, while guarenteeing certain safety and complexity properties.</p>
+
+<p>The aforementioned usage of shared state and side effects is employed due to a lack of alternatives to implement dataflow between callbacks.
+Thus, to improve the situation, proper abstractions to model dataflow explicitly are needed.</p>
+
+<p>From a high-level perspective, this dataflow model consists of entities, which can emit and/or receive data, and pure functions to “wire” them together.
+Instead of using side effects, these functions pass data through arguments and return values, based on semantics of the connected entities.
+There exist multiple types of entities, representing different concepts like time changing values, event occurrences, or actions.</p>
+
+<p>Essentially, this means that callbacks are chained and can pass data in different ways, all of which is done in a composable manner, backed by a clear semantic model.</p>
+
+<p>The following sections will introduce the core abstractions in more detail.</p>
+
+<h2 id="signals">Signals</h2>
+
+<p>Signals are used to model dependency relations between mutable values.
+A <code>SignalT&lt;S&gt;</code> instance represents a container holding a single value of type <code>S</code>, which will notify dependents when that value changes.
+Dependents could be other signals, which will re-calculate their own values as a result.</p>
+
+<p>To explain this by example, consider the following expression:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">X</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span></code></pre></div>
+
+<p>This could be interpreted as an imperative statement:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="kt">int</span> <span class="n">X</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span><span class="p">;</span></code></pre></div>
+
+<p>If <code>A</code> or <code>B</code> might change later, the statement has to be re-executed to uphold the invariant of <code>X</code> being equal to the sum of <code>A</code> and <code>B</code>.</p>
+
+<p>Alternatively, instead of storing <code>X</code> as a variable in memory, it could be defined as a function:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="kt">int</span> <span class="nf">X</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span><span class="p">;</span> <span class="p">}</span></code></pre></div>
+
+<p>This removes the need to update <code>X</code> imperatively, but also repeats the calculation on every access rather than on changes only.</p>
+
+<p>Signals are implemented as a combination of both approaches.
+To demonstrate this, <code>A</code> and <code>B</code> are now declared as <code>SignalT&lt;int&gt;</code>.
+A function is defined, which calculates the value of <code>X</code> based on its given arguments:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="kt">int</span> <span class="nf">CalcX</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span> <span class="p">}</span></code></pre></div>
+
+<p>This function is used to connect <code>X</code> to its dependencies <code>A</code> and <code>B</code>:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">X</span> <span class="o">=</span> <span class="n">MakeSignal</span><span class="p">(</span><span class="n">With</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">),</span> <span class="n">CalcX</span><span class="p">);</span></code></pre></div>
+
+<p>The values of <code>A</code> and <code>B</code> are passed as arguments to <code>CalcX</code> and the return value is used as value of <code>X</code>.</p>
+
+<p><code>CalcX</code> is automatically called to set the initial value of <code>X</code>, or upon notification by one of its dependencies about a change.
+If the new value of <code>X</code> is different from the current one, it would send change notifications to its own dependents (if it had any).</p>
+
+<p>A special type of signals are <code>VarSignals</code>.
+Instead of automatically calculating their values based on other signals, they can be changed directly.
+This enables interaction with signals from imperative code. Here’s the complete example:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">A</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">VarSignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">B</span> <span class="o">=</span> <span class="n">MakeVar</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">SignalT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>    <span class="n">X</span> <span class="o">=</span> <span class="n">MakeSignal</span><span class="p">(</span><span class="n">With</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">),</span> <span class="n">CalcX</span><span class="p">);</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">X</span><span class="p">.</span><span class="n">Value</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> <span class="c1">// output: 3</span>
+<span class="n">A</span><span class="p">.</span><span class="n">Set</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">X</span><span class="p">.</span><span class="n">Value</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span> <span class="c1">// output: 4</span></code></pre></div>
+
+<p>Updates happen pushed-based, i.e. as part of <code>A.Set(2)</code>.
+<code>Value()</code> is a pull-based interface to retrieve the stored result.</p>
+
+<p>In summary, the value of signal is calculated by a function, stored in memory, and automatically updated when its dependencies change by re-applying that function with new arguments.
+When considering deeply nested dependency relations involving computationally expensive operations,
+signals apply selective updating, as if only the necessary values were re-calculated imperatively, while the calculations themselves are defined as pure functions.</p>
+
+<h2 id="event-streams">Event streams</h2>
+
+<p>Unlike signals, event streams do not represent a single, time-varying and persistent value, but streams of fleeting, discrete values.
+This allows to model general events like mouse clicks or values from a hardware sensor, which do not fit the category of state changes as covered by signals.
+Event streams and signals are similar in the sense that both are reactive containers that can notify their dependents.</p>
+
+<p>An event stream of type <code>Events&lt;E&gt;</code> propagates a list of values <code>E</code> and will notify dependents, if that list is non-empty.
+Dependents can then process the propagated values, after which they are discarded.
+In other words, event streams don’t hold on to values, they only forward them.</p>
+
+<p>Here’s an example:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="kt">bool</span>  <span class="nf">IsGreaterThan100</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">;</span> <span class="p">}</span>
+<span class="kt">bool</span>  <span class="nf">IsLessThan10</span><span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span>     <span class="p">{</span> <span class="k">return</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="p">}</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">EventSourceT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">A</span>  <span class="o">=</span> <span class="n">MakeEventSource</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="n">EventSourceT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">B</span>  <span class="o">=</span> <span class="n">MakeEventSource</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="n">EventsT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>	  <span class="n">X</span>  <span class="o">=</span> <span class="n">Merge</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">);</span>
+
+<span class="n">EventsT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>	  <span class="n">Y1</span> <span class="o">=</span> <span class="n">Filter</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">IsGreaterThan100</span><span class="p">);</span>
+<span class="n">EventsT</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span>	  <span class="n">Y2</span> <span class="o">=</span> <span class="n">Filter</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">IsLessThan10</span><span class="p">);</span>
+
+<span class="c1">// Instead of declaring named functions, we can also use C++11 lambdas</span>
+<span class="n">EventsT</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span>	  <span class="n">Z</span>  <span class="o">=</span> <span class="n">Transform</span><span class="p">(</span><span class="n">Y1</span><span class="p">,</span> <span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">v</span> <span class="o">/</span> <span class="mf">100.0f</span><span class="p">;</span> <span class="p">}]);</span>
+<span class="p">...</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">A</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">B</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="p">...</span></code></pre></div>
+
+<p><code>EventSourceT</code> exists analogously to <code>VarSignalT</code> to provide an imperative interface.
+Values enter through sources <code>A</code> and <code>B</code>, both of which get merged into a single stream <code>X</code>.
+<code>Y1</code> and <code>Y2</code> are each filtered to contain only certain numbers forwarded from <code>X</code>.
+<code>Z</code> takes values from <code>Y1</code> and transforms them.</p>
+
+<p>Of course, for those events to have an effect, they should trigger actions or be stored somewhere persistently.
+The example leaves that part out for now and instead focuses on composability, i.e. how functions like <code>Merge</code> or <code>Transform</code> are used to create new event streams from existing ones.
+This is possible, because event streams are first-class values, as opposed to being indirectly represented by the API (e.g. <code>OnMouseClick()</code> vs. <code>EventsT&lt;&gt; MouseClick</code>).</p>
+
+<h2 id="observers">Observers</h2>
+
+<p>Observers fill the role of “common” callbacks with side effects.
+They allow to register functions at subjects, which can be any signal or event stream, and have these functions called when notified by the subject.
+In particular, a signal observer is called every time the signal value changes, and an event observer is called for every event that passes the stream.
+Observers are only ever on the receiving side of notifications, because they have no dependents.</p>
+
+<p>Similar to signals and event streams, observers are first-class objects.
+They’re created with <code>Observe(theSubject, theCallback)</code>, which returns an instance of <code>ObserverT</code>.
+This instance provides an interface to detach itself from the subject explicitly.</p>
+
+<p>An example shows how observers complement event streams to trigger actions (e.g. console output):</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">EventsT</span><span class="o">&lt;&gt;</span> <span class="n">LeftClick</span>  <span class="o">=</span> <span class="p">...;</span>
+<span class="n">EventsT</span><span class="o">&lt;&gt;</span> <span class="n">RightClick</span> <span class="o">=</span> <span class="p">...;</span>
+<span class="c1">// Note: If the event value type is omitted, the type &#39;Token&#39; is used as default.</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">ObserverT</span> <span class="n">obs</span> <span class="o">=</span>
+	<span class="n">Observe</span><span class="p">(</span>
+		<span class="n">Merge</span><span class="p">(</span><span class="n">LeftClick</span><span class="p">,</span> <span class="n">RightClick</span><span class="p">),</span>
+		<span class="p">[]</span> <span class="p">(</span><span class="n">Token</span><span class="p">)</span> <span class="p">{</span>
+			<span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Clicked&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+		<span class="p">});</span>
+<span class="p">...</span></code></pre></div>
+
+<p>Another example, this time using a signal observer:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">VarSignal</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">LastValue</span>  <span class="o">=</span> <span class="p">...;</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">ObserverT</span> <span class="n">obs</span> <span class="o">=</span>
+	<span class="n">Observe</span><span class="p">(</span>
+		<span class="n">LastValue</span><span class="p">,</span>
+		<span class="p">[]</span> <span class="p">(</span><span class="kt">int</span> <span class="n">v</span><span class="p">)</span> <span class="p">{</span>
+			<span class="n">cout</span> <span class="o">&lt;</span> <span class="s">&quot;Value changed to &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">v</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+		<span class="p">});</span>
+<span class="p">...</span></code></pre></div>
+
+<p>The obvious benefit is that we don’t have to implement callback registration and dispatch mechanisms ourselves.
+Further, they are already in place and available on every reactive value without any additional steps.</p>
+
+<h2 id="coordinated-change-propagation">Coordinated change propagation</h2>
+
+<p>A problem that has been mentioned earlier is the uncoordinated execution of callbacks.
+To construct a practical scenario for this, imagine a graphical user interface, consisting of multiple components that are positioned on the screen.
+If the size of any of the components changes, the screen layout has to be updated.
+There exist several controls the user can interact with to change the size of specific components.</p>
+
+<p>In summary, this scenario defines three layers, connected by callbacks:</p>
+
+<ul>
+  <li>the input controls;</li>
+  <li>the display components;</li>
+  <li>the screen layout.</li>
+</ul>
+
+<p>The question is, what happens if a single control affects multiple components:</p>
+
+<ul>
+  <li>Each component individually triggers an update of the layout. As we add more layers to our scenario, the number of updates caused by a single change might grow exponentially.</li>
+  <li>Some of these updates are executed while part of the components have already been changed, while others have not. This can lead to intermittent errors - or <em>glitches</em> - which are hard to spot.</li>
+  <li>Parallelization requires mutually exclusive access to shared data and critical operations (i.e. updating the layout cannot happen concurrently).</li>
+</ul>
+
+<p>When building the same system based on signals, events and observers, execution of individual callback functions is ordered.
+First, all inputs are processed; then, the components are changed; lastly, the layout is updated once.
+This ordering is based on the inherent hierarchy of the presented model.</p>
+
+<p>Enabling parallelization comes naturally with this approach, as it becomes an issue of implicitly synchronizing forks and joins of the control flow, rather than managing mutually exclusive access to data.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The presented reactive types provide us with specialized tools to address requirements that would otherwise be implemented with callbacks and side effects:</p>
+
+<ul>
+  <li>Signals, as an alternative to updating and propagating state changes manually.</li>
+  <li>Event streams, as an alternative to transfering data between event handlers explicitly, i.e. through shared message queues.</li>
+</ul>
+
+<p>For cases where callbacks with side effects are not just a means to an end, but what is actually intended, observers exist as an alternative to setting up registration mechanisms by hand.</p>
+
+<p>Change propagation is not just based on flooding, but uses a coordinated approach for</p>
+
+<ul>
+  <li>avoidance of intermittent updates;</li>
+  <li>glitch freedom;</li>
+  <li>implicit parallelism.</li>
+</ul>
+
+<p>This concludes an overview of the main features C++React has to offer.</p>
+
+<h3 id="further-reading">Further reading</h3>
+
+<p>The concepts described in this article are well-established in reactive programming and not original to this library, though semantics may slightly differ between implementations.
+An academic paper which has been especially influential for the design of this library is <a href="http://lamp.epfl.ch/~imaier/pub/DeprecatingObserversTR2010.pdf">Deprecating the Observer Pattern</a> by Maier et al.</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

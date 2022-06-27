@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>MakeContinuation | C++React</title>
+  <link rel="icon" type="image/png" href="../../media/favicon.png">
+  <link rel="stylesheet" href="../../styles/design.css">
+  <link rel="stylesheet" href="../../styles/syntax.css">
+  <script src="../../scripts/jquery-1.11.1.min.js"></script>
+  <script src="../../scripts/jquery.fastLiveFilter.js"></script>
+</head>
+
+<body>
+<div id="nav_panel_container">
+  <div id="nav_panel_header">
+    <input id="api_search" class="search_input" placeholder="Type to filter">
+  </div>
+  <div id="nav_panel_body">
+    <ul id="api_list">
+      <li class="api_group"><a class="group_link" href="../Algorithm.h.html">Algorithm.h</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Algorithm.h/Hold.html"><img class="entity_icon" src="../../media/icon_func.png" /> Hold</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Monitor.html"><img class="entity_icon" src="../../media/icon_func.png" /> Monitor</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Iterate.html"><img class="entity_icon" src="../../media/icon_func.png" /> Iterate</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Snapshot.html"><img class="entity_icon" src="../../media/icon_func.png" /> Snapshot</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Pulse.html"><img class="entity_icon" src="../../media/icon_func.png" /> Pulse</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/Changed.html"><img class="entity_icon" src="../../media/icon_func.png" /> Changed</a></li>
+      <li><a class="ref_link" href="../Algorithm.h/ChangedTo.html"><img class="entity_icon" src="../../media/icon_func.png" /> ChangedTo</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Domain.h.html">Domain.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="WeightHint.html"><img class="entity_icon" src="../../media/icon_enum.png" /> WeightHint</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="Continuation.html"><img class="entity_icon" src="../../media/icon_class.png" /> Continuation</a></li>
+      <li><a class="ref_link" href="TransactionStatus.html"><img class="entity_icon" src="../../media/icon_class.png" /> TransactionStatus</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="DoTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> DoTransaction</a></li>
+      <li><a class="ref_link" href="AsyncTransaction.html"><img class="entity_icon" src="../../media/icon_func.png" /> AsyncTransaction</a></li>
+      <li><a class="ref_link" href="MakeContinuation.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeContinuation</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_DOMAIN</a></li>
+      <li><a class="ref_link" href="USING_REACTIVE_DOMAIN.html"><img class="entity_icon" src="../../media/icon_macro.png" /> USING_REACTIVE_DOMAIN</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Event.h.html">Event.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../Event.h/Token.html"><img class="entity_icon" src="../../media/icon_enum.png" /> Token</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../Event.h/Events.html"><img class="entity_icon" src="../../media/icon_class.png" /> Events</a></li>
+      <li><a class="ref_link" href="../Event.h/EventSource.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventSource</a></li>
+      <li><a class="ref_link" href="../Event.h/TempEvents.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempEvents</a></li>
+      <li><a class="ref_link" href="../Event.h/EventRange.html"><img class="entity_icon" src="../../media/icon_class.png" /> EventRange</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Event.h/MakeEventSource.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeEventSource</a></li>
+      <li><a class="ref_link" href="../Event.h/Merge.html"><img class="entity_icon" src="../../media/icon_func.png" /> Merge</a></li>
+      <li><a class="ref_link" href="../Event.h/Filter.html"><img class="entity_icon" src="../../media/icon_func.png" /> Filter</a></li>
+      <li><a class="ref_link" href="../Event.h/Transform.html"><img class="entity_icon" src="../../media/icon_func.png" /> Transform</a></li>
+      <li><a class="ref_link" href="../Event.h/Process.html"><img class="entity_icon" src="../../media/icon_func.png" /> Process</a></li>
+      <li><a class="ref_link" href="../Event.h/Join.html"><img class="entity_icon" src="../../media/icon_func.png" /> Join</a></li>
+      <li><a class="ref_link" href="../Event.h/Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../Event.h/Tokenize.html"><img class="entity_icon" src="../../media/icon_func.png" /> Tokenize</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Observer.h.html">Observer.h</a></li>
+      <!-- <li class="api_subgroup">Constants</li> -->
+      <li><a class="ref_link" href="../Observer.h/ObserverAction.html"><img class="entity_icon" src="../../media/icon_enum.png" /> ObserverAction</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../Observer.h/Observer.html"><img class="entity_icon" src="../../media/icon_class.png" /> Observer</a></li>
+      <li><a class="ref_link" href="../Observer.h/ScopedObserver.html"><img class="entity_icon" src="../../media/icon_class.png" /> ScopedObserver</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Observer.h/Observe.html"><img class="entity_icon" src="../../media/icon_func.png" /> Observe</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Reactor.h.html">Reactor.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../Reactor.h/Reactor.html"><img class="entity_icon" src="../../media/icon_class.png" /> Reactor</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Reactor.h/MakeReactor.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeReactor</a></li>
+
+      <li class="api_group"><a class="group_link" href="../Signal.h.html">Signal.h</a></li>
+      <!-- <li class="api_subgroup">Classes</li> -->
+      <li><a class="ref_link" href="../Signal.h/Signal.html"><img class="entity_icon" src="../../media/icon_class.png" /> Signal</a></li>
+      <li><a class="ref_link" href="../Signal.h/VarSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> VarSignal</a></li>
+      <li><a class="ref_link" href="../Signal.h/TempSignal.html"><img class="entity_icon" src="../../media/icon_class.png" /> TempSignal</a></li>
+      <li><a class="ref_link" href="../Signal.h/SignalPack.html"><img class="entity_icon" src="../../media/icon_class.png" /> SignalPack</a></li>
+      <!-- <li class="api_subgroup">Functions</li> -->
+      <li><a class="ref_link" href="../Signal.h/MakeVar.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeVar</a></li>
+      <li><a class="ref_link" href="../Signal.h/MakeSignal.html"><img class="entity_icon" src="../../media/icon_func.png" /> MakeSignal</a></li>
+      <li><a class="ref_link" href="../Signal.h/Flatten.html"><img class="entity_icon" src="../../media/icon_func.png" /> Flatten</a></li>
+      <li><a class="ref_link" href="../Signal.h/With.html"><img class="entity_icon" src="../../media/icon_func.png" /> With</a></li>
+      <!-- <li class="api_subgroup">Macros</li> -->
+      <li><a class="ref_link" href="../Signal.h/REACTIVE_PTR.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_PTR</a></li>
+      <li><a class="ref_link" href="../Signal.h/REACTIVE_REF.html"><img class="entity_icon" src="../../media/icon_macro.png" /> REACTIVE_REF</a></li>
+
+      <li class="api_group"><a class="group_link" href="../TypeTraits.h.html">TypeTraits.h</a></li>
+
+    </ul>
+  </div>
+</div>
+
+<script>
+    $(function() {
+        $("#api_search").fastLiveFilter(
+          "#api_list",
+          {
+            groups: ["api_group", "api_subgroup"]
+          });
+    });
+</script>
+
+<div id="content_panel_container">
+  <div id="content_panel_header">
+    <span class="header_text">
+
+
+      <a href="../../index.html">Home</a> &#8640;
+
+      <a href="../index.html">Reference</a> &#8640;
+
+      <a href="../Domain.h.html">Domain.h</a> &#8640;
+
+
+      MakeContinuation
+    </span>
+  </div>
+  <div class="content_panel_body">
+
+
+  <h1>MakeContinuation <span class="type_tag">function</span></h1>
+
+    
+    <h2 id="syntax">Syntax</h2>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="c1">// (1)</span>
+<span class="k">template</span>
+<span class="o">&lt;</span>
+    <span class="k">typename</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">D2</span> <span class="o">=</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">S</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">FIn</span>
+<span class="o">&gt;</span>
+<span class="n">Continuation</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">D2</span><span class="o">&gt;</span> <span class="n">MakeContinuation</span><span class="p">(</span><span class="k">const</span> <span class="n">Signal</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">S</span><span class="o">&gt;&amp;</span> <span class="n">trigger</span><span class="p">,</span> <span class="n">FIn</span><span class="o">&amp;&amp;</span> <span class="n">func</span><span class="p">);</span>
+
+<span class="c1">// (2)</span>
+<span class="k">template</span>
+<span class="o">&lt;</span>
+    <span class="k">typename</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">D2</span> <span class="o">=</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">E</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">FIn</span>
+<span class="o">&gt;</span>
+<span class="n">Continuation</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">D2</span><span class="o">&gt;</span> <span class="n">MakeContinuation</span><span class="p">(</span><span class="k">const</span> <span class="n">Events</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="o">&gt;&amp;</span> <span class="n">trigger</span><span class="p">,</span> <span class="n">FIn</span><span class="o">&amp;&amp;</span> <span class="n">func</span><span class="p">);</span>
+
+<span class="c1">// (3)</span>
+<span class="k">template</span>
+<span class="o">&lt;</span>
+    <span class="k">typename</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">D2</span> <span class="o">=</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">E</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">FIn</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="p">...</span> <span class="n">TDepValues</span>
+<span class="o">&gt;</span>
+<span class="n">Continuation</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">D2</span><span class="o">&gt;</span>
+    <span class="n">MakeContinuation</span><span class="p">(</span><span class="k">const</span> <span class="n">Events</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="o">&gt;&amp;</span> <span class="n">trigger</span><span class="p">,</span>
+                     <span class="k">const</span> <span class="n">SignalPack</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">TDepValues</span><span class="p">...</span><span class="o">&gt;&amp;</span> <span class="n">depPack</span><span class="p">,</span> <span class="n">FIn</span><span class="o">&amp;&amp;</span> <span class="n">func</span><span class="p">);</span>
+
+<span class="c1">// (4)</span>
+<span class="k">template</span>
+<span class="o">&lt;</span>
+    <span class="k">typename</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">D2</span> <span class="o">=</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">S</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">FIn</span>
+<span class="o">&gt;</span>
+<span class="n">Continuation</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">D2</span><span class="o">&gt;</span> <span class="n">MakeContinuation</span><span class="p">(</span><span class="n">TransactionFlagsT</span> <span class="n">flags</span><span class="p">,</span> <span class="k">const</span> <span class="n">Signal</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">S</span><span class="o">&gt;&amp;</span> <span class="n">trigger</span><span class="p">,</span> <span class="n">FIn</span><span class="o">&amp;&amp;</span> <span class="n">func</span><span class="p">);</span>
+
+<span class="c1">// (5)</span>
+<span class="k">template</span>
+<span class="o">&lt;</span>
+    <span class="k">typename</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">D2</span> <span class="o">=</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">E</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">FIn</span>
+<span class="o">&gt;</span>
+<span class="n">Continuation</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">D2</span><span class="o">&gt;</span> <span class="n">MakeContinuation</span><span class="p">(</span><span class="n">TransactionFlagsT</span> <span class="n">flags</span><span class="p">,</span> <span class="k">const</span> <span class="n">Events</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="o">&gt;&amp;</span> <span class="n">trigger</span><span class="p">,</span> <span class="n">FIn</span><span class="o">&amp;&amp;</span> <span class="n">func</span><span class="p">);</span>
+
+<span class="c1">// (6)</span>
+<span class="k">template</span>
+<span class="o">&lt;</span>
+    <span class="k">typename</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">D2</span> <span class="o">=</span> <span class="n">D</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">E</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="n">FIn</span><span class="p">,</span>
+    <span class="k">typename</span> <span class="p">...</span> <span class="n">TDepValues</span>
+<span class="o">&gt;</span>
+<span class="n">Continuation</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">D2</span><span class="o">&gt;</span>
+    <span class="n">MakeContinuation</span><span class="p">(</span><span class="n">TransactionFlagsT</span> <span class="n">flags</span><span class="p">,</span> <span class="k">const</span> <span class="n">Events</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="o">&gt;&amp;</span> <span class="n">trigger</span><span class="p">,</span>
+                     <span class="k">const</span> <span class="n">SignalPack</span><span class="o">&lt;</span><span class="n">D</span><span class="p">,</span><span class="n">TDepValues</span><span class="p">...</span><span class="o">&gt;&amp;</span> <span class="n">depPack</span><span class="p">,</span> <span class="n">FIn</span><span class="o">&amp;&amp;</span> <span class="n">func</span><span class="p">);</span></code></pre></div>
+
+<h2 id="semantics">Semantics</h2>
+<p>(1) When the signal value <code>s</code> of <code>trigger</code> changes, <code>func(s)</code> is queued as an asynchrounous transaction of domain <code>D2</code>.
+In pseudo code:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">AsyncTransaction</span><span class="o">&lt;</span><span class="n">D2</span><span class="o">&gt;</span><span class="p">([</span><span class="n">func</span><span class="p">,</span> <span class="n">s</span><span class="p">]</span> <span class="p">{</span>
+    <span class="n">func</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="p">});</span></code></pre></div>
+
+<p>(2) For every event <code>e</code> in <code>trigger</code>, <code>func(e)</code> is called in an asynchronous transaction of domain <code>D2</code>.
+Multiple events from the same turn are captured in a single transaction.
+In pseudo code:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">AsyncTransaction</span><span class="o">&lt;</span><span class="n">D2</span><span class="o">&gt;</span><span class="p">([</span><span class="n">func</span><span class="p">,</span> <span class="n">events</span><span class="p">]</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="nl">e</span> <span class="p">:</span> <span class="n">events</span><span class="p">)</span>
+        <span class="n">func</span><span class="p">(</span><span class="n">e</span><span class="p">);</span>
+<span class="p">});</span></code></pre></div>
+
+<p>(3) Similar to (2), but the synchronized values of signals in <code>depPack</code> are passed to <code>func</code> as additional arguments.
+Changes of signals in <code>depPack</code> do not trigger an update - only received events do.
+In pseudo code:</p>
+
+<div class="highlight"><pre><code class="language-c--" data-lang="c++"><span class="n">AsyncTransaction</span><span class="o">&lt;</span><span class="n">D2</span><span class="o">&gt;</span><span class="p">([</span><span class="n">func</span><span class="p">,</span> <span class="n">events</span><span class="p">,</span> <span class="n">depValues</span><span class="p">...]</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span><span class="o">&amp;</span> <span class="nl">e</span> <span class="p">:</span> <span class="n">events</span><span class="p">)</span>
+        <span class="n">func</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">depValues</span> <span class="p">...);</span>
+<span class="p">});</span></code></pre></div>
+
+<p>The signature of <code>func</code> should be equivalent to:</p>
+
+<ul>
+  <li>(1) <code>void func(const S&amp;)</code></li>
+  <li>(2) <code>void func(const E&amp;)</code></li>
+  <li>(3) <code>void func(const E&amp;, const TDepValues&amp; ...)</code></li>
+</ul>
+
+<p>(4,5,6) behave similar to (1,2,3), respectively, but allow to specify the flags that are used for the continuation transaction.</p>
+
+<p>The event parameter <code>const E&amp;</code> can also be replaced by an event range, i.e. <code>void func(EventRange&lt;E&gt; range, const TDepValues&amp; ...)</code> for case (3).
+This allows for explicit batch processing of events of a single turn.</p>
+
+<p>The initiating transaction is only complete, when all its continuations are complete, i.e. <code>DoTransaction</code> will block, and <code>AsyncContinuation</code> passes on its <code>TransactionStatus</code> to all continuation transactions.
+Waiting on continuations does not occupy the engine; other transactions can already start running and continuations can bounce back and forth between domains without blocking each other.</p>
+
+  </div>
+</div>
+
+</body>
+
+</html>

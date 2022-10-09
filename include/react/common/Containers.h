@@ -117,7 +117,7 @@ public:
         front_( nodes_.begin() ),
         back_( nodes_.begin() )
     {
-        for (auto i=0; i<split_size; i++)
+        for (size_t i=0; i<split_size; i++)
             *(back_++) = other.PopFront();
     }
 

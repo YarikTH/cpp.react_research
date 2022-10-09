@@ -18,6 +18,11 @@
 #include "react/detail/IReactiveEngine.h"
 #include "react/detail/graph/ContinuationNodes.h"
 
+#ifdef REACT_ENABLE_LOGGING
+    #include "react/logging/EventLog.h"
+    #include "react/logging/EventRecords.h"
+#endif //REACT_ENABLE_LOGGING
+
 // Include all engines for convenience
 #include "react/engine/PulsecountEngine.h"
 #include "react/engine/SubtreeEngine.h"

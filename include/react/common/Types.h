@@ -24,8 +24,6 @@ ObjectId GetObjectId(const O& obj)
 	return (ObjectId)&obj;
 }
 
-using UpdateDurationT = std::chrono::duration<uint, std::micro>;
-
 /****************************************/ REACT_IMPL_END /***************************************/
 
 #endif // REACT_COMMON_TYPES_H_INCLUDED

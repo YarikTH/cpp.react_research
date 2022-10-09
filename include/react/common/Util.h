@@ -51,35 +51,6 @@ inline auto apply(F && f, T && t)
         ::apply(std::forward<F>(f), std::forward<T>(t));
 }
 
-template<size_t N>
-struct ApplyMemberFn {
-    template <typename O, typename F, typename T, typename... A>
-    static inline auto apply(O obj, F f, T && t, A &&... a)
-        -> decltype(ApplyMemberFn<N-1>::apply(obj, f, std::forward<T>(t), std::get<N-1>(std::forward<T>(t)), std::forward<A>(a)...))
-    {
-        return ApplyMemberFn<N-1>::apply(obj, f, std::forward<T>(t), std::get<N-1>(std::forward<T>(t)), std::forward<A>(a)...);
-    }
-};
-
-template<>
-struct ApplyMemberFn<0>
-{
-    template<typename O, typename F, typename T, typename... A>
-    static inline auto apply(O obj, F f, T &&, A &&... a)
-        -> decltype((obj->*f)(std::forward<A>(a)...))
-    {
-        return (obj->*f)(std::forward<A>(a)...);
-    }
-};
-
-template <typename O, typename F, typename T>
-inline auto applyMemberFn(O obj, F f, T&& t)
-    -> decltype(ApplyMemberFn<std::tuple_size<typename std::decay<T>::type>::value>::apply(obj, f, std::forward<T>(t)))
-{
-    return ApplyMemberFn<std::tuple_size<typename std::decay<T>::type>::value>
-        ::apply(obj, f, std::forward<T>(t));
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Helper to enable calling a function on each element of an argument pack.
 /// We can't do f(args) ...; because ... expands with a comma.
@@ -110,50 +81,6 @@ struct DisableIfSame :
     std::enable_if<! std::is_same<
         typename std::decay<T>::type,
         typename std::decay<U>::type>::value> {};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// AddDummyArgWrapper
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TArg, typename F, typename TRet, typename ... TDepValues>
-struct AddDummyArgWrapper
-{
-    AddDummyArgWrapper(const AddDummyArgWrapper& other) = default;
-
-    AddDummyArgWrapper(AddDummyArgWrapper&& other) :
-        MyFunc( std::move(other.MyFunc) )
-    {}
-
-    template <typename FIn, class = typename DisableIfSame<FIn,AddDummyArgWrapper>::type>
-    explicit AddDummyArgWrapper(FIn&& func) : MyFunc( std::forward<FIn>(func) ) {}
-
-    TRet operator()(TArg, TDepValues& ... args)
-    {
-        return MyFunc(args ...);
-    }
-
-    F MyFunc;
-};
-
-template <typename TArg, typename F, typename ... TDepValues>
-struct AddDummyArgWrapper<TArg,F,void,TDepValues...>
-{
-public:
-    AddDummyArgWrapper(const AddDummyArgWrapper& other) = default;
-
-    AddDummyArgWrapper(AddDummyArgWrapper&& other) :
-        MyFunc( std::move(other.MyFunc) )
-    {}
-
-    template <typename FIn, class = typename DisableIfSame<FIn,AddDummyArgWrapper>::type>
-    explicit AddDummyArgWrapper(FIn&& func) : MyFunc( std::forward<FIn>(func) ) {}
-
-    void operator()(TArg, TDepValues& ... args)
-    {
-        MyFunc(args ...);
-    }
-
-    F MyFunc;
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// AddDefaultReturnValueWrapper

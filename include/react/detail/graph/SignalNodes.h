@@ -14,7 +14,7 @@
 #include <memory>
 #include <utility>
 
-#include "GraphBase.h"
+#include "react/detail/graph/GraphBase.h"
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 

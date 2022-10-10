@@ -15,7 +15,7 @@
 #include <string>
 #include <thread>
 
-#include "Logging.h"
+#include "react/logging/Logging.h"
 #include "react/common/Types.h"
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/

@@ -27,8 +27,8 @@
 #include "tbb/enumerable_thread_specific.h"
 #include "tbb/queuing_mutex.h"
 
-#include "IReactiveEngine.h"
-#include "ObserverBase.h"
+#include "react/detail/IReactiveEngine.h"
+#include "react/detail/ObserverBase.h"
 #include "react/common/Concurrency.h"
 #include "react/detail/Turn.h"
 

@@ -19,7 +19,7 @@
 
 #include "tbb/concurrent_vector.h"
 
-#include "Logging.h"
+#include "react/logging/Logging.h"
 #include "react/common/Types.h"
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/

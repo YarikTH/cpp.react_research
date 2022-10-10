@@ -14,7 +14,7 @@
 #include <memory>
 #include <utility>
 
-#include "GraphBase.h"
+#include "react/detail/graph/GraphBase.h"
 
 #include "react/detail/ReactiveInput.h"
 

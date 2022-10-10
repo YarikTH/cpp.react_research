@@ -14,8 +14,8 @@
 #include <memory>
 #include <utility>
 
-#include "EventNodes.h"
-#include "SignalNodes.h"
+#include "react/detail/graph/EventNodes.h"
+#include "react/detail/graph/SignalNodes.h"
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 

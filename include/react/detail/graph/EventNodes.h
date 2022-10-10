@@ -18,7 +18,7 @@
 
 #include "tbb/spin_mutex.h"
 
-#include "GraphBase.h"
+#include "react/detail/graph/GraphBase.h"
 #include "react/common/Concurrency.h"
 #include "react/common/Types.h"
 

@@ -15,7 +15,7 @@
 #include <vector>
 #include <utility>
 
-#include "IReactiveNode.h"
+#include "react/detail/IReactiveNode.h"
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 

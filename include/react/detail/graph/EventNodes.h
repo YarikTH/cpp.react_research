@@ -59,11 +59,10 @@ class EventStreamNode :
 public:
     using DataT     = std::vector<E>;
     using EngineT   = typename D::Engine;
-    using TurnT     = typename EngineT::TurnT;
 
     EventStreamNode() = default;
 
-    void SetCurrentTurn(const TurnT& turn, bool forceUpdate = false, bool noClear = false)
+    void SetCurrentTurn(const Turn& turn, bool forceUpdate = false, bool noClear = false)
     {
         this->AccessBufferForClearing([&] {
             if (curTurnId_ != turn.Id() || forceUpdate)
@@ -139,8 +138,7 @@ public:
     {
         if (this->events_.size() > 0 && !changedFlag_)
         {
-            using TurnT = typename D::Engine::TurnT;
-            TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+            Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 
             this->SetCurrentTurn(turn, true, true);
             changedFlag_ = true;
@@ -177,23 +175,23 @@ public:
         EventMergeOp::ReactiveOpBase( std::move(other) )
     {}
 
-    template <typename TTurn, typename TCollector>
-    void Collect(const TTurn& turn, const TCollector& collector) const
+    template <typename TCollector>
+    void Collect(const Turn& turn, const TCollector& collector) const
     {
-        REACT_IMPL::apply(CollectFunctor<TTurn, TCollector>( turn, collector ), this->deps_);
+        REACT_IMPL::apply(CollectFunctor<TCollector>( turn, collector ), this->deps_);
     }
 
-    template <typename TTurn, typename TCollector, typename TFunctor>
+    template <typename TCollector, typename TFunctor>
     void CollectRec(const TFunctor& functor) const
     {
-        REACT_IMPL::apply(reinterpret_cast<const CollectFunctor<TTurn,TCollector>&>(functor), this->deps_);
+        REACT_IMPL::apply(reinterpret_cast<const CollectFunctor<TCollector>&>(functor), this->deps_);
     }
 
 private:
-    template <typename TTurn, typename TCollector>
+    template <typename TCollector>
     struct CollectFunctor
     {
-        CollectFunctor(const TTurn& turn, const TCollector& collector) :
+        CollectFunctor(const Turn& turn, const TCollector& collector) :
             MyTurn( turn ),
             MyCollector( collector )
         {}
@@ -206,7 +204,7 @@ private:
         template <typename T>
         void collect(const T& op) const
         {
-            op.template CollectRec<TTurn,TCollector>(*this);
+            op.template CollectRec<TCollector>(*this);
         }
 
         template <typename T>
@@ -218,7 +216,7 @@ private:
                 MyCollector(v);
         }
 
-        const TTurn&        MyTurn;
+        const Turn&        MyTurn;
         const TCollector&   MyCollector;
     };
 };
@@ -246,17 +244,17 @@ public:
         filter_( std::move(other.filter_) )
     {}
 
-    template <typename TTurn, typename TCollector>
-    void Collect(const TTurn& turn, const TCollector& collector) const
+    template <typename TCollector>
+    void Collect(const Turn& turn, const TCollector& collector) const
     {
         collectImpl(turn, FilteredEventCollector<TCollector>{ filter_, collector }, getDep());
     }
 
-    template <typename TTurn, typename TCollector, typename TFunctor>
+    template <typename TCollector, typename TFunctor>
     void CollectRec(const TFunctor& functor) const
     {
         // Can't recycle functor because MyFunc needs replacing
-        Collect<TTurn,TCollector>(functor.MyTurn, functor.MyCollector);
+        Collect<TCollector>(functor.MyTurn, functor.MyCollector);
     }
 
 private:
@@ -281,14 +279,14 @@ private:
         const TCollector&   MyCollector;    // The wrapped collector
     };
 
-    template <typename TTurn, typename TCollector, typename T>
-    static void collectImpl(const TTurn& turn, const TCollector& collector, const T& op)
+    template <typename TCollector, typename T>
+    static void collectImpl(const Turn& turn, const TCollector& collector, const T& op)
     {
        op.Collect(turn, collector);
     }
 
-    template <typename TTurn, typename TCollector, typename T>
-    static void collectImpl(const TTurn& turn, const TCollector& collector,
+    template <typename TCollector, typename T>
+    static void collectImpl(const Turn& turn, const TCollector& collector,
                             const std::shared_ptr<T>& depPtr)
     {
         depPtr->SetCurrentTurn(turn);
@@ -324,17 +322,17 @@ public:
         func_( std::move(other.func_) )
     {}
 
-    template <typename TTurn, typename TCollector>
-    void Collect(const TTurn& turn, const TCollector& collector) const
+    template <typename TCollector>
+    void Collect(const Turn& turn, const TCollector& collector) const
     {
         collectImpl(turn, TransformEventCollector<TCollector>( func_, collector ), getDep());
     }
 
-    template <typename TTurn, typename TCollector, typename TFunctor>
+    template <typename TCollector, typename TFunctor>
     void CollectRec(const TFunctor& functor) const
     {
         // Can't recycle functor because MyFunc needs replacing
-        Collect<TTurn,TCollector>(functor.MyTurn, functor.MyCollector);
+        Collect<TCollector>(functor.MyTurn, functor.MyCollector);
     }
 
 private:
@@ -357,14 +355,14 @@ private:
         const TTarget&  MyTarget;
     };
 
-    template <typename TTurn, typename TCollector, typename T>
-    static void collectImpl(const TTurn& turn, const TCollector& collector, const T& op)
+    template <typename TCollector, typename T>
+    static void collectImpl(const Turn& turn, const TCollector& collector, const T& op)
     {
        op.Collect(turn, collector);
     }
 
-    template <typename TTurn, typename TCollector, typename T>
-    static void collectImpl(const TTurn& turn, const TCollector& collector, const std::shared_ptr<T>& depPtr)
+    template <typename TCollector, typename T>
+    static void collectImpl(const Turn& turn, const TCollector& collector, const std::shared_ptr<T>& depPtr)
     {
         depPtr->SetCurrentTurn(turn);
 
@@ -408,8 +406,7 @@ public:
 
     virtual void Tick(void* turnPtr) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 
         this->SetCurrentTurn(turn, true);
 
@@ -502,8 +499,7 @@ public:
 
     virtual void Tick(void* turnPtr) override
     {
-        typedef typename D::Engine::TurnT TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 
         this->SetCurrentTurn(turn, true);
         inner_->SetCurrentTurn(turn);
@@ -590,8 +586,7 @@ public:
 
     virtual void Tick(void* turnPtr) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 
         this->SetCurrentTurn(turn, true);
         // Update of this node could be triggered from deps,
@@ -681,8 +676,7 @@ public:
 
     virtual void Tick(void* turnPtr) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 
         this->SetCurrentTurn(turn, true);
         // Update of this node could be triggered from deps,
@@ -768,8 +762,7 @@ public:
 
     virtual void Tick(void* turnPtr) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 
         this->SetCurrentTurn(turn, true);
 
@@ -848,8 +841,7 @@ public:
 
     virtual void Tick(void* turnPtr) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 
         this->SetCurrentTurn(turn, true);
         // Update of this node could be triggered from deps,
@@ -910,7 +902,6 @@ class EventJoinNode :
     public EventStreamNode<D,std::tuple<TValues ...>>
 {
     using Engine = typename EventJoinNode::Engine;
-    using TurnT = typename Engine::TurnT;
 
 public:
     EventJoinNode(const std::shared_ptr<EventStreamNode<D,TValues>>& ... sources) :
@@ -934,7 +925,7 @@ public:
 
     virtual void Tick(void* turnPtr) override
     {
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 
         this->SetCurrentTurn(turn, true);
 
@@ -1007,7 +998,7 @@ private:
     };
 
     template <typename T>
-    static void fetchBuffer(TurnT& turn, Slot<T>& slot)
+    static void fetchBuffer(Turn& turn, Slot<T>& slot)
     {
         slot.Source->SetCurrentTurn(turn);
 

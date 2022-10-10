@@ -42,7 +42,6 @@ public:
     using CoroutineT = boost::coroutines::coroutine<NodeBase<D>*>;
     using PullT = typename CoroutineT::pull_type;
     using PushT = typename CoroutineT::push_type;
-    using TurnT = typename D::Engine::TurnT;
 
     template <typename F>
     ReactorNode(F&& func) :
@@ -90,7 +89,7 @@ public:
 
     virtual void Tick(void* turnPtr) override
     {
-        turnPtr_ = reinterpret_cast<TurnT*>(turnPtr);
+        turnPtr_ = reinterpret_cast<Turn*>(turnPtr);
 
         mainLoop_();
 
@@ -245,7 +244,7 @@ private:
     std::function<void(TContext)>    func_;
 
     PullT   mainLoop_;
-    TurnT*  turnPtr_;
+    Turn*  turnPtr_;
 
     PushT*  curOutPtr_ = nullptr;
 

@@ -611,7 +611,6 @@ private:
     friend class AsyncWorker;
 
 public:
-    using TurnT = typename D::TurnT;
     using Engine = typename D::Engine;
 
     InputManager() :
@@ -636,7 +635,7 @@ public:
         // Phase 1 - Input admission
         ThreadLocalInputState<>::IsTransactionActive = true;
 
-        TurnT turn( nextTurnId() );
+        Turn turn( nextTurnId() );
         Engine::OnTurnAdmissionStart(turn);
         func();
         tr.RunMergedInputs();
@@ -735,7 +734,7 @@ private:
 
         transactionQueue_.EnterQueue(tr);
 
-        TurnT turn( nextTurnId() );
+        Turn turn( nextTurnId() );
         Engine::OnTurnAdmissionStart(turn);
         r.AddInput(std::forward<V>(v));
         tr.RunMergedInputs();
@@ -754,7 +753,7 @@ private:
 
         transactionQueue_.EnterQueue(tr);
 
-        TurnT turn( nextTurnId() );
+        Turn turn( nextTurnId() );
         Engine::OnTurnAdmissionStart(turn);
         r.ModifyInput(func);
         Engine::OnTurnAdmissionEnd(turn);
@@ -842,7 +841,7 @@ private:
             // Blocks until turn is at the front of the queue
             transactionQueue_.EnterQueue(tr);
 
-            TurnT turn( nextTurnId() );
+            Turn turn( nextTurnId() );
 
             // Phase 1 - Input admission
             ThreadLocalInputState<>::IsTransactionActive = true;

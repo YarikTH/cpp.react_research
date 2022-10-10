@@ -13,8 +13,8 @@ namespace toposort {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// EngineBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode, typename TTurn>
-void EngineBase<TNode,TTurn>::OnNodeAttach(TNode& node, TNode& parent)
+template <typename TNode>
+void EngineBase<TNode>::OnNodeAttach(TNode& node, TNode& parent)
 {
     parent.Successors.Add(node);
 
@@ -22,32 +22,32 @@ void EngineBase<TNode,TTurn>::OnNodeAttach(TNode& node, TNode& parent)
         node.Level = parent.Level + 1;
 }
 
-template <typename TNode, typename TTurn>
-void EngineBase<TNode,TTurn>::OnNodeDetach(TNode& node, TNode& parent)
+template <typename TNode>
+void EngineBase<TNode>::OnNodeDetach(TNode& node, TNode& parent)
 {
     parent.Successors.Remove(node);
 }
 
-template <typename TNode, typename TTurn>
-void EngineBase<TNode,TTurn>::OnInputChange(TNode& node, TTurn& turn)
+template <typename TNode>
+void EngineBase<TNode>::OnInputChange(TNode& node, Turn& turn)
 {
     processChildren(node, turn);
 }
 
-template <typename TNode, typename TTurn>
-void EngineBase<TNode,TTurn>::OnNodePulse(TNode& node, TTurn& turn)
+template <typename TNode>
+void EngineBase<TNode>::OnNodePulse(TNode& node, Turn& turn)
 {
     processChildren(node, turn);
 }
 
 // Explicit instantiation
-template class EngineBase<SeqNode,SeqTurn>;
-template class EngineBase<ParNode,ParTurn>;
+template class EngineBase<SeqNode>;
+template class EngineBase<ParNode>;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SeqEngineBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void SeqEngineBase::Propagate(SeqTurn& turn)
+void SeqEngineBase::Propagate(Turn& turn)
 {
     while (scheduledNodes_.FetchNext())
     {
@@ -67,7 +67,7 @@ void SeqEngineBase::Propagate(SeqTurn& turn)
     }
 }
 
-void SeqEngineBase::OnDynamicNodeAttach(SeqNode& node, SeqNode& parent, SeqTurn& turn)
+void SeqEngineBase::OnDynamicNodeAttach(SeqNode& node, SeqNode& parent, Turn& turn)
 {
     this->OnNodeAttach(node, parent);
     
@@ -78,12 +78,12 @@ void SeqEngineBase::OnDynamicNodeAttach(SeqNode& node, SeqNode& parent, SeqTurn&
     scheduledNodes_.Push(&node);
 }
 
-void SeqEngineBase::OnDynamicNodeDetach(SeqNode& node, SeqNode& parent, SeqTurn& turn)
+void SeqEngineBase::OnDynamicNodeDetach(SeqNode& node, SeqNode& parent, Turn& turn)
 {
     this->OnNodeDetach(node, parent);
 }
 
-void SeqEngineBase::processChildren(SeqNode& node, SeqTurn& turn)
+void SeqEngineBase::processChildren(SeqNode& node, Turn& turn)
 {
     // Add children to queue
     for (auto* succ : node.Successors)
@@ -108,7 +108,7 @@ void SeqEngineBase::invalidateSuccessors(SeqNode& node)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// ParEngineBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void ParEngineBase::Propagate(ParTurn& turn)
+void ParEngineBase::Propagate(Turn& turn)
 {
     while (topoQueue_.FetchNext())
     {
@@ -154,19 +154,19 @@ void ParEngineBase::Propagate(ParTurn& turn)
     }
 }
 
-void ParEngineBase::OnDynamicNodeAttach(ParNode& node, ParNode& parent, ParTurn& turn)
+void ParEngineBase::OnDynamicNodeAttach(ParNode& node, ParNode& parent, Turn& turn)
 {
     DynRequestData data{ true, &node, &parent };
     dynRequests_.push_back(data);
 }
 
-void ParEngineBase::OnDynamicNodeDetach(ParNode& node, ParNode& parent, ParTurn& turn)
+void ParEngineBase::OnDynamicNodeDetach(ParNode& node, ParNode& parent, Turn& turn)
 {
     DynRequestData data{ false, &node, &parent };
     dynRequests_.push_back(data);
 }
 
-void ParEngineBase::applyDynamicAttach(ParNode& node, ParNode& parent, ParTurn& turn)
+void ParEngineBase::applyDynamicAttach(ParNode& node, ParNode& parent, Turn& turn)
 {
     this->OnNodeAttach(node, parent);
 
@@ -177,12 +177,12 @@ void ParEngineBase::applyDynamicAttach(ParNode& node, ParNode& parent, ParTurn& 
     topoQueue_.Push(&node);
 }
 
-void ParEngineBase::applyDynamicDetach(ParNode& node, ParNode& parent, ParTurn& turn)
+void ParEngineBase::applyDynamicDetach(ParNode& node, ParNode& parent, Turn& turn)
 {
     this->OnNodeDetach(node, parent);
 }
 
-void ParEngineBase::processChildren(ParNode& node, ParTurn& turn)
+void ParEngineBase::processChildren(ParNode& node, Turn& turn)
 {
     // Add children to queue
     for (auto* succ : node.Successors)

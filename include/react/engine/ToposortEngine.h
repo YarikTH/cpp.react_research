@@ -74,16 +74,6 @@ struct DynRequestData
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ExclusiveSeqTurn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-using SeqTurn = Turn;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// ExclusiveParTurn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-using ParTurn = Turn;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Functors
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
@@ -101,37 +91,37 @@ struct GetWeightFunctor
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// EngineBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename TNode, typename TTurn>
-class EngineBase : public IReactiveEngine<TNode,TTurn>
+template <typename TNode>
+class EngineBase : public IReactiveEngine<TNode>
 {
 public:
     void OnNodeAttach(TNode& node, TNode& parent);
     void OnNodeDetach(TNode& node, TNode& parent);
 
-    void OnInputChange(TNode& node, TTurn& turn);
-    void OnNodePulse(TNode& node, TTurn& turn);
+    void OnInputChange(TNode& node, Turn& turn);
+    void OnNodePulse(TNode& node, Turn& turn);
 
 protected:
-    virtual void processChildren(TNode& node, TTurn& turn) = 0;
+    virtual void processChildren(TNode& node, Turn& turn) = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// SeqEngineBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class SeqEngineBase : public EngineBase<SeqNode,SeqTurn>
+class SeqEngineBase : public EngineBase<SeqNode>
 {
 public:
     using TopoQueueT = TopoQueue<SeqNode*, GetLevelFunctor<SeqNode>>;
 
-    void Propagate(SeqTurn& turn);
+    void Propagate(Turn& turn);
 
-    void OnDynamicNodeAttach(SeqNode& node, SeqNode& parent, SeqTurn& turn);
-    void OnDynamicNodeDetach(SeqNode& node, SeqNode& parent, SeqTurn& turn);
+    void OnDynamicNodeAttach(SeqNode& node, SeqNode& parent, Turn& turn);
+    void OnDynamicNodeDetach(SeqNode& node, SeqNode& parent, Turn& turn);
 
 private:
     void invalidateSuccessors(SeqNode& node);
 
-    virtual void processChildren(SeqNode& node, SeqTurn& turn) override;
+    virtual void processChildren(SeqNode& node, Turn& turn) override;
 
     TopoQueueT    scheduledNodes_;
 };
@@ -139,7 +129,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// ParEngineBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class ParEngineBase : public EngineBase<ParNode,ParTurn>
+class ParEngineBase : public EngineBase<ParNode>
 {
 public:
     using DynRequestVectT = tbb::concurrent_vector<DynRequestData>;
@@ -151,18 +141,18 @@ public:
         GetWeightFunctor<ParNode>
     >;
 
-    void Propagate(ParTurn& turn);
+    void Propagate(Turn& turn);
 
-    void OnDynamicNodeAttach(ParNode& node, ParNode& parent, ParTurn& turn);
-    void OnDynamicNodeDetach(ParNode& node, ParNode& parent, ParTurn& turn);
+    void OnDynamicNodeAttach(ParNode& node, ParNode& parent, Turn& turn);
+    void OnDynamicNodeDetach(ParNode& node, ParNode& parent, Turn& turn);
 
 private:
-    void applyDynamicAttach(ParNode& node, ParNode& parent, ParTurn& turn);
-    void applyDynamicDetach(ParNode& node, ParNode& parent, ParTurn& turn);
+    void applyDynamicAttach(ParNode& node, ParNode& parent, Turn& turn);
+    void applyDynamicDetach(ParNode& node, ParNode& parent, Turn& turn);
 
     void invalidateSuccessors(ParNode& node);
 
-    virtual void processChildren(ParNode& node, ParTurn& turn) override;
+    virtual void processChildren(ParNode& node, Turn& turn) override;
 
     TopoQueueT          topoQueue_;
     DynRequestVectT     dynRequests_;

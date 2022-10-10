@@ -121,8 +121,7 @@ public:
     virtual void Tick(void* turnPtr) override
     {
 #ifdef REACT_ENABLE_LOGGING
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 #endif
 
         REACT_LOG(D::Log().template Append<NodeEvaluateBeginEvent>(
@@ -203,8 +202,7 @@ public:
     virtual void Tick(void* turnPtr) override
     {
 #ifdef REACT_ENABLE_LOGGING
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 #endif
 
         REACT_LOG(D::Log().template Append<NodeEvaluateBeginEvent>(
@@ -290,8 +288,7 @@ public:
 
     virtual void Tick(void* turnPtr) override
     {
-        using TurnT = typename D::Engine::TurnT;
-        TurnT& turn = *reinterpret_cast<TurnT*>(turnPtr);
+        Turn& turn = *reinterpret_cast<Turn*>(turnPtr);
 
         REACT_LOG(D::Log().template Append<NodeEvaluateBeginEvent>(
             GetObjectId(*this), turn.Id()));

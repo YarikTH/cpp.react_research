@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "react/detail/Defs.h"
+#include "react/detail/Turn.h"
 #include "react/common/Types.h"
 #include "react/logging/EventRecords.h"
 
@@ -23,20 +24,18 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template
 <
-    typename TNode,
-    typename TTurn
+    typename TNode
 >
 struct IReactiveEngine
 {
     using NodeT = TNode;
-    using TurnT = TTurn;
 
-    void OnTurnAdmissionStart(TurnT& turn)  {}
-    void OnTurnAdmissionEnd(TurnT& turn)    {}
+    void OnTurnAdmissionStart(Turn& turn)  {}
+    void OnTurnAdmissionEnd(Turn& turn)    {}
 
-    void OnInputChange(NodeT& node, TurnT& turn)    {}
+    void OnInputChange(NodeT& node, Turn& turn)    {}
 
-    void Propagate(TurnT& turn)  {}
+    void Propagate(Turn& turn)  {}
 
     void OnNodeCreate(NodeT& node)  {}
     void OnNodeDestroy(NodeT& node) {}
@@ -44,11 +43,11 @@ struct IReactiveEngine
     void OnNodeAttach(NodeT& node, NodeT& parent)   {}
     void OnNodeDetach(NodeT& node, NodeT& parent)   {}
 
-    void OnNodePulse(NodeT& node, TurnT& turn)      {}
-    void OnNodeIdlePulse(NodeT& node, TurnT& turn)  {}
+    void OnNodePulse(NodeT& node, Turn& turn)      {}
+    void OnNodeIdlePulse(NodeT& node, Turn& turn)  {}
 
-    void OnDynamicNodeAttach(NodeT& node, NodeT& parent, TurnT& turn)    {}
-    void OnDynamicNodeDetach(NodeT& node, NodeT& parent, TurnT& turn)    {}
+    void OnDynamicNodeAttach(NodeT& node, NodeT& parent, Turn& turn)    {}
+    void OnDynamicNodeDetach(NodeT& node, NodeT& parent, Turn& turn)    {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +61,6 @@ template
 struct EngineInterface
 {
     using NodeT = typename TEngine::NodeT;
-    using TurnT = typename TEngine::TurnT;
 
     static TEngine& Instance()
     {
@@ -70,24 +68,24 @@ struct EngineInterface
         return engine;
     }
 
-    static void OnTurnAdmissionStart(TurnT& turn)
+    static void OnTurnAdmissionStart(Turn& turn)
     {
         Instance().OnTurnAdmissionStart(turn);
     }
 
-    static void OnTurnAdmissionEnd(TurnT& turn)
+    static void OnTurnAdmissionEnd(Turn& turn)
     {
         Instance().OnTurnAdmissionEnd(turn);
     }
 
-    static void OnInputChange(NodeT& node, TurnT& turn)
+    static void OnInputChange(NodeT& node, Turn& turn)
     {
         REACT_LOG(D::Log().template Append<InputNodeAdmissionEvent>(
             GetObjectId(node), turn.Id()));
         Instance().OnInputChange(node, turn);
     }
 
-    static void Propagate(TurnT& turn)
+    static void Propagate(Turn& turn)
     {
         Instance().Propagate(turn);
     }
@@ -120,28 +118,28 @@ struct EngineInterface
         Instance().OnNodeDetach(node, parent);
     }
 
-    static void OnNodePulse(NodeT& node, TurnT& turn)
+    static void OnNodePulse(NodeT& node, Turn& turn)
     {
         REACT_LOG(D::Log().template Append<NodePulseEvent>(
             GetObjectId(node), turn.Id()));
         Instance().OnNodePulse(node, turn);
     }
 
-    static void OnNodeIdlePulse(NodeT& node, TurnT& turn)
+    static void OnNodeIdlePulse(NodeT& node, Turn& turn)
     {
         REACT_LOG(D::Log().template Append<NodeIdlePulseEvent>(
             GetObjectId(node), turn.Id()));
         Instance().OnNodeIdlePulse(node, turn);
     }
 
-    static void OnDynamicNodeAttach(NodeT& node, NodeT& parent, TurnT& turn)
+    static void OnDynamicNodeAttach(NodeT& node, NodeT& parent, Turn& turn)
     {
         REACT_LOG(D::Log().template Append<DynamicNodeAttachEvent>(
             GetObjectId(node), GetObjectId(parent), turn.Id()));
         Instance().OnDynamicNodeAttach(node, parent, turn);
     }
 
-    static void OnDynamicNodeDetach(NodeT& node, NodeT& parent, TurnT& turn)
+    static void OnDynamicNodeDetach(NodeT& node, NodeT& parent, Turn& turn)
     {
         REACT_LOG(D::Log().template Append<DynamicNodeDetachEvent>(
             GetObjectId(node), GetObjectId(parent), turn.Id()));

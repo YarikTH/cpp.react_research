@@ -94,7 +94,6 @@ public:
     using Policy = typename D::Policy;
     using Engine = typename D::Engine;
     using NodeT = typename Engine::NodeT;
-    using TurnT = typename Engine::TurnT;
 
     NodeBase() = default;
 

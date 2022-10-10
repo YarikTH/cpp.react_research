@@ -636,7 +636,7 @@ public:
         // Phase 1 - Input admission
         ThreadLocalInputState<>::IsTransactionActive = true;
 
-        TurnT turn( nextTurnId(), flags );
+        TurnT turn( nextTurnId() );
         Engine::OnTurnAdmissionStart(turn);
         func();
         tr.RunMergedInputs();
@@ -735,7 +735,7 @@ private:
 
         transactionQueue_.EnterQueue(tr);
 
-        TurnT turn( nextTurnId(), 0 );
+        TurnT turn( nextTurnId() );
         Engine::OnTurnAdmissionStart(turn);
         r.AddInput(std::forward<V>(v));
         tr.RunMergedInputs();
@@ -754,7 +754,7 @@ private:
 
         transactionQueue_.EnterQueue(tr);
 
-        TurnT turn( nextTurnId(), 0 );
+        TurnT turn( nextTurnId() );
         Engine::OnTurnAdmissionStart(turn);
         r.ModifyInput(func);
         Engine::OnTurnAdmissionEnd(turn);
@@ -842,7 +842,7 @@ private:
             // Blocks until turn is at the front of the queue
             transactionQueue_.EnterQueue(tr);
 
-            TurnT turn( nextTurnId(), item.Flags );
+            TurnT turn( nextTurnId() );
 
             // Phase 1 - Input admission
             ThreadLocalInputState<>::IsTransactionActive = true;

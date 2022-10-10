@@ -23,7 +23,7 @@ static const uint dfs_threshold = 3;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// MarkerTask
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class MarkerTask: public task
+class MarkerTask: public tbb::task
 {
 public:
     using BufferT = NodeBuffer<Node,chunk_size>;
@@ -37,7 +37,7 @@ public:
         nodes_( other.nodes_, SplitTag( ) )
     {}
 
-    task* execute()
+    tbb::task* execute()
     {
         uint splitCount = 0;
 
@@ -79,7 +79,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// UpdaterTask
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class UpdaterTask: public task
+class UpdaterTask: public tbb::task
 {
 public:
     using BufferT = NodeBuffer<Node,chunk_size>;
@@ -206,7 +206,7 @@ void EngineBase::OnInputChange(Node& node, Turn& turn)
 template <typename TTask, typename TIt, typename ... TArgs>
 void spawnTasks
 (
-    task& rootTask, task_list& spawnList,
+    tbb::task& rootTask, tbb::task_list& spawnList,
     const size_t count, TIt start, TIt end,
     TArgs& ... args
 )

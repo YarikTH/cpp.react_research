@@ -26,14 +26,6 @@
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 namespace subtree {
 
-using std::atomic;
-using std::vector;
-
-using tbb::task;
-using tbb::empty_task;
-using tbb::task_list;
-using tbb::spin_rw_mutex;
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Turn
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +41,7 @@ public:
 class Node : public IReactiveNode
 {
 public:
-    using ShiftMutexT = spin_rw_mutex;
+    using ShiftMutexT = tbb::spin_rw_mutex;
 
     inline bool IsQueued() const    { return flags_.Test<flag_queued>(); }
     inline void SetQueuedFlag()     { flags_.Set<flag_queued>(); }
@@ -117,8 +109,8 @@ private:
     };
 
     EnumFlags<EFlags>   flags_;
-    atomic<uint16_t>    readyCount_     { 0 };
-    atomic<bool>        shouldUpdate_   { false };
+    std::atomic<uint16_t>    readyCount_     { 0 };
+    std::atomic<bool>        shouldUpdate_   { false };
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,10 +153,10 @@ private:
     void markSubtree(Node& root);
 
     TopoQueueT      scheduledNodes_;
-    vector<Node*>   subtreeRoots_;
+    std::vector<Node*>   subtreeRoots_;
 
-    empty_task&     rootTask_   = *new(task::allocate_root()) empty_task;
-    task_list       spawnList_;
+    tbb::empty_task&     rootTask_   = *new(tbb::task::allocate_root()) tbb::empty_task;
+    tbb::task_list       spawnList_;
 
     bool            isInPhase2_ = false;
 }; 

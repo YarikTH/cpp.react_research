@@ -28,11 +28,6 @@
 
 namespace toposort {
 
-using std::atomic;
-using std::vector;
-using tbb::concurrent_vector;
-using tbb::spin_mutex;
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Parameters
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,11 +53,11 @@ public:
 class ParNode : public IReactiveNode
 {
 public:
-    using InvalidateMutexT = spin_mutex;
+    using InvalidateMutexT = tbb::spin_mutex;
 
     int             Level       { 0 };
     int             NewLevel    { 0 };
-    atomic<bool>    Collected   { false };
+    std::atomic<bool>    Collected   { false };
 
     NodeVector<ParNode> Successors;
     InvalidateMutexT    InvalidateMutex;
@@ -155,7 +150,7 @@ private:
 class ParEngineBase : public EngineBase<ParNode,ParTurn>
 {
 public:
-    using DynRequestVectT = concurrent_vector<DynRequestData>;
+    using DynRequestVectT = tbb::concurrent_vector<DynRequestData>;
     using TopoQueueT = ConcurrentTopoQueue
     <
         ParNode*,

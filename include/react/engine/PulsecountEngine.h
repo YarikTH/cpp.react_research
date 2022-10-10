@@ -26,14 +26,6 @@
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 namespace pulsecount {
 
-using std::atomic;
-using std::vector;
-
-using tbb::task;
-using tbb::empty_task;
-using tbb::spin_rw_mutex;
-using tbb::task_list;
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Turn
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +56,7 @@ enum class ENodeState
 class Node : public IReactiveNode
 {
 public:
-    using ShiftMutexT = spin_rw_mutex;
+    using ShiftMutexT = tbb::spin_rw_mutex;
 
     inline void IncCounter() { counter_.fetch_add(1, std::memory_order_relaxed); }
     inline bool DecCounter() { return counter_.fetch_sub(1, std::memory_order_relaxed) > 1; }
@@ -91,8 +83,8 @@ public:
     ENodeState          State       = ENodeState::unchanged;
 
 private:
-    atomic<int>         counter_    { 0 };
-    atomic<ENodeMark>   mark_       { ENodeMark::unmarked };
+    std::atomic<int>         counter_    { 0 };
+    std::atomic<ENodeMark>   mark_       { ENodeMark::unmarked };
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +94,7 @@ class EngineBase : public IReactiveEngine<Node,Turn>
 {
 public:
     using NodeShiftMutexT = Node::ShiftMutexT;
-    using NodeVectT = vector<Node*>;
+    using NodeVectT = std::vector<Node*>;
 
     void OnNodeAttach(Node& node, Node& parent);
     void OnNodeDetach(Node& node, Node& parent);
@@ -118,8 +110,8 @@ public:
 
 private:
     NodeVectT       changedInputs_;
-    empty_task&     rootTask_       = *new(task::allocate_root()) empty_task;
-    task_list       spawnList_;
+    tbb::empty_task&     rootTask_       = *new(tbb::task::allocate_root()) tbb::empty_task;
+    tbb::task_list       spawnList_;
 };
 
 } // ~namespace pulsecount

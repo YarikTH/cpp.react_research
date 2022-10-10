@@ -21,29 +21,10 @@
 
 #include "react/common/Concurrency.h"
 #include "react/common/Types.h"
+#include "react/detail/Turn.h"
 #include "react/detail/ReactiveInput.h"
 #include "react/detail/IReactiveNode.h"
 #include "react/detail/IReactiveEngine.h"
 #include "react/detail/ObserverBase.h"
-
-/***************************************/ REACT_IMPL_BEGIN /**************************************/
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// Turn
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class Turn
-{
-public:
-    inline Turn(TurnIdT id) :
-        id_( id )
-    {}
-
-    inline TurnIdT Id() const { return id_; }
-
-private:
-    TurnIdT    id_;
-};
-
-/****************************************/ REACT_IMPL_END /***************************************/
 
 #endif // REACT_DETAIL_ENGINEBASE_H_INCLUDED

@@ -30,6 +30,7 @@
 #include "IReactiveEngine.h"
 #include "ObserverBase.h"
 #include "react/common/Concurrency.h"
+#include "react/detail/Turn.h"
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 
@@ -45,7 +46,6 @@ class InputManager;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Common types & constants
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-using TurnIdT = uint;
 using TransactionFuncT = std::function<void()>;
 
 enum ETransactionFlags

@@ -147,7 +147,7 @@ public:
     EventSlotNode(const Group& group) :
         EventSlotNode::EventNode( group )
     {
-        inputNodeId_ = this->GetGraphPtr()->RegisterNode(&slotInput_);
+        inputNodeId_ = this->GetGraphPtr()->register_node(&slotInput_);
         this->RegisterMe();
 
         this->AttachToMe(inputNodeId_);
@@ -159,7 +159,7 @@ public:
         this->DetachFromMe(inputNodeId_);
 
         this->UnregisterMe();
-        this->GetGraphPtr()->UnregisterNode(inputNodeId_);
+        this->GetGraphPtr()->unregister_node(inputNodeId_);
     }
 
     virtual UpdateResult Update() noexcept override

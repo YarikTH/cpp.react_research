@@ -38,15 +38,15 @@ public:
 
     template <typename F>
     void DoTransaction(F&& func)
-        { GetGraphPtr()->DoTransaction(std::forward<F>(func)); }
+        { GetGraphPtr()->do_transaction(std::forward<F>(func)); }
 
     template <typename F>
     void EnqueueTransaction(F&& func, TransactionFlags flags = TransactionFlags::none)
-        { GetGraphPtr()->EnqueueTransaction(std::forward<F>(func), SyncPoint::Dependency{ }, flags); }
+        { GetGraphPtr()->enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ }, flags); }
 
     template <typename F>
     void EnqueueTransaction(F&& func, const SyncPoint& syncPoint, TransactionFlags flags = TransactionFlags::none)
-        { GetGraphPtr()->EnqueueTransaction(std::forward<F>(func), SyncPoint::Dependency{ syncPoint }, flags); }
+        { GetGraphPtr()->enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ syncPoint }, flags); }
 
     friend bool operator==(const Group& a, const Group& b)
         { return a.GetGraphPtr() == b.GetGraphPtr(); }

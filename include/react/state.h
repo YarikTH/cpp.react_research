@@ -161,7 +161,7 @@ private:
         NodeId nodeId = castedPtr->GetNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [castedPtr, &newValue] { castedPtr->SetValue(std::forward<T>(newValue)); });
+        graphPtr->push_input(nodeId, [castedPtr, &newValue] { castedPtr->SetValue(std::forward<T>(newValue)); });
     }
 
     template <typename F>
@@ -175,7 +175,7 @@ private:
         NodeId nodeId = castedPtr->GetNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [castedPtr, &func] { castedPtr->ModifyValue(func); });
+        graphPtr->push_input(nodeId, [castedPtr, &func] { castedPtr->ModifyValue(func); });
     }
 };
 
@@ -228,7 +228,7 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [this, castedPtr, &newInput] { castedPtr->SetInput(newInput); });
+        graphPtr->push_input(nodeId, [this, castedPtr, &newInput] { castedPtr->SetInput(newInput); });
     }
 };
 

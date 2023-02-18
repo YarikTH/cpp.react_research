@@ -28,12 +28,12 @@
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 
-class ReactGraph;
+class react_graph;
 
 class TransactionQueue
 {
 public:
-    TransactionQueue(ReactGraph& graph) :
+    TransactionQueue(react_graph& graph) :
         graph_( graph )
     { }
 
@@ -79,120 +79,115 @@ private:
 
     std::atomic<size_t> count_{ 0 };
 
-    ReactGraph& graph_;
+    react_graph& graph_;
 };
 
-class ReactGraph
+class react_graph
 {
 public:
-    NodeId RegisterNode(IReactNode* nodePtr);
-    void UnregisterNode(NodeId nodeId);
+    NodeId register_node(IReactNode* nodePtr);
+    void unregister_node(NodeId nodeId);
 
-    void AttachNode(NodeId node, NodeId parentId);
-    void DetachNode(NodeId node, NodeId parentId);
-
-    template <typename F>
-    void PushInput(NodeId nodeId, F&& inputCallback);
-
-    void AddSyncPointDependency(SyncPoint::Dependency dep);
+    void attach_node(NodeId nodeId, NodeId parentId);
+    void detach_node(NodeId nodeId, NodeId parentId);
 
     template <typename F>
-    void DoTransaction(F&& transactionCallback);
+    void push_input(NodeId nodeId, F&& inputCallback);
+
+    void add_sync_point_dependency(SyncPoint::Dependency dep);
 
     template <typename F>
-    void EnqueueTransaction(F&& func, SyncPoint::Dependency dep, TransactionFlags flags);
+    void do_transaction(F&& transactionCallback);
+
+    template <typename F>
+    void enqueue_transaction(F&& func, SyncPoint::Dependency dep, TransactionFlags flags);
 
 private:
-    struct NodeData
+    struct node_data
     {
-        NodeData() = default;
+        node_data(const node_data&) = delete;
+        node_data& operator=(const node_data&) = delete;
+        node_data(node_data&&) noexcept = default;
+        node_data& operator=(node_data&&) noexcept = default;
 
-        NodeData(const NodeData&) = default;
-        NodeData& operator=(const NodeData&) = default;
-
-        explicit NodeData(IReactNode* nodePtrIn) :
-            nodePtr( nodePtrIn )
+        explicit node_data(IReactNode* node_ptr ) : node_ptr( node_ptr )
         { }
 
-        int     level       = 0;
-        int     newLevel    = 0 ;
-        bool    queued      = false;
+        int level = 0;
+        int new_level = 0 ;
+        bool queued = false;
 
-        IReactNode*  nodePtr = nullptr;
+        IReactNode* node_ptr = nullptr;
 
         std::vector<NodeId> successors;
     };
 
-    class TopoQueue
+    class topological_queue
     {
     public:
-        void Push(NodeId nodeId, int level)
-            { queueData_.emplace_back(nodeId, level); }
+        void push(NodeId nodeId, int level)
+            { m_queue_data.emplace_back(nodeId, level); }
 
-        bool FetchNext();
+        bool fetch_next();
 
-        const std::vector<NodeId>& Next() const
-            { return nextData_; }
-
-        bool IsEmpty() const
-            { return queueData_.empty(); }
+        [[nodiscard]] const std::vector<NodeId>& next_values() const
+            { return m_next_data; }
 
     private:
         using Entry = std::pair<NodeId /*nodeId*/, int /*level*/>;
 
-        std::vector<Entry>  queueData_;
-        std::vector<NodeId> nextData_;
-
-        int minLevel_ = (std::numeric_limits<int>::max)();
+        std::vector<Entry> m_queue_data;
+        std::vector<NodeId> m_next_data;
     };
 
-    void Propagate();
+    void propagate();
 
-    void ScheduleSuccessors(NodeData & node);
-    void RecalculateSuccessorLevels(NodeData & node);
+    void schedule_successors( node_data& node);
+    void recalculate_successor_levels( node_data& node);
 
 private:
-    TransactionQueue    transactionQueue_{ *this };
+    TransactionQueue m_transaction_queue{ *this };
 
-    SlotMap<NodeData>   nodeData_;
+    SlotMap<node_data> m_node_data;
 
-    TopoQueue scheduledNodes_;
+    topological_queue m_scheduled_nodes;
 
-    std::vector<NodeId>         changedInputs_;
-    std::vector<IReactNode*>    changedNodes_;
+    std::vector<NodeId> m_changed_inputs;
 
-    std::vector<SyncPoint::Dependency> localDependencies_;
+    std::vector<SyncPoint::Dependency> m_local_dependencies;
 
-    int  transactionLevel_ = 0;
+    int m_transaction_level = 0;
 };
 
 template <typename F>
-void ReactGraph::PushInput(NodeId nodeId, F&& inputCallback)
+void react_graph::push_input(NodeId nodeId, F&& inputCallback)
 {
     // This writes to the input buffer of the respective node.
     std::forward<F>(inputCallback)();
-    
-    changedInputs_.push_back(nodeId);
 
-    if (transactionLevel_ == 0)
-        Propagate();
+    m_changed_inputs.push_back(nodeId);
+
+    if( m_transaction_level == 0 )
+    {
+        propagate();
+    }
 }
 
 template <typename F>
-void ReactGraph::DoTransaction(F&& transactionCallback)
+void react_graph::do_transaction(F&& transactionCallback)
 {
     // Transaction callback may add multiple inputs.
-    ++transactionLevel_;
+    ++m_transaction_level;
     std::forward<F>(transactionCallback)();
-    --transactionLevel_;
+    --m_transaction_level;
 
-    Propagate();
+    propagate();
 }
 
 template <typename F>
-void ReactGraph::EnqueueTransaction(F&& func, SyncPoint::Dependency dep, TransactionFlags flags)
+void react_graph::enqueue_transaction(F&& func, SyncPoint::Dependency dep, TransactionFlags flags)
 {
-    transactionQueue_.Push(std::forward<F>(func), std::move(dep), flags);
+    m_transaction_queue.Push(std::forward<F>(func), std::move(dep), flags);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +197,7 @@ class GroupInternals
 {
 public:
     GroupInternals() :
-        graphPtr_( std::make_shared<ReactGraph>() )
+        graphPtr_( std::make_shared<react_graph>() )
     {  }
 
     GroupInternals(const GroupInternals&) = default;
@@ -211,14 +206,14 @@ public:
     GroupInternals(GroupInternals&&) = default;
     GroupInternals& operator=(GroupInternals&&) = default;
 
-    auto GetGraphPtr() -> std::shared_ptr<ReactGraph>&
+    auto GetGraphPtr() -> std::shared_ptr<react_graph>&
         { return graphPtr_; }
 
-    auto GetGraphPtr() const -> const std::shared_ptr<ReactGraph>&
+    auto GetGraphPtr() const -> const std::shared_ptr<react_graph>&
         { return graphPtr_; }
 
 private:
-    std::shared_ptr<ReactGraph> graphPtr_;
+    std::shared_ptr<react_graph> graphPtr_;
 };
 
 /****************************************/ REACT_IMPL_END /***************************************/

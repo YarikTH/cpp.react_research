@@ -20,7 +20,7 @@
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 
-class ReactGraph;
+class react_graph;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// CreateWrappedNode
@@ -74,23 +74,23 @@ public:
         { return group_; }
 
 protected:
-    auto GetGraphPtr() const -> const std::shared_ptr<ReactGraph>&
+    auto GetGraphPtr() const -> const std::shared_ptr<react_graph>&
         { return GetInternals(group_).GetGraphPtr(); }
 
-    auto GetGraphPtr() -> std::shared_ptr<ReactGraph>&
+    auto GetGraphPtr() -> std::shared_ptr<react_graph>&
         { return GetInternals(group_).GetGraphPtr(); }
 
     void RegisterMe()
-        { nodeId_ = GetGraphPtr()->RegisterNode(this); }
+        { nodeId_ = GetGraphPtr()->register_node(this); }
     
     void UnregisterMe()
-        { GetGraphPtr()->UnregisterNode(nodeId_); }
+        { GetGraphPtr()->unregister_node(nodeId_); }
 
     void AttachToMe(NodeId otherNodeId)
-        { GetGraphPtr()->AttachNode(nodeId_, otherNodeId); }
+        { GetGraphPtr()->attach_node(nodeId_, otherNodeId); }
 
     void DetachFromMe(NodeId otherNodeId)
-        { GetGraphPtr()->DetachNode(nodeId_, otherNodeId); }
+        { GetGraphPtr()->detach_node(nodeId_, otherNodeId); }
 
 private:
     NodeId nodeId_;

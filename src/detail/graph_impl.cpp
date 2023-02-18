@@ -23,20 +23,21 @@
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 
-NodeId ReactGraph::RegisterNode(IReactNode* nodePtr)
+NodeId
+    react_graph::register_node(IReactNode* nodePtr)
 {
-    return nodeData_.Insert(NodeData{ nodePtr });
+    return m_node_data.Insert( node_data{ nodePtr });
 }
 
-void ReactGraph::UnregisterNode(NodeId nodeId)
+void react_graph::unregister_node(NodeId nodeId)
 {
-    nodeData_.Erase(nodeId);
+    m_node_data.Erase(nodeId);
 }
 
-void ReactGraph::AttachNode(NodeId nodeId, NodeId parentId)
+void react_graph::attach_node(NodeId nodeId, NodeId parentId)
 {
-    auto& node = nodeData_[nodeId];
-    auto& parent = nodeData_[parentId];
+    auto& node = m_node_data[nodeId];
+    auto& parent = m_node_data[parentId];
 
     parent.successors.push_back(nodeId);
 
@@ -44,52 +45,54 @@ void ReactGraph::AttachNode(NodeId nodeId, NodeId parentId)
         node.level = parent.level + 1;
 }
 
-void ReactGraph::DetachNode(NodeId nodeId, NodeId parentId)
+void react_graph::detach_node(NodeId node, NodeId parentId)
 {
-    auto& parent = nodeData_[parentId];
+    auto& parent = m_node_data[parentId];
     auto& successors = parent.successors;
 
-    successors.erase(std::find(successors.begin(), successors.end(), nodeId));
+    successors.erase(std::find(successors.begin(), successors.end(), node ));
 }
 
-void ReactGraph::AddSyncPointDependency(SyncPoint::Dependency dep)
+void react_graph::add_sync_point_dependency(SyncPoint::Dependency dep)
 {
-    localDependencies_.push_back(std::move(dep));
+    m_local_dependencies.push_back(std::move(dep));
 }
 
-void ReactGraph::Propagate()
+void react_graph::propagate()
 {
+    std::vector<IReactNode*> changedNodes;
+
     // Fill update queue with successors of changed inputs.
-    for (NodeId nodeId : changedInputs_)
+    for (NodeId nodeId : m_changed_inputs )
     {
-        auto& node = nodeData_[nodeId];
-        auto* nodePtr = node.nodePtr;
+        auto& node = m_node_data[nodeId];
+        auto* nodePtr = node.node_ptr;
 
         UpdateResult res = nodePtr->Update();
 
         if (res == UpdateResult::changed)
         {
-            changedNodes_.push_back(nodePtr);
-            ScheduleSuccessors(node);
+            changedNodes.push_back(nodePtr);
+            schedule_successors( node );
         }
     }
 
     // Propagate changes.
-    while (scheduledNodes_.FetchNext())
+    while ( m_scheduled_nodes.fetch_next())
     {
-        for (NodeId nodeId : scheduledNodes_.Next())
+        for (NodeId nodeId : m_scheduled_nodes.next_values())
         {
-            auto& node = nodeData_[nodeId];
-            auto* nodePtr = node.nodePtr;
+            auto& node = m_node_data[nodeId];
+            auto* nodePtr = node.node_ptr;
 
             // A predecessor of this node has shifted to a lower level?
-            if (node.level < node.newLevel)
+            if (node.level < node.new_level )
             {
                 // Re-schedule this node.
-                node.level = node.newLevel;
+                node.level = node.new_level;
 
-                RecalculateSuccessorLevels(node);
-                scheduledNodes_.Push(nodeId, node.level);
+                recalculate_successor_levels( node );
+                m_scheduled_nodes.push( nodeId, node.level );
                 continue;
             }
 
@@ -99,15 +102,15 @@ void ReactGraph::Propagate()
             if (res == UpdateResult::shifted)
             {
                 // Re-schedule this node.
-                RecalculateSuccessorLevels(node);
-                scheduledNodes_.Push(nodeId, node.level);
+                recalculate_successor_levels( node );
+                m_scheduled_nodes.push( nodeId, node.level );
                 continue;
             }
             
             if (res == UpdateResult::changed)
             {
-                changedNodes_.push_back(nodePtr);
-                ScheduleSuccessors(node);
+                changedNodes.push_back(nodePtr);
+                schedule_successors( node );
             }
 
             node.queued = false;
@@ -115,63 +118,64 @@ void ReactGraph::Propagate()
     }
 
     // Cleanup buffers in changed nodes.
-    for (IReactNode* nodePtr : changedNodes_)
+    for (IReactNode* nodePtr : changedNodes)
         nodePtr->Clear();
-    changedNodes_.clear();
+    changedNodes.clear();
 
     // Clean link state.
-    localDependencies_.clear();
+    m_local_dependencies.clear();
 }
 
-void ReactGraph::ScheduleSuccessors(NodeData& node)
+void react_graph::schedule_successors( node_data& node)
 {
     for (NodeId succId : node.successors)
     {
-        auto& succ = nodeData_[succId];
+        auto& succ = m_node_data[succId];
 
         if (!succ.queued)
         {
             succ.queued = true;
-            scheduledNodes_.Push(succId, succ.level);
+            m_scheduled_nodes.push( succId, succ.level );
         }
     }
 }
 
-void ReactGraph::RecalculateSuccessorLevels(NodeData& node)
+void react_graph::recalculate_successor_levels( node_data& node)
 {
     for (NodeId succId : node.successors)
     {
-        auto& succ = nodeData_[succId];
+        auto& succ = m_node_data[succId];
 
-        if (succ.newLevel <= node.level)
-            succ.newLevel = node.level + 1;
+        if (succ.new_level <= node.level)
+            succ.new_level = node.level + 1;
     }
 }
 
-bool ReactGraph::TopoQueue::FetchNext()
+bool react_graph::topological_queue::fetch_next()
 {
     // Throw away previous values
-    nextData_.clear();
+    m_next_data.clear();
 
     // Find min level of nodes in queue data
-    minLevel_ = (std::numeric_limits<int>::max)();
-    for (const auto& e : queueData_)
-        if (minLevel_ > e.second)
-            minLevel_ = e.second;
+    auto minimal_level = (std::numeric_limits<int>::max)();
+    for (const auto& e : m_queue_data )
+        if (minimal_level > e.second)
+            minimal_level = e.second;
 
     // Swap entries with min level to the end
-    auto p = std::partition(queueData_.begin(), queueData_.end(), [t = minLevel_] (const Entry& e) { return t != e.second; });
+    auto p = std::partition(m_queue_data.begin(),
+        m_queue_data.end(), [t = minimal_level] (const Entry& e) { return t != e.second; });
 
     // Move min level values to next data
-    nextData_.reserve(std::distance(p, queueData_.end()));
+    m_next_data.reserve(std::distance(p, m_queue_data.end()));
 
-    for (auto it = p; it != queueData_.end(); ++it)
-        nextData_.push_back(it->first);
+    for (auto it = p; it != m_queue_data.end(); ++it)
+        m_next_data.push_back(it->first);
 
     // Truncate moved entries
-    queueData_.resize(std::distance(queueData_.begin(), p));
+    m_queue_data.resize(std::distance(m_queue_data.begin(), p));
 
-    return !nextData_.empty();
+    return !m_next_data.empty();
 }
 
 void TransactionQueue::ProcessQueue()
@@ -210,34 +214,34 @@ size_t TransactionQueue::ProcessNextBatch()
             skipPop = false;
         }
 
-        graph_.DoTransaction([&]
-        {
+        graph_.do_transaction( [&] {
             curTransaction.func();
-            graph_.AddSyncPointDependency(std::move(curTransaction.dep));
+            graph_.add_sync_point_dependency( std::move( curTransaction.dep ) );
 
-            if (canMerge)
+            if( canMerge )
             {
                 // Pull in additional mergeable transactions.
-                for (;;)
+                for( ;; )
                 {
-                    if (!transactions_.try_pop(curTransaction))
+                    if( !transactions_.try_pop( curTransaction ) )
                         return;
 
-                    canMerge = IsBitmaskSet(curTransaction.flags, TransactionFlags::allow_merging);
+                    canMerge
+                        = IsBitmaskSet( curTransaction.flags, TransactionFlags::allow_merging );
 
                     ++popCount;
 
-                    if (!canMerge)
+                    if( !canMerge )
                     {
                         skipPop = true;
                         return;
                     }
 
                     curTransaction.func();
-                    graph_.AddSyncPointDependency(std::move(curTransaction.dep));
+                    graph_.add_sync_point_dependency( std::move( curTransaction.dep ) );
                 }
             }
-        });
+        } );
     }
 }
 

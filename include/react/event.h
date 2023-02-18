@@ -162,7 +162,8 @@ private:
         NodeId nodeId = castedPtr->GetNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->push_input(nodeId, [castedPtr, &value] { castedPtr->EmitValue(std::forward<T>(value)); });
+        castedPtr->EmitValue(std::forward<T>(value));
+        graphPtr->push_input(nodeId);
     }
 };
 
@@ -216,7 +217,8 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->push_input(nodeId, [this, castedPtr, &input] { castedPtr->AddSlotInput(input); });
+        castedPtr->AddSlotInput(input);
+        graphPtr->push_input(nodeId);
     }
 
     void RemoveSlotInput(const Event<E>& input)
@@ -229,7 +231,8 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->push_input(nodeId, [this, castedPtr, &input] { castedPtr->RemoveSlotInput(input); });
+        castedPtr->RemoveSlotInput(input);
+        graphPtr->push_input(nodeId);
     }
 
     void RemoveAllSlotInputs()
@@ -242,7 +245,8 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->push_input(nodeId, [castedPtr] { castedPtr->RemoveAllSlotInputs(); });
+        castedPtr->RemoveAllSlotInputs();
+        graphPtr->push_input(nodeId);
     }
 };
 

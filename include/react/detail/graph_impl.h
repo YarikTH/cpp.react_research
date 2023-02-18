@@ -91,8 +91,7 @@ public:
     void attach_node(NodeId nodeId, NodeId parentId);
     void detach_node(NodeId nodeId, NodeId parentId);
 
-    template <typename F>
-    void push_input(NodeId nodeId, F&& inputCallback);
+    void push_input(NodeId nodeId);
 
     void add_sync_point_dependency(SyncPoint::Dependency dep);
 
@@ -159,12 +158,8 @@ private:
     int m_transaction_level = 0;
 };
 
-template <typename F>
-void react_graph::push_input(NodeId nodeId, F&& inputCallback)
+inline void react_graph::push_input(NodeId nodeId)
 {
-    // This writes to the input buffer of the respective node.
-    std::forward<F>(inputCallback)();
-
     m_changed_inputs.push_back(nodeId);
 
     if( m_transaction_level == 0 )

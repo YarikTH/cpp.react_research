@@ -30,11 +30,10 @@ template <typename T, typename E>
 auto Hold(const Group& group, T&& initialValue, const Event<E>& evnt) -> State<E>
 {
     using REACT_IMPL::HoldNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     return CreateWrappedNode<State<E>, HoldNode<E>>(
-        group, std::forward<T>(initialValue), SameGroupOrLink(group, evnt));
+        group, std::forward<T>(initialValue), evnt);
 }
 
 template <typename T, typename E>
@@ -48,11 +47,10 @@ template <typename S>
 auto Monitor(const Group& group, const State<S>& state) -> Event<S>
 {
     using REACT_IMPL::MonitorNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     return CreateWrappedNode<Event<S>, MonitorNode<S>>(
-        group, SameGroupOrLink(group, state));
+        group, state);
 }
 
 template <typename S>
@@ -66,26 +64,24 @@ template <typename S, typename T, typename F, typename E>
 auto Iterate(const Group& group, T&& initialValue, F&& func, const Event<E>& evnt) -> State<S>
 {
     using REACT_IMPL::IterateNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     using FuncType = typename std::decay<F>::type;
 
     return CreateWrappedNode<State<S>, IterateNode<S, FuncType, E>>(
-        group, std::forward<T>(initialValue), std::forward<F>(func), SameGroupOrLink(group, evnt));
+        group, std::forward<T>(initialValue), std::forward<F>(func), evnt);
 }
 
 template <typename S, typename T, typename F, typename E>
 auto IterateByRef(const Group& group, T&& initialValue, F&& func, const Event<E>& evnt) -> State<S>
 {
     using REACT_IMPL::IterateByRefNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     using FuncType = typename std::decay<F>::type;
 
     return CreateWrappedNode<State<S>, IterateByRefNode<S, FuncType, E>>(
-        group, std::forward<T>(initialValue), std::forward<F>(func), SameGroupOrLink(group, evnt));
+        group, std::forward<T>(initialValue), std::forward<F>(func), evnt);
 }
 
 template <typename S, typename T, typename F, typename E>
@@ -103,26 +99,24 @@ template <typename S, typename T, typename F, typename E, typename ... Us>
 auto Iterate(const Group& group, T&& initialValue, F&& func, const Event<E>& evnt, const State<Us>& ... states) -> State<S>
 {
     using REACT_IMPL::SyncedIterateNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     using FuncType = typename std::decay<F>::type;
 
     return CreateWrappedNode<State<S>, SyncedIterateNode<S, FuncType, E, Us ...>>(
-        group, std::forward<T>(initialValue), std::forward<F>(func), SameGroupOrLink(group, evnt), SameGroupOrLink(group, states) ...);
+        group, std::forward<T>(initialValue), std::forward<F>(func), evnt, states ...);
 }
 
 template <typename S, typename T, typename F, typename E, typename ... Us>
 auto IterateByRef(const Group& group, T&& initialValue, F&& func, const Event<E>& evnt, const State<Us>& ... states) -> State<S>
 {
     using REACT_IMPL::SyncedIterateByRefNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     using FuncType = typename std::decay<F>::type;
 
     return CreateWrappedNode<State<S>, SyncedIterateByRefNode<S, FuncType, E, Us ...>>(
-        group, std::forward<T>(initialValue), std::forward<F>(func), SameGroupOrLink(group, evnt), SameGroupOrLink(group, states) ...);
+        group, std::forward<T>(initialValue), std::forward<F>(func), evnt, states ...);
 }
 
 template <typename S, typename T, typename F, typename E, typename ... Us>
@@ -140,11 +134,10 @@ template <typename S, typename E>
 auto Snapshot(const Group& group, const State<S>& state, const Event<E>& evnt) -> State<S>
 {
     using REACT_IMPL::SnapshotNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     return CreateWrappedNode<State<S>, SnapshotNode<S, E>>(
-        group, SameGroupOrLink(group, state), SameGroupOrLink(group, evnt));
+        group, state, evnt);
 }
 
 template <typename S, typename E>
@@ -158,11 +151,10 @@ template <typename S, typename E>
 auto Pulse(const Group& group, const State<S>& state, const Event<E>& evnt) -> Event<S>
 {
     using REACT_IMPL::PulseNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     return CreateWrappedNode<Event<S>, PulseNode<S, E>>(
-        group, SameGroupOrLink(group, state), SameGroupOrLink(group, evnt));
+        group, state, evnt);
 }
 
 template <typename S, typename E>
@@ -177,10 +169,9 @@ template <typename S, template <typename> class TState,
 auto Flatten(const Group& group, const State<TState<S>>& state) -> State<S>
 {
     using REACT_IMPL::FlattenStateNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
-    return CreateWrappedNode<State<S>, FlattenStateNode<S, TState>>(group, SameGroupOrLink(group, state));
+    return CreateWrappedNode<State<S>, FlattenStateNode<S, TState>>(group, state);
 }
 
 template <typename S, template <typename> class TState,
@@ -196,11 +187,10 @@ template <template <typename ...> class TList, template <typename> class TState,
 auto FlattenList(const Group& group, const State<TList<TState<V>, TParams ...>>& list) -> State<TList<V>>
 {
     using REACT_IMPL::FlattenStateListNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     return CreateWrappedNode<State<TList<V>>, FlattenStateListNode<TList, TState, V, TParams ...>>(
-        group, SameGroupOrLink(group, list));
+        group, list);
 }
 
 template <template <typename ...> class TList, template <typename> class TState, typename V, typename ... TParams,
@@ -216,11 +206,10 @@ template <template <typename ...> class TMap, template <typename> class TState, 
 auto FlattenMap(const Group& group, const State<TMap<K, TState<V>, TParams ...>>& map) -> State<TMap<K, V>>
 {
     using REACT_IMPL::FlattenStateMapNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     return CreateWrappedNode<State<TMap<K, V>>, FlattenStateMapNode<TMap, TState, K, V, TParams ...>>(
-        group, SameGroupOrLink(group, map));
+        group, map);
 }
 
 template <template <typename ...> class TMap, template <typename> class TState, typename K, typename V, typename ... TParams,
@@ -276,7 +265,6 @@ template <typename T, typename TFlat = typename T::Flat>
 auto FlattenObject(const Group& group, const State<T>& obj) -> State<TFlat>
 {
     using REACT_IMPL::FlattenObjectNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     return CreateWrappedNode<State<TFlat>, FlattenObjectNode<T, TFlat>>(group, obj);
@@ -290,7 +278,6 @@ template <typename T, typename TFlat = typename T::Flat>
 auto FlattenObject(const Group& group, const State<Ref<T>>& obj) -> State<TFlat>
 {
     using REACT_IMPL::FlattenObjectNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     return CreateWrappedNode<State<TFlat>, FlattenObjectNode<Ref<T>, TFlat>>(group, obj);

@@ -30,8 +30,7 @@ enum class WeightHint
 enum class TransactionFlags
 {
     none            = 0,
-    allow_merging   = 1 << 1,
-    sync_linked     = 1 << 2
+    allow_merging   = 1 << 1
 };
 
 REACT_DEFINE_BITMASK_OPERATORS(TransactionFlags)
@@ -66,9 +65,6 @@ class StateVar;
 
 template <typename S>
 class StateSlot;
-
-template <typename S>
-class StateLink;
 
 template <typename S>
 using StateRef = State<Ref<S>>;

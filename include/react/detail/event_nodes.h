@@ -72,7 +72,7 @@ public:
     EventSourceNode(const Group& group) :
         EventSourceNode::EventNode( group )
     {
-        this->RegisterMe(NodeCategory::input);
+        this->RegisterMe();
     }
 
     ~EventSourceNode()
@@ -147,7 +147,7 @@ public:
     EventSlotNode(const Group& group) :
         EventSlotNode::EventNode( group )
     {
-        inputNodeId_ = this->GetGraphPtr()->RegisterNode(&slotInput_, NodeCategory::dyninput);
+        inputNodeId_ = this->GetGraphPtr()->RegisterNode(&slotInput_);
         this->RegisterMe();
 
         this->AttachToMe(inputNodeId_);
@@ -396,83 +396,6 @@ private:
     }
 
     std::tuple<Slot<Ts>...> slots_;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EventLinkNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename E>
-class EventLinkNode : public EventNode<E>
-{
-public:
-    EventLinkNode(const Group& group, const Event<E>& dep) :
-        EventLinkNode::EventNode( group ),
-        dep_( dep ),
-        srcGroup_( dep.GetGroup() )
-    {
-        this->RegisterMe(NodeCategory::input);
-
-        auto& srcGraphPtr = GetInternals(srcGroup_).GetGraphPtr();
-        outputNodeId_ = srcGraphPtr->RegisterNode(&linkOutput_, NodeCategory::linkoutput);
-        
-        srcGraphPtr->AttachNode(outputNodeId_, GetInternals(dep).GetNodeId());
-    }
-
-    ~EventLinkNode()
-    {
-        auto& srcGraphPtr = GetInternals(srcGroup_).GetGraphPtr();
-        srcGraphPtr->DetachNode(outputNodeId_, GetInternals(dep_).GetNodeId());
-        srcGraphPtr->UnregisterNode(outputNodeId_);
-
-        auto& linkCache = this->GetGraphPtr()->GetLinkCache();
-        linkCache.Erase(this);
-
-        this->UnregisterMe();
-    }
-
-    void SetWeakSelfPtr(const std::weak_ptr<EventLinkNode>& self)
-        { linkOutput_.parent = self; }
-
-    virtual UpdateResult Update() noexcept override
-        { return UpdateResult::changed; }
-
-    void SetEvents(EventValueList<E>&& events)
-        { this->Events() = std::move(events); }
-
-private:
-    struct VirtualOutputNode : public IReactNode
-    {
-        virtual UpdateResult Update() noexcept override
-            { return UpdateResult::changed; }
-
-        virtual void CollectOutput(LinkOutputMap& output) override
-        {
-            if (auto p = parent.lock())
-            {
-                auto* rawPtr = p->GetGraphPtr().get();
-                output[rawPtr].push_back(
-                    [storedParent = std::move(p), storedEvents = GetInternals(p->dep_).Events()] () mutable
-                    {
-                        NodeId nodeId = storedParent->GetNodeId();
-                        auto& graphPtr = storedParent->GetGraphPtr();
-
-                        graphPtr->PushInput(nodeId,
-                            [&storedParent, &storedEvents]
-                            {
-                                storedParent->SetEvents(std::move(storedEvents));
-                            });
-                    });
-            }
-        }
-
-        std::weak_ptr<EventLinkNode> parent;  
-    };
-
-    Event<E>    dep_;
-    Group       srcGroup_;
-    NodeId      outputNodeId_;
-
-    VirtualOutputNode linkOutput_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

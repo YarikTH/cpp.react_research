@@ -54,7 +54,7 @@ public:
         func_( std::forward<FIn>(func) ),
         depHolder_( deps ... )
     {
-        this->RegisterMe(NodeCategory::output);
+        this->RegisterMe();
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(deps).GetNodeId()));
 
         react::impl::apply([this] (const auto& ... deps)
@@ -94,7 +94,7 @@ public:
         func_( std::forward<FIn>(func) ),
         subject_( subject )
     {
-        this->RegisterMe(NodeCategory::output);
+        this->RegisterMe();
         this->AttachToMe(GetInternals(subject).GetNodeId());
     }
 
@@ -130,7 +130,7 @@ public:
         subject_( subject ),
         syncHolder_( syncs ... )
     {
-        this->RegisterMe(NodeCategory::output);
+        this->RegisterMe();
         this->AttachToMe(GetInternals(subject).GetNodeId());
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(syncs).GetNodeId()));
     }

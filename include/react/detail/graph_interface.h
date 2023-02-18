@@ -25,7 +25,6 @@
 /// Definitions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 using NodeId = size_t;
-using LinkId = size_t;
 
 enum class UpdateResult
 {
@@ -34,19 +33,8 @@ enum class UpdateResult
     shifted
 };
 
-enum class NodeCategory
-{
-    normal,
-    input,
-    dyninput,
-    output,
-    linkoutput
-};
-
 class ReactGraph;
 struct IReactNode;
-
-using LinkOutputMap = std::unordered_map<ReactGraph*, std::vector<std::function<void()>>>;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// IReactNode
@@ -58,9 +46,6 @@ struct IReactNode
     virtual UpdateResult Update() noexcept = 0;
     
     virtual void Clear() noexcept
-        { }
-
-    virtual void CollectOutput(LinkOutputMap& output)
         { }
 };
 

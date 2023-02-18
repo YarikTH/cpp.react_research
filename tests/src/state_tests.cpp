@@ -43,22 +43,6 @@ TEST(StateTest, Construction)
 
         EXPECT_TRUE(ref1 == ref2);
     }
-
-    // State link
-    {
-        auto t0 = StateVar<int>::Create(g, 0);
-
-        auto s1 = StateSlot<int>::Create(g, t0);
-
-        auto t1 = StateLink<int>::Create(g, s1);
-        StateLink<int> t2( t1 );
-        StateLink<int> t3( std::move(t1) );
-        
-        StateLink<int> ref1( t2 );
-        State<int>     ref2( t3 );
-
-        EXPECT_TRUE(ref1 == ref2);
-    }
 }
 
 TEST(StateTest, BasicOutput)

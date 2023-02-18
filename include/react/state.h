@@ -12,7 +12,6 @@
 #include "react/detail/defs.h"
 #include "react/api.h"
 #include "react/group.h"
-#include "react/common/ptrcache.h"
 #include "react/detail/state_nodes.h"
 
 #include <memory>
@@ -80,10 +79,9 @@ private:
     static auto CreateFuncNode(const Group& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps) -> decltype(auto)
     {
         using REACT_IMPL::StateFuncNode;
-        using REACT_IMPL::SameGroupOrLink;
 
         return std::make_shared<StateFuncNode<S, typename std::decay<F>::type, T1, Ts ...>>(
-            group, std::forward<F>(func), SameGroupOrLink(group, dep1), SameGroupOrLink(group, deps) ...);
+            group, std::forward<F>(func), dep1, deps...);
     }
 
     template <typename RET, typename NODE, typename ... ARGS>
@@ -216,69 +214,21 @@ private:
     static auto CreateSlotNode(const Group& group, const State<S>& input) -> decltype(auto)
     {
         using REACT_IMPL::StateSlotNode;
-        using REACT_IMPL::SameGroupOrLink;
 
-        return std::make_shared<StateSlotNode<S>>(group, SameGroupOrLink(group, input));
+        return std::make_shared<StateSlotNode<S>>(group, input);
     }
 
     void SetSlotInput(const State<S>& newInput)
     {
         using REACT_IMPL::NodeId;
         using REACT_IMPL::StateSlotNode;
-        using REACT_IMPL::SameGroupOrLink;
 
         auto* castedPtr = static_cast<StateSlotNode<S>*>(this->GetNodePtr().get());
 
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [this, castedPtr, &newInput] { castedPtr->SetInput(SameGroupOrLink(this->GetGroup(), newInput)); });
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// StateLink
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename S>
-class StateLink : public State<S>
-{
-public:
-    // Construct with group
-    static StateLink Create(const Group& group, const State<S>& input)
-        { return StateLink(GetOrCreateLinkNode(group, input)); }
-
-    StateLink() = default;
-
-    StateLink(const StateLink&) = default;
-    StateLink& operator=(const StateLink&) = default;
-
-    StateLink(StateLink&&) = default;
-    StateLink& operator=(StateLink&&) = default;
-
-protected:
-    StateLink(std::shared_ptr<REACT_IMPL::StateNode<S>>&& nodePtr) :
-        StateLink::State( std::move(nodePtr) )
-    { }
-
-private:
-    static auto GetOrCreateLinkNode(const Group& group, const State<S>& input) -> decltype(auto)
-    {
-        using REACT_IMPL::StateLinkNode;
-        using REACT_IMPL::IReactNode;
-        using REACT_IMPL::ReactGraph;
-        
-        IReactNode* k = GetInternals(input).GetNodePtr().get();
-
-        ReactGraph::LinkCache& linkCache = GetInternals(group).GetGraphPtr()->GetLinkCache();
-
-        std::shared_ptr<IReactNode> nodePtr = linkCache.LookupOrCreate(k, [&]
-            {
-                auto nodePtr = std::make_shared<StateLinkNode<S>>(group, input);
-                nodePtr->SetWeakSelfPtr(std::weak_ptr<StateLinkNode<S>>{ nodePtr });
-                return std::static_pointer_cast<IReactNode>(nodePtr);
-            });
-
-        return std::static_pointer_cast<StateLinkNode<S>>(nodePtr);
+        graphPtr->PushInput(nodeId, [this, castedPtr, &newInput] { castedPtr->SetInput(newInput); });
     }
 };
 

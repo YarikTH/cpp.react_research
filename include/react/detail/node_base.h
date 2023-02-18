@@ -80,8 +80,8 @@ protected:
     auto GetGraphPtr() -> std::shared_ptr<ReactGraph>&
         { return GetInternals(group_).GetGraphPtr(); }
 
-    void RegisterMe(NodeCategory category = NodeCategory::normal)
-        { nodeId_ = GetGraphPtr()->RegisterNode(this, category); }
+    void RegisterMe()
+        { nodeId_ = GetGraphPtr()->RegisterNode(this); }
     
     void UnregisterMe()
         { GetGraphPtr()->UnregisterNode(nodeId_); }

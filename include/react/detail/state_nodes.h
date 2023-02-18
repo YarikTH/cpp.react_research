@@ -11,6 +11,7 @@
 
 #include "react/detail/defs.h"
 
+#include <cassert>
 #include <memory>
 #include <queue>
 #include <utility>
@@ -65,7 +66,7 @@ public:
         StateVarNode::StateNode( group ),
         newValue_( )
     {
-        this->RegisterMe(NodeCategory::input);
+        this->RegisterMe();
     }
 
     template <typename T>
@@ -202,7 +203,7 @@ public:
         StateSlotNode::StateNode( group, GetInternals(dep).Value() ),
         input_( dep )
     {
-        inputNodeId_ = this->GetGraphPtr()->RegisterNode(&slotInput_, NodeCategory::dyninput);
+        inputNodeId_ = this->GetGraphPtr()->RegisterNode(&slotInput_);
         
         this->RegisterMe();
         this->AttachToMe(inputNodeId_);
@@ -256,81 +257,6 @@ private:
     NodeId              inputNodeId_;
     VirtualInputNode    slotInput_;
     
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// StateLinkNode
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename S>
-class StateLinkNode : public StateNode<S>
-{
-public:
-    StateLinkNode(const Group& group, const State<S>& dep) :
-        StateLinkNode::StateNode( group, GetInternals(dep).Value() ),
-        dep_ ( dep ),
-        srcGroup_( dep.GetGroup() )
-    {
-        this->RegisterMe(NodeCategory::input);
-
-        auto& srcGraphPtr = GetInternals(srcGroup_).GetGraphPtr();
-        outputNodeId_ = srcGraphPtr->RegisterNode(&linkOutput_, NodeCategory::linkoutput);
-        
-        srcGraphPtr->AttachNode(outputNodeId_, GetInternals(dep).GetNodeId());
-    }
-
-    ~StateLinkNode()
-    {
-        auto& srcGraphPtr = GetInternals(srcGroup_).GetGraphPtr();
-        srcGraphPtr->DetachNode(outputNodeId_, GetInternals(dep_).GetNodeId());
-        srcGraphPtr->UnregisterNode(outputNodeId_);
-
-        auto& linkCache = this->GetGraphPtr()->GetLinkCache();
-        linkCache.Erase(this);
-
-        this->UnregisterMe();
-    }
-
-    void SetWeakSelfPtr(const std::weak_ptr<StateLinkNode>& self)
-        { linkOutput_.parent = self; }
-
-    virtual UpdateResult Update() noexcept override
-        { return UpdateResult::changed; }
-
-    void SetValue(S&& newValue)
-        { this->Value() = std::move(newValue); }
-
-private:
-    struct VirtualOutputNode : public IReactNode
-    {
-        virtual UpdateResult Update() noexcept override
-            { return UpdateResult::changed; }
-
-        virtual void CollectOutput(LinkOutputMap& output) override
-        {
-            if (auto p = parent.lock())
-            {
-                auto* rawPtr = p->GetGraphPtr().get();
-                output[rawPtr].push_back([storedParent = std::move(p), storedValue = GetInternals(p->dep_).Value()] () mutable -> void
-                    {
-                        NodeId nodeId = storedParent->GetNodeId();
-                        auto& graphPtr = storedParent->GetGraphPtr();
-
-                        graphPtr->PushInput(nodeId, [&storedParent, &storedValue]
-                            {
-                                storedParent->SetValue(std::move(storedValue));
-                            });
-                    });
-            }
-        }
-
-        std::weak_ptr<StateLinkNode> parent;
-    };
-
-    State<S>    dep_;
-    Group       srcGroup_;
-    NodeId      outputNodeId_;
-
-    VirtualOutputNode linkOutput_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -401,18 +327,6 @@ public:
 private:
     State<S> input_;
 };
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/// SameGroupOrLink
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename S>
-static State<S> SameGroupOrLink(const Group& targetGroup, const State<S>& dep)
-{
-    if (dep.GetGroup() == targetGroup)
-        return dep;
-    else
-        return StateLink<S>::Create(targetGroup, dep);
-}
 
 /****************************************/ REACT_IMPL_END /***************************************/
 

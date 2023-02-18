@@ -76,7 +76,7 @@ private:
     {
         using REACT_IMPL::StateObserverNode;
         return std::make_shared<StateObserverNode<typename std::decay<F>::type, T1, Ts ...>>(
-            group, std::forward<F>(func), SameGroupOrLink(group, dep1), SameGroupOrLink(group, deps) ...);
+            group, std::forward<F>(func), dep1, deps...);
     }
 
     template <typename F, typename T>
@@ -84,7 +84,7 @@ private:
     {
         using REACT_IMPL::EventObserverNode;
         return std::make_shared<EventObserverNode<typename std::decay<F>::type, T>>(
-            group, std::forward<F>(func), SameGroupOrLink(group, dep));
+            group, std::forward<F>(func), dep);
     }
 
     template <typename F, typename T, typename ... Us>
@@ -92,7 +92,7 @@ private:
     {
         using REACT_IMPL::SyncedEventObserverNode;
         return std::make_shared<SyncedEventObserverNode<typename std::decay<F>::type, T, Us ...>>(
-            group, std::forward<F>(func), SameGroupOrLink(group, dep), SameGroupOrLink(group, syncs) ...);
+            group, std::forward<F>(func), dep, syncs...);
     }
 
 private:

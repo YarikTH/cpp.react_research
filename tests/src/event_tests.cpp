@@ -46,20 +46,6 @@ TEST(EventTest, Construction)
 
         EXPECT_TRUE(ref1 == ref2);
     }
-
-    // Event link
-    {
-        auto s1 = EventSlot<int>::Create(g);
-
-        auto t1 = EventLink<int>::Create(g, s1);
-        EventLink<int> t2( t1 );
-        EventLink<int> t3( std::move(t1) );
-        
-        EventLink<int> ref1( t2 );
-        Event<int>     ref2( t3 );
-
-        EXPECT_TRUE(ref1 == ref2);
-    }
 }
 
 TEST(EventTest, BasicOutput)

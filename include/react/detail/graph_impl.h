@@ -22,7 +22,6 @@
 #include <tbb/concurrent_queue.h>
 #include <tbb/task.h>
 
-#include "react/common/ptrcache.h"
 #include "react/common/slotmap.h"
 #include "react/common/syncpoint.h"
 #include "react/detail/graph_interface.h"
@@ -86,9 +85,7 @@ private:
 class ReactGraph
 {
 public:
-    using LinkCache = WeakPtrCache<void*, IReactNode>;
-
-    NodeId RegisterNode(IReactNode* nodePtr, NodeCategory category);
+    NodeId RegisterNode(IReactNode* nodePtr);
     void UnregisterNode(NodeId nodeId);
 
     void AttachNode(NodeId node, NodeId parentId);
@@ -97,18 +94,13 @@ public:
     template <typename F>
     void PushInput(NodeId nodeId, F&& inputCallback);
 
-    void AddSyncPointDependency(SyncPoint::Dependency dep, bool syncLinked);
-
-    void AllowLinkedTransactionMerging(bool allowMerging);
+    void AddSyncPointDependency(SyncPoint::Dependency dep);
 
     template <typename F>
     void DoTransaction(F&& transactionCallback);
 
     template <typename F>
     void EnqueueTransaction(F&& func, SyncPoint::Dependency dep, TransactionFlags flags);
-    
-    LinkCache& GetLinkCache()
-        { return linkCache_; }
 
 private:
     struct NodeData
@@ -118,12 +110,9 @@ private:
         NodeData(const NodeData&) = default;
         NodeData& operator=(const NodeData&) = default;
 
-        NodeData(IReactNode* nodePtrIn, NodeCategory categoryIn) :
-            category(categoryIn),
+        explicit NodeData(IReactNode* nodePtrIn) :
             nodePtr( nodePtrIn )
         { }
-
-        NodeCategory category = NodeCategory::normal;
 
         int     level       = 0;
         int     newLevel    = 0 ;
@@ -158,7 +147,6 @@ private:
     };
 
     void Propagate();
-    void UpdateLinkNodes();
 
     void ScheduleSuccessors(NodeData & node);
     void RecalculateSuccessorLevels(NodeData & node);
@@ -173,15 +161,9 @@ private:
     std::vector<NodeId>         changedInputs_;
     std::vector<IReactNode*>    changedNodes_;
 
-    LinkOutputMap scheduledLinkOutputs_;
-
     std::vector<SyncPoint::Dependency> localDependencies_;
-    std::vector<SyncPoint::Dependency> linkDependencies_;
-
-    LinkCache linkCache_;
 
     int  transactionLevel_ = 0;
-    bool allowLinkedTransactionMerging_ = false;
 };
 
 template <typename F>

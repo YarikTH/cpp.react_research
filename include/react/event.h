@@ -11,6 +11,7 @@
 
 #include "react/detail/defs.h"
 
+#include <cassert>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -20,8 +21,6 @@
 
 #include "react/detail/state_nodes.h"
 #include "react/detail/event_nodes.h"
-
-#include "react/common/ptrcache.h"
 
 /*****************************************/ REACT_BEGIN /*****************************************/
 
@@ -87,20 +86,18 @@ protected:
     static auto CreateProcessingNode(const Group& group, F&& func, const Event<T>& dep) -> decltype(auto)
     {
         using REACT_IMPL::EventProcessingNode;
-        using REACT_IMPL::SameGroupOrLink;
 
         return std::make_shared<EventProcessingNode<E, T, typename std::decay<F>::type>>(
-            group, std::forward<F>(func), SameGroupOrLink(group, dep));
+            group, std::forward<F>(func), dep);
     }
 
     template <typename F, typename T, typename ... Us>
     static auto CreateSyncedProcessingNode(const Group& group, F&& func, const Event<T>& dep, const State<Us>& ... syncs) -> decltype(auto)
     {
         using REACT_IMPL::SyncedEventProcessingNode;
-        using REACT_IMPL::SameGroupOrLink;
 
         return std::make_shared<SyncedEventProcessingNode<E, T, typename std::decay<F>::type, Us ...>>(
-            group, std::forward<F>(func), SameGroupOrLink(group, dep), SameGroupOrLink(group, syncs) ...);
+            group, std::forward<F>(func), dep, syncs ...);
     }
 
     template <typename RET, typename NODE, typename ... ARGS>
@@ -220,7 +217,7 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->AddSlotInput(SameGroupOrLink(this->GetGroup(), input)); });
+        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->AddSlotInput(input); });
     }
 
     void RemoveSlotInput(const Event<E>& input)
@@ -233,7 +230,7 @@ private:
         NodeId nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
-        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->RemoveSlotInput(SameGroupOrLink(this->GetGroup(), input)); });
+        graphPtr->PushInput(nodeId, [this, castedPtr, &input] { castedPtr->RemoveSlotInput(input); });
     }
 
     void RemoveAllSlotInputs()
@@ -251,63 +248,16 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// EventLink
-///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename E>
-class EventLink : public Event<E>
-{
-public:
-    // Construct with group
-    static EventLink Create(const Group& group, const Event<E>& input)
-        { return EventLink(GetOrCreateLinkNode(group, input)); }
-
-    EventLink() = default;
-
-    EventLink(const EventLink&) = default;
-    EventLink& operator=(const EventLink&) = default;
-
-    EventLink(EventLink&&) = default;
-    EventLink& operator=(EventLink&&) = default;
-
-protected:
-    EventLink(std::shared_ptr<REACT_IMPL::EventNode<E>>&& nodePtr) :
-        EventLink::Event( std::move(nodePtr) )
-    { }
-
-private:
-    static auto GetOrCreateLinkNode(const Group& group, const Event<E>& input) -> decltype(auto)
-    {
-        using REACT_IMPL::EventLinkNode;
-        using REACT_IMPL::IReactNode;
-        using REACT_IMPL::ReactGraph;
-        
-        IReactNode* k = GetInternals(input).GetNodePtr().get();
-
-        ReactGraph::LinkCache& linkCache = GetInternals(group).GetGraphPtr()->GetLinkCache();
-
-        std::shared_ptr<IReactNode> nodePtr = linkCache.LookupOrCreate(k, [&]
-            {
-                auto nodePtr = std::make_shared<EventLinkNode<E>>(group, input);
-                nodePtr->SetWeakSelfPtr(std::weak_ptr<EventLinkNode<E>>{ nodePtr });
-                return std::static_pointer_cast<IReactNode>(nodePtr);
-            });
-
-        return std::static_pointer_cast<EventLinkNode<E>>(nodePtr);
-    }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Merge
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E, typename ... Us>
 static auto Merge(const Group& group, const Event<E>& dep1, const Event<Us>& ... deps) -> Event<E>
 {
     using REACT_IMPL::EventMergeNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     return CreateWrappedNode<Event<E>, EventMergeNode<E, E, Us ...>>(
-        group, SameGroupOrLink(group, dep1), SameGroupOrLink(group, deps) ...);
+        group, dep1, deps ...);
 }
 
 template <typename T = void, typename U1, typename ... Us>
@@ -386,13 +336,12 @@ template <typename U1, typename ... Us>
 static auto Join(const Group& group, const Event<U1>& dep1, const Event<Us>& ... deps) -> Event<std::tuple<U1, Us ...>>
 {
     using REACT_IMPL::EventJoinNode;
-    using REACT_IMPL::SameGroupOrLink;
     using REACT_IMPL::CreateWrappedNode;
 
     static_assert(sizeof...(Us) > 0, "Join requires at least 2 inputs.");
 
     return CreateWrappedNode<Event<std::tuple<U1, Us ...>>, EventJoinNode<U1, Us ...>>(
-        group, SameGroupOrLink(group, dep1), SameGroupOrLink(group, deps) ...);
+        group, dep1, deps ...);
 }
 
 template <typename U1, typename ... Us>
@@ -400,18 +349,5 @@ static auto Join(const Event<U1>& dep1, const Event<Us>& ... deps) -> Event<std:
     { return Join(dep1.GetGroup(), dep1, deps ...); }
 
 /******************************************/ REACT_END /******************************************/
-
-/***************************************/ REACT_IMPL_BEGIN /**************************************/
-
-template <typename E>
-static Event<E> SameGroupOrLink(const Group& targetGroup, const Event<E>& dep)
-{
-    if (dep.GetGroup() == targetGroup)
-        return dep;
-    else
-        return EventLink<E>::Create(targetGroup, dep);
-}
-
-/****************************************/ REACT_IMPL_END /***************************************/
 
 #endif // REACT_EVENT_H_INCLUDED

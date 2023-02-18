@@ -25,11 +25,9 @@
 /// Definitions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 using NodeId = size_t;
-using TurnId = size_t;
 using LinkId = size_t;
 
 static NodeId invalid_node_id = (std::numeric_limits<size_t>::max)();
-static TurnId invalid_turn_id = (std::numeric_limits<size_t>::max)();
 static LinkId invalid_link_id = (std::numeric_limits<size_t>::max)();
 
 enum class UpdateResult
@@ -60,7 +58,7 @@ struct IReactNode
 {
     virtual ~IReactNode() = default;
 
-    virtual UpdateResult Update(TurnId turnId) noexcept = 0;
+    virtual UpdateResult Update() noexcept = 0;
     
     virtual void Clear() noexcept
         { }

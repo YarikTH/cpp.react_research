@@ -80,7 +80,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         if (! this->Events().empty())
             return UpdateResult::changed;
@@ -115,7 +115,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         react::impl::apply([this] (auto& ... inputs)
             { REACT_EXPAND_PACK(MergeFromInput(inputs)); }, inputs_);
@@ -162,7 +162,7 @@ public:
         this->GetGraphPtr()->UnregisterNode(inputNodeId_);
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         for (auto& e : inputs_)
         {
@@ -210,7 +210,7 @@ public:
 private:        
     struct VirtualInputNode : public IReactNode
     {
-        virtual UpdateResult Update(TurnId turnId) noexcept override
+        virtual UpdateResult Update() noexcept override
             { return UpdateResult::changed; }
     };
 
@@ -243,7 +243,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         func_(GetInternals(dep_).Events(), std::back_inserter(this->Events()));
 
@@ -286,7 +286,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         // Updates might be triggered even if only sync nodes changed. Ignore those.
         if (GetInternals(dep_).Events().empty())
@@ -334,11 +334,11 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         // Move events into buffers.
-        react::impl::apply([this, turnId] (Slot<Ts>& ... slots)
-            { REACT_EXPAND_PACK(FetchBuffer(turnId, slots)); }, slots_);
+        react::impl::apply([this] (Slot<Ts>& ... slots)
+            { REACT_EXPAND_PACK(FetchBuffer(slots)); }, slots_);
 
         while (true)
         {
@@ -383,7 +383,7 @@ private:
     };
 
     template <typename U>
-    static void FetchBuffer(TurnId turnId, Slot<U>& slot)
+    static void FetchBuffer(Slot<U>& slot)
     {
         slot.buffer.insert(slot.buffer.end(), GetInternals(slot.source).Events().begin(), GetInternals(slot.source).Events().end());
     }
@@ -433,7 +433,7 @@ public:
     void SetWeakSelfPtr(const std::weak_ptr<EventLinkNode>& self)
         { linkOutput_.parent = self; }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
         { return UpdateResult::changed; }
 
     void SetEvents(EventValueList<E>&& events)
@@ -442,7 +442,7 @@ public:
 private:
     struct VirtualOutputNode : public IReactNode
     {
-        virtual UpdateResult Update(TurnId turnId) noexcept override
+        virtual UpdateResult Update() noexcept override
             { return UpdateResult::changed; }
 
         virtual void CollectOutput(LinkOutputMap& output) override

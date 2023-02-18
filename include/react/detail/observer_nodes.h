@@ -68,7 +68,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         react::impl::apply([this] (const auto& ... deps)
             { this->func_(GetInternals(deps).Value() ...); }, depHolder_);
@@ -104,7 +104,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         func_(GetInternals(subject_).Events());
         return UpdateResult::unchanged;
@@ -143,7 +143,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         // Updates might be triggered even if only sync nodes changed. Ignore those.
         if (GetInternals(this->subject_).Events().empty())

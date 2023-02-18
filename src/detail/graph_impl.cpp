@@ -72,7 +72,7 @@ void ReactGraph::Propagate()
         auto& node = nodeData_[nodeId];
         auto* nodePtr = node.nodePtr;
 
-        UpdateResult res = nodePtr->Update(0u);
+        UpdateResult res = nodePtr->Update();
 
         if (res == UpdateResult::changed)
         {
@@ -107,7 +107,7 @@ void ReactGraph::Propagate()
                 continue;
             }
 
-            UpdateResult res = nodePtr->Update(0u);
+            UpdateResult res = nodePtr->Update();
 
             // Topology changed?
             if (res == UpdateResult::shifted)

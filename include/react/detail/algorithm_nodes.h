@@ -43,7 +43,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         S newValue = func_(GetInternals(evnt_).Events(), this->Value());
 
@@ -86,7 +86,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         func_(GetInternals(evnt_).Events(), this->Value());
 
@@ -126,7 +126,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         // Updates might be triggered even if only sync nodes changed. Ignore those.
         if (GetInternals(evnt_).Events().empty())
@@ -181,7 +181,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         // Updates might be triggered even if only sync nodes changed. Ignore those.
         if (GetInternals(evnt_).Events().empty())
@@ -226,7 +226,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         bool changed = false;
 
@@ -275,7 +275,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         bool changed = false;
         
@@ -322,7 +322,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         this->Events().push_back(GetInternals(input_).Value());
         return UpdateResult::changed;
@@ -356,7 +356,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         for (size_t i = 0; i < GetInternals(trigger_).Events().size(); ++i)
             this->Events().push_back(GetInternals(input_).Value());
@@ -396,7 +396,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         const State<S>& newInner = GetInternals(outer_).Value();
 
@@ -456,7 +456,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         const InputListType& newInner = GetInternals(outer_).Value();
 
@@ -529,7 +529,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         const InputMapType& newInner = GetInternals(outer_).Value();
 
@@ -602,7 +602,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         const T& newValue = GetInternals(obj_).Value();
 

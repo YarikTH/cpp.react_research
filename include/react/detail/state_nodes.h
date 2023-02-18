@@ -81,7 +81,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         if (isInputAdded_)
         {
@@ -170,7 +170,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         S newValue = react::impl::apply([this] (const auto& ... deps)
             { return this->func_(GetInternals(deps).Value() ...); }, depHolder_);
@@ -218,7 +218,7 @@ public:
         this->GetGraphPtr()->UnregisterNode(inputNodeId_);
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         if (! (this->Value() == GetInternals(input_).Value()))
         {
@@ -248,7 +248,7 @@ public:
 private:        
     struct VirtualInputNode : public IReactNode
     {
-        virtual UpdateResult Update(TurnId turnId) noexcept override
+        virtual UpdateResult Update() noexcept override
             { return UpdateResult::changed; }
     };
 
@@ -293,7 +293,7 @@ public:
     void SetWeakSelfPtr(const std::weak_ptr<StateLinkNode>& self)
         { linkOutput_.parent = self; }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
         { return UpdateResult::changed; }
 
     void SetValue(S&& newValue)
@@ -302,7 +302,7 @@ public:
 private:
     struct VirtualOutputNode : public IReactNode
     {
-        virtual UpdateResult Update(TurnId turnId) noexcept override
+        virtual UpdateResult Update() noexcept override
             { return UpdateResult::changed; }
 
         virtual void CollectOutput(LinkOutputMap& output) override
@@ -392,7 +392,7 @@ public:
         this->UnregisterMe();
     }
 
-    virtual UpdateResult Update(TurnId turnId) noexcept override
+    virtual UpdateResult Update() noexcept override
     {
         this->Value() = std::cref(GetInternals(input_).Value());
         return UpdateResult::changed;

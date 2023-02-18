@@ -236,7 +236,6 @@ size_t TransactionQueue::ProcessNextBatch()
     bool syncLinked = false;
 
     bool skipPop = false;
-    bool isDone = false;
 
     // Outer loop. One transaction per iteration.
     for (;;)

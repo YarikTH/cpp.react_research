@@ -27,9 +27,6 @@
 using NodeId = size_t;
 using LinkId = size_t;
 
-static NodeId invalid_node_id = (std::numeric_limits<size_t>::max)();
-static LinkId invalid_link_id = (std::numeric_limits<size_t>::max)();
-
 enum class UpdateResult
 {
     unchanged,

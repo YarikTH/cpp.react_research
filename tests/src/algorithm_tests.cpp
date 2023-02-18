@@ -277,9 +277,7 @@ struct Incrementer
 {
     T operator()(const EventValueList<Token>& events, T v) const
     { 
-        for (auto e : events)
-            ++v;
-        return v;
+        return v + events.size();
     }
 };
 
@@ -288,9 +286,7 @@ struct Decrementer
 {
     T operator()(const EventValueList<Token>& events, T v) const
     { 
-        for (auto e : events)
-            --v;
-        return v;
+        return v - events.size();
     }
 };
 

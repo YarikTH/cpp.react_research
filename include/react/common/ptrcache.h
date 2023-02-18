@@ -45,7 +45,7 @@ public:
         }
 
         std::shared_ptr<V> v = createFunc();
-        auto res = map_.emplace(key, v);
+        map_.emplace(key, v);
         return v;
     }
 

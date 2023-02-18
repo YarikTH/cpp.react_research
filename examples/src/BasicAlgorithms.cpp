@@ -105,9 +105,7 @@ namespace example3
 
         State<int> count = Iterate<int>(0, [] (const auto& events, int count)
             {
-                for (auto e : events)
-                    ++count;
-                return count;
+                return count + events.size();
             }, increment);
     };
 
@@ -146,9 +144,7 @@ namespace example4
 
         State<int> count = Iterate<int>(0, [] (const auto& events, int count)
             {
-                for (auto e : events)
-                    ++count;
-                return count;
+                return count + events.size();
             }, input);
 
         State<float> sum = Iterate<float>(0.0f, [] (const auto& events, float sum)

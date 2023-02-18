@@ -119,8 +119,8 @@ private:
         NodeData& operator=(const NodeData&) = default;
 
         NodeData(IReactNode* nodePtrIn, NodeCategory categoryIn) :
-            nodePtr( nodePtrIn ),
-            category(categoryIn)
+            category(categoryIn),
+            nodePtr( nodePtrIn )
         { }
 
         NodeCategory category = NodeCategory::normal;
@@ -187,9 +187,6 @@ private:
 template <typename F>
 void ReactGraph::PushInput(NodeId nodeId, F&& inputCallback)
 {
-    auto& node = nodeData_[nodeId];
-    auto* nodePtr = node.nodePtr;
-
     // This writes to the input buffer of the respective node.
     std::forward<F>(inputCallback)();
     

@@ -8,8 +8,8 @@
 #include <string>
 #include <utility>
 
-#include "react/Event.h"
-#include "react/Observer.h"
+#include "react/event.h"
+#include "react/observer.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Example 1 - Hello world

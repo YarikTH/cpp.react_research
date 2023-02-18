@@ -15,50 +15,50 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Example 1 - Reactive class members
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-namespace example1
-{
-    using namespace std;
-    using namespace react;
-
-    Group g;
-
-    class Shape
-    {
-    public:
-        StateVar<int> width     = StateVar<int>::Create(g, 0);
-        StateVar<int> height    = StateVar<int>::Create(g, 0);
-
-        State<int> size         = State<int>::Create(g, CalcSize, width, height);
-
-        auto GetReactiveMembers() const -> decltype(auto)
-            { return std::tie(width, height, size); }
-
-    private:
-        static int CalcSize(int w, int h)
-            { return w * h; }
-    };
-
-    void Run()
-    {
-        cout << "Example 1 - Reactive class members" << endl;
-
-        auto myShape = ObjectState<Shape>::Create(g, Shape());
-
-        auto obs = Observer::Create([] (const auto& ctx)
-            {
-                const Shape& shape = ctx.GetObject();
-                cout << "Size is " << ctx.Get(shape.size) << endl;
-            }, myShape);
-
-        g.DoTransaction([&]
-            {
-                myShape->width.Set(4);
-                myShape->height.Set(4);
-            }); // output: Size changed to 16
-
-        cout << endl;
-    }
-}
+//namespace example1
+//{
+//    using namespace std;
+//    using namespace react;
+//
+//    Group g;
+//
+//    class Shape
+//    {
+//    public:
+//        StateVar<int> width     = StateVar<int>::Create(g, 0);
+//        StateVar<int> height    = StateVar<int>::Create(g, 0);
+//
+//        State<int> size         = State<int>::Create(g, CalcSize, width, height);
+//
+//        auto GetReactiveMembers() const -> decltype(auto)
+//            { return std::tie(width, height, size); }
+//
+//    private:
+//        static int CalcSize(int w, int h)
+//            { return w * h; }
+//    };
+//
+//    void Run()
+//    {
+//        cout << "Example 1 - Reactive class members" << endl;
+//
+//        auto myShape = ObjectState<Shape>::Create(g, Shape());
+//
+//        auto obs = Observer::Create([] (const auto& ctx)
+//            {
+//                const Shape& shape = ctx.GetObject();
+//                cout << "Size is " << ctx.Get(shape.size) << endl;
+//            }, myShape);
+//
+//        g.DoTransaction([&]
+//            {
+//                myShape->width.Set(4);
+//                myShape->height.Set(4);
+//            }); // output: Size changed to 16
+//
+//        cout << endl;
+//    }
+//}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Example 2 - Slots
@@ -123,7 +123,7 @@ namespace example2
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main()
 {
-    example1::Run();
+    //example1::Run();
     example2::Run();
 
     return 0;

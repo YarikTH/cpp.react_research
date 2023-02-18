@@ -137,7 +137,7 @@ public:
 
     ~SyncedEventObserverNode()
     {
-        apply([this] (const auto& ... syncs)
+        impl::apply([this] (const auto& ... syncs)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(syncs).GetNodeId())); }, syncHolder_);
         this->DetachFromMe(GetInternals(subject_).GetNodeId());
         this->UnregisterMe();
@@ -149,7 +149,7 @@ public:
         if (GetInternals(this->subject_).Events().empty())
             return UpdateResult::unchanged;
 
-        apply([this] (const auto& ... syncs)
+        impl::apply([this] (const auto& ... syncs)
             { func_(GetInternals(this->subject_).Events(), GetInternals(syncs).Value() ...); }, syncHolder_);
 
         return UpdateResult::unchanged;

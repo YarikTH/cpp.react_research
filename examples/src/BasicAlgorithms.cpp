@@ -489,6 +489,11 @@ public:
 private:
 };
 
+bool operator==(const Employee&, const Employee&)
+{
+    return false;
+}
+
 struct Employee::Flat : public Flattened<Employee>
 {
     using Flattened::Flattened;

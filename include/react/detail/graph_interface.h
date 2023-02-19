@@ -45,7 +45,7 @@ struct IReactNode
 
     virtual UpdateResult Update() noexcept = 0;
     
-    virtual void Clear() noexcept
+    virtual void finalize() noexcept
         { }
 };
 

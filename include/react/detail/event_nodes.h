@@ -55,7 +55,7 @@ public:
     const EventValueList<E>& Events() const
         { return events_; }
 
-    virtual void Clear() noexcept override
+    virtual void finalize() noexcept override
         { events_.clear(); }
 
 private:

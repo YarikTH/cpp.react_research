@@ -23,8 +23,7 @@
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 
-NodeId
-    react_graph::register_node(IReactNode* nodePtr)
+NodeId react_graph::register_node(IReactNode* nodePtr)
 {
     return m_node_data.Insert( node_data{ nodePtr });
 }
@@ -60,7 +59,7 @@ void react_graph::add_sync_point_dependency(SyncPoint::Dependency dep)
 
 void react_graph::propagate()
 {
-    std::vector<IReactNode*> changedNodes;
+    std::vector<IReactNode*> changed_nodes;
 
     // Fill update queue with successors of changed inputs.
     for (NodeId nodeId : m_changed_inputs )
@@ -72,7 +71,7 @@ void react_graph::propagate()
 
         if (res == UpdateResult::changed)
         {
-            changedNodes.push_back(nodePtr);
+            changed_nodes.push_back(nodePtr);
             schedule_successors( node );
         }
     }
@@ -109,7 +108,7 @@ void react_graph::propagate()
             
             if (res == UpdateResult::changed)
             {
-                changedNodes.push_back(nodePtr);
+                changed_nodes.push_back(nodePtr);
                 schedule_successors( node );
             }
 
@@ -118,9 +117,9 @@ void react_graph::propagate()
     }
 
     // Cleanup buffers in changed nodes.
-    for (IReactNode* nodePtr : changedNodes)
-        nodePtr->Clear();
-    changedNodes.clear();
+    for (IReactNode* nodePtr : changed_nodes )
+        nodePtr->finalize();
+    changed_nodes.clear();
 
     // Clean link state.
     m_local_dependencies.clear();

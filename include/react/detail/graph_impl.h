@@ -85,13 +85,13 @@ private:
 class react_graph
 {
 public:
-    NodeId register_node(IReactNode* nodePtr);
-    void unregister_node(NodeId nodeId);
+    node_id register_node(IReactNode* nodePtr);
+    void unregister_node(node_id nodeId);
 
-    void attach_node(NodeId nodeId, NodeId parentId);
-    void detach_node(NodeId nodeId, NodeId parentId);
+    void attach_node(node_id nodeId, node_id parentId);
+    void detach_node(node_id nodeId, node_id parentId);
 
-    void push_input(NodeId nodeId);
+    void push_input(node_id nodeId);
 
     void add_sync_point_dependency(SyncPoint::Dependency dep);
 
@@ -118,25 +118,25 @@ private:
 
         IReactNode* node_ptr = nullptr;
 
-        std::vector<NodeId> successors;
+        std::vector<node_id> successors;
     };
 
     class topological_queue
     {
     public:
-        void push(NodeId nodeId, int level)
+        void push(node_id nodeId, int level)
             { m_queue_data.emplace_back(nodeId, level); }
 
         bool fetch_next();
 
-        [[nodiscard]] const std::vector<NodeId>& next_values() const
+        [[nodiscard]] const std::vector<node_id>& next_values() const
             { return m_next_data; }
 
     private:
-        using Entry = std::pair<NodeId /*nodeId*/, int /*level*/>;
+        using Entry = std::pair<node_id /*nodeId*/, int /*level*/>;
 
         std::vector<Entry> m_queue_data;
-        std::vector<NodeId> m_next_data;
+        std::vector<node_id> m_next_data;
     };
 
     void propagate();
@@ -151,14 +151,14 @@ private:
 
     topological_queue m_scheduled_nodes;
 
-    std::vector<NodeId> m_changed_inputs;
+    std::vector<node_id> m_changed_inputs;
 
     std::vector<SyncPoint::Dependency> m_local_dependencies;
 
     int m_transaction_level = 0;
 };
 
-inline void react_graph::push_input(NodeId nodeId)
+inline void react_graph::push_input(node_id nodeId)
 {
     m_changed_inputs.push_back(nodeId);
 

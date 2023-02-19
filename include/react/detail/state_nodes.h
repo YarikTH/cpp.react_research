@@ -243,7 +243,7 @@ public:
         input_ = newInput;
     }
 
-    NodeId GetInputNodeId() const
+    node_id GetInputNodeId() const
         { return inputNodeId_; }
 
 private:        
@@ -254,7 +254,7 @@ private:
     };
 
     State<S>            input_;
-    NodeId              inputNodeId_;
+    node_id              inputNodeId_;
     VirtualInputNode    slotInput_;
     
 };
@@ -284,7 +284,7 @@ public:
     auto GetNodePtr() const -> const std::shared_ptr<StateNode<S>>&
         { return nodePtr_; }
 
-    NodeId GetNodeId() const
+    node_id GetNodeId() const
         { return nodePtr_->GetNodeId(); }
 
     S& Value()

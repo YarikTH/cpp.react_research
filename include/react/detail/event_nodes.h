@@ -204,7 +204,7 @@ public:
         inputs_.clear();
     }
 
-    NodeId GetInputNodeId() const
+    node_id GetInputNodeId() const
         { return inputNodeId_; }
 
 private:        
@@ -216,7 +216,7 @@ private:
 
     std::vector<Event<E>> inputs_;
 
-    NodeId              inputNodeId_;
+    node_id              inputNodeId_;
     VirtualInputNode    slotInput_;
 };
 
@@ -423,7 +423,7 @@ public:
     auto GetNodePtr() const -> const std::shared_ptr<EventNode<E>>&
         { return nodePtr_; }
 
-    NodeId GetNodeId() const
+    node_id GetNodeId() const
         { return nodePtr_->GetNodeId(); }
 
     EventValueList<E>& Events()

@@ -235,7 +235,7 @@ public:
         initMode_( true )
     { }
 
-    Flattened(const C& base, REACT_IMPL::FlattenedInitTag, std::vector<REACT_IMPL::NodeId>&& emptyMemberIds) :
+    Flattened(const C& base, REACT_IMPL::FlattenedInitTag, std::vector<REACT_IMPL::node_id>&& emptyMemberIds) :
         C( base ),
         initMode_( true ),
         memberIds_( std::move(emptyMemberIds) ) // This will be empty, but has pre-allocated storage. It's a tweak.
@@ -252,7 +252,7 @@ public:
 
 private:
     bool initMode_ = false;
-    std::vector<REACT_IMPL::NodeId> memberIds_;
+    std::vector<REACT_IMPL::node_id> memberIds_;
 
     template <typename T, typename TFlat>
     friend class impl::FlattenObjectNode;

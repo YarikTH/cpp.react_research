@@ -153,12 +153,12 @@ private:
     template <typename T>
     void SetValue(T&& newValue)
     {
-        using REACT_IMPL::NodeId;
+        using REACT_IMPL::node_id;
         using VarNodeType = REACT_IMPL::StateVarNode<S>;
 
         VarNodeType* castedPtr = static_cast<VarNodeType*>(this->GetNodePtr().get());
 
-        NodeId nodeId = castedPtr->GetNodeId();
+        node_id nodeId = castedPtr->GetNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
         castedPtr->SetValue(std::forward<T>(newValue));
@@ -168,12 +168,12 @@ private:
     template <typename F>
     void ModifyValue(const F& func)
     {
-        using REACT_IMPL::NodeId;
+        using REACT_IMPL::node_id;
         using VarNodeType = REACT_IMPL::StateVarNode<S>;
 
         VarNodeType* castedPtr = static_cast<VarNodeType*>(this->GetNodePtr().get());
         
-        NodeId nodeId = castedPtr->GetNodeId();
+        node_id nodeId = castedPtr->GetNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
         castedPtr->ModifyValue(func);
@@ -222,12 +222,12 @@ private:
 
     void SetSlotInput(const State<S>& newInput)
     {
-        using REACT_IMPL::NodeId;
+        using REACT_IMPL::node_id;
         using REACT_IMPL::StateSlotNode;
 
         auto* castedPtr = static_cast<StateSlotNode<S>*>(this->GetNodePtr().get());
 
-        NodeId nodeId = castedPtr->GetInputNodeId();
+        node_id nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
         castedPtr->SetInput(newInput);

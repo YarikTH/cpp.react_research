@@ -64,7 +64,7 @@ public:
         }
     }*/
 
-    NodeId GetNodeId() const
+    node_id GetNodeId() const
         { return nodeId_; }
 
     auto GetGroup() const -> const Group&
@@ -86,14 +86,14 @@ protected:
     void UnregisterMe()
         { GetGraphPtr()->unregister_node(nodeId_); }
 
-    void AttachToMe(NodeId otherNodeId)
+    void AttachToMe(node_id otherNodeId)
         { GetGraphPtr()->attach_node(nodeId_, otherNodeId); }
 
-    void DetachFromMe(NodeId otherNodeId)
+    void DetachFromMe(node_id otherNodeId)
         { GetGraphPtr()->detach_node(nodeId_, otherNodeId); }
 
 private:
-    NodeId nodeId_;
+    node_id nodeId_;
 
     Group group_;
 };

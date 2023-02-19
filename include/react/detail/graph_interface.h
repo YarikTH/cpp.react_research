@@ -24,7 +24,32 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Definitions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-using NodeId = size_t;
+class node_id
+{
+public:
+    using value_type = size_t;
+
+    node_id() = default;
+
+    explicit node_id(value_type id) : m_id(id){}
+
+    operator value_type()
+    {
+        return m_id;
+    }
+
+    bool operator==( node_id other) const noexcept
+    {
+        return m_id == other.m_id;
+    }
+
+    bool operator!=(node_id other) const noexcept
+    {
+        return m_id != other.m_id;
+    }
+private:
+    value_type m_id = -1;
+};
 
 enum class UpdateResult
 {

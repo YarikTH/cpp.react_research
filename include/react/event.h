@@ -154,12 +154,12 @@ private:
     template <typename T>
     void EmitValue(T&& value)
     {
-        using REACT_IMPL::NodeId;
+        using REACT_IMPL::node_id;
         using REACT_IMPL::EventSourceNode;
 
         auto* castedPtr = static_cast<EventSourceNode<E>*>(this->GetNodePtr().get());
 
-        NodeId nodeId = castedPtr->GetNodeId();
+        node_id nodeId = castedPtr->GetNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
         castedPtr->EmitValue(std::forward<T>(value));
@@ -209,12 +209,12 @@ private:
 
     void AddSlotInput(const Event<E>& input)
     {
-        using REACT_IMPL::NodeId;
+        using REACT_IMPL::node_id;
         using SlotNodeType = REACT_IMPL::EventSlotNode<E>;
 
         SlotNodeType* castedPtr = static_cast<SlotNodeType*>(this->GetNodePtr().get());
 
-        NodeId nodeId = castedPtr->GetInputNodeId();
+        node_id nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
         castedPtr->AddSlotInput(input);
@@ -223,12 +223,12 @@ private:
 
     void RemoveSlotInput(const Event<E>& input)
     {
-        using REACT_IMPL::NodeId;
+        using REACT_IMPL::node_id;
         using SlotNodeType = REACT_IMPL::EventSlotNode<E>;
 
         SlotNodeType* castedPtr = static_cast<SlotNodeType*>(this->GetNodePtr().get());
 
-        NodeId nodeId = castedPtr->GetInputNodeId();
+        node_id nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
         castedPtr->RemoveSlotInput(input);
@@ -237,12 +237,12 @@ private:
 
     void RemoveAllSlotInputs()
     {
-        using REACT_IMPL::NodeId;
+        using REACT_IMPL::node_id;
         using SlotNodeType = REACT_IMPL::EventSlotNode<E>;
 
         SlotNodeType* castedPtr = static_cast<SlotNodeType*>(this->GetNodePtr().get());
 
-        NodeId nodeId = castedPtr->GetInputNodeId();
+        node_id nodeId = castedPtr->GetInputNodeId();
         auto& graphPtr = GetInternals(this->GetGroup()).GetGraphPtr();
 
         castedPtr->RemoveAllSlotInputs();

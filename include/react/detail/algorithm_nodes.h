@@ -587,7 +587,7 @@ public:
         this->RegisterMe();
         this->AttachToMe(GetInternals(obj).GetNodeId());
 
-        for (NodeId nodeId : this->Value().memberIds_)
+        for (node_id nodeId : this->Value().memberIds_)
             this->AttachToMe(nodeId);
 
         this->Value().initMode_ = false;
@@ -595,7 +595,7 @@ public:
 
     ~FlattenObjectNode()
     {
-        for (NodeId nodeId :  this->Value().memberIds_)
+        for (node_id nodeId :  this->Value().memberIds_)
             this->DetachFromMe(nodeId);
 
         this->DetachFromMe(GetInternals(obj_).GetNodeId());
@@ -608,7 +608,7 @@ public:
 
         if (HasChanged(newValue, static_cast<const T&>(this->Value())))
         {
-            for (NodeId nodeId : this->Value().memberIds_)
+            for (node_id nodeId : this->Value().memberIds_)
                 this->DetachFromMe(nodeId);
 
             // Steal array from old value for new value so we don't have to re-allocate.
@@ -616,7 +616,7 @@ public:
             this->Value().memberIds_.clear();
             this->Value() = TFlat { newValue, FlattenedInitTag{ }, std::move(this->Value().memberIds_) };
 
-            for (NodeId nodeId : this->Value().memberIds_)
+            for (node_id nodeId : this->Value().memberIds_)
                 this->AttachToMe(nodeId);
 
             return UpdateResult::shifted;

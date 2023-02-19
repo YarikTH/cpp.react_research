@@ -23,17 +23,17 @@
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 
-NodeId react_graph::register_node(IReactNode* nodePtr)
+node_id react_graph::register_node(IReactNode* nodePtr)
 {
-    return m_node_data.Insert( node_data{ nodePtr });
+    return node_id{m_node_data.Insert( node_data{ nodePtr })};
 }
 
-void react_graph::unregister_node(NodeId nodeId)
+void react_graph::unregister_node(node_id nodeId)
 {
     m_node_data.Erase(nodeId);
 }
 
-void react_graph::attach_node(NodeId nodeId, NodeId parentId)
+void react_graph::attach_node(node_id nodeId, node_id parentId)
 {
     auto& node = m_node_data[nodeId];
     auto& parent = m_node_data[parentId];
@@ -44,7 +44,7 @@ void react_graph::attach_node(NodeId nodeId, NodeId parentId)
         node.level = parent.level + 1;
 }
 
-void react_graph::detach_node(NodeId node, NodeId parentId)
+void react_graph::detach_node(node_id node, node_id parentId)
 {
     auto& parent = m_node_data[parentId];
     auto& successors = parent.successors;
@@ -62,7 +62,7 @@ void react_graph::propagate()
     std::vector<IReactNode*> changed_nodes;
 
     // Fill update queue with successors of changed inputs.
-    for (NodeId nodeId : m_changed_inputs )
+    for (node_id nodeId : m_changed_inputs )
     {
         auto& node = m_node_data[nodeId];
         auto* nodePtr = node.node_ptr;
@@ -79,7 +79,7 @@ void react_graph::propagate()
     // Propagate changes.
     while ( m_scheduled_nodes.fetch_next())
     {
-        for (NodeId nodeId : m_scheduled_nodes.next_values())
+        for (node_id nodeId : m_scheduled_nodes.next_values())
         {
             auto& node = m_node_data[nodeId];
             auto* nodePtr = node.node_ptr;
@@ -127,7 +127,7 @@ void react_graph::propagate()
 
 void react_graph::schedule_successors( node_data& node)
 {
-    for (NodeId succId : node.successors)
+    for (node_id succId : node.successors)
     {
         auto& succ = m_node_data[succId];
 
@@ -141,7 +141,7 @@ void react_graph::schedule_successors( node_data& node)
 
 void react_graph::recalculate_successor_levels( node_data& node)
 {
-    for (NodeId succId : node.successors)
+    for (node_id succId : node.successors)
     {
         auto& succ = m_node_data[succId];
 

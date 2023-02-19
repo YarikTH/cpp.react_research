@@ -185,7 +185,7 @@ public:
     auto GetNodePtr() const -> const std::shared_ptr<ObserverNode>&
         { return nodePtr_; }
 
-    NodeId GetNodeId() const
+    node_id GetNodeId() const
         { return nodePtr_->GetNodeId(); }
 
 protected:

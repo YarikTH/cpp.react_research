@@ -24,167 +24,205 @@
 /// Insert returns the slot index, which stays valid until the element is erased.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-class SlotMap
+class slot_map
 {
-    static const size_t initial_capacity = 8;
-    static const size_t grow_factor = 2;
-
-    using StorageType = typename std::aligned_storage<sizeof(T), alignof(T)>::type;
-
 public:
-    using ValueType = T;
+    using value_type = T;
+    using size_type = size_t;
+    using reference = value_type&;
+    using const_reference = const value_type&;
 
-    SlotMap() = default;
+    /// Constructs the slot_map
+    slot_map() = default;
 
-    SlotMap(SlotMap&&) = default;
-    SlotMap& operator=(SlotMap&&) = default;
-
-    SlotMap(const SlotMap&) = delete;
-    SlotMap& operator=(const SlotMap&) = delete;
-
-    ~SlotMap()
-        { Reset(); }
-
-    T& operator[](size_t index)
-        { return reinterpret_cast<T&>(data_[index]); }
-
-    const T& operator[](size_t index) const
-        { return reinterpret_cast<T&>(data_[index]); }
-
-    size_t Insert(T value)
+    /// Destructs the slot_map
+    ~slot_map()
     {
-        if (IsAtFullCapacity())
+        reset();
+    }
+
+    slot_map(slot_map&&) noexcept = default;
+    slot_map& operator=(slot_map&&) noexcept = default;
+    slot_map(const slot_map&) = delete;
+    slot_map& operator=(const slot_map&) = delete;
+
+    /// Returns a reference to the element at specified slot index. No bounds checking is performed.
+    reference operator[]( size_type index )
+    {
+        return reinterpret_cast<reference>( m_data[index] );
+    }
+
+    /// Returns a reference to the element at specified slot index. No bounds checking is performed.
+    const_reference operator[]( size_type index ) const
+    {
+        return reinterpret_cast<const_reference>( m_data[index] );
+    }
+
+    /// Insert new object, return its index
+    [[nodiscard]] size_type insert( value_type value )
+    {
+        if( is_at_full_capacity() )
         {
-            Grow();
-            return InsertAtBack(std::move(value));
+            grow();
+            return insert_at_back( std::move( value ) );
         }
-        else if (HasFreeIndices())
+        else if( has_free_indices() )
         {
-            return InsertAtFreeIndex(std::move(value));
+            return insert_at_freed_slot( std::move( value ) );
         }
         else
         {
-            return InsertAtBack(std::move(value));
+            return insert_at_back( std::move( value ) );
         }
     }
 
-    void Erase(size_t index)
+    /// Destroy object by given index
+    void erase( const size_type index )
     {
         // If we erased something other than the last element, save in free index list.
-        if (index != (size_ - 1))
+        if( index != ( total_size() - 1 ) )
         {
-            freeIndices_[freeSize_++] = index;
+            m_free_indices[m_free_size++] = index;
         }
 
-        reinterpret_cast<T&>(data_[index]).~T();
-        --size_;
+        reinterpret_cast<reference>( m_data[index] ).~value_type();
+        --m_size;
+
+        // If free indices appeared at the end of allocated range, remove them from list
+        shake_free_indices();
     }
 
-    void Clear()
+    /// Clear the data, leave capacity intact
+    void clear()
     {
-        // Sort free indexes so we can remove check for them in linear time.
-        std::sort(&freeIndices_[0], &freeIndices_[freeSize_]);
-        
-        const size_t totalSize = size_ + freeSize_;
-        size_t index = 0;
+        const size_type size = total_size();
+        size_type index = 0;
 
         // Skip over free indices.
-        for (size_t j = 0; j < freeSize_; ++j)
+        for( size_type j = 0; j < m_free_size; ++j )
         {
-            size_t freeIndex = freeIndices_[j];
+            size_type free_index = m_free_indices[j];
 
-            for (; index < totalSize; ++index)
+            for( ; index < size; ++index )
             {
-                if (index == freeIndex)
+                if( index == free_index )
                 {
                     ++index;
                     break;
                 }
                 else
                 {
-                    reinterpret_cast<T&>(data_[index]).~T();
+                    reinterpret_cast<reference>( m_data[index] ).~value_type();
                 }
             }
         }
 
         // Rest
-        for (; index < totalSize; ++index)
-            reinterpret_cast<T&>(data_[index]).~T();
+        for( ; index < size; ++index )
+            reinterpret_cast<reference>( m_data[index] ).~value_type();
 
-        size_ = 0;
-        freeSize_ = 0;
+        m_size = 0;
+        m_free_size = 0;
     }
 
-    void Reset()
+    /// Clear the data and return container to its initial state with 0 capacity
+    void reset()
     {
-        Clear();
+        clear();
 
-        data_.reset();
-        freeIndices_.reset();
+        m_data.reset();
+        m_free_indices.reset();
 
-        capacity_ = 0;
+        m_capacity = 0;
     }
 
 private:
-    T& GetDataAt(size_t index)
-        { return reinterpret_cast<T&>(data_[index]); }
+    static inline constexpr size_t initial_capacity = 8;
+    static inline constexpr size_t grow_factor = 2;
 
-    T& GetDataAt(size_t index) const
-        { return reinterpret_cast<T&>(data_[index]); }
+    using storage_type =
+        typename std::aligned_storage<sizeof( value_type ), alignof( value_type )>::type;
 
-    bool IsAtFullCapacity() const
-        { return capacity_ == size_; }
+    [[nodiscard]] bool is_at_full_capacity() const
+    {
+        return m_capacity == m_size;
+    }
 
-    bool HasFreeIndices() const
-        { return freeSize_ > 0; }
+    [[nodiscard]] bool has_free_indices() const
+    {
+        return m_free_size > 0;
+    }
 
-    size_t CalcNextCapacity() const
-        { return capacity_ == 0? initial_capacity : capacity_ * grow_factor;  }
+    [[nodiscard]] size_type calculate_next_capacity() const
+    {
+        return m_capacity == 0 ? initial_capacity : m_capacity * grow_factor;
+    }
 
-    void Grow()
+    [[nodiscard]] size_type total_size()
+    {
+        return m_size + m_free_size;
+    }
+
+    void shake_free_indices()
+    {
+        if( m_free_size == 0 )
+        {
+            return;
+        }
+
+        std::sort( &m_free_indices[0], &m_free_indices[m_free_size] );
+
+        while( m_free_size > 0 && m_free_indices[m_free_size - 1] == total_size() - 1 )
+        {
+            --m_free_size;
+        }
+    }
+
+    void grow()
     {
         // Allocate new storage
-        size_t  newCapacity = CalcNextCapacity();
-        
-        std::unique_ptr<StorageType[]> newData{ new StorageType[newCapacity] };
-        std::unique_ptr<size_t[]> newFreeIndices{ new size_t[newCapacity] };
+        const size_type new_capacity = calculate_next_capacity();
+
+        std::unique_ptr<storage_type[]> new_data{ new storage_type[new_capacity] };
+        std::unique_ptr<size_type[]> new_free_indices{ new size_type[new_capacity] };
 
         // Move data to new storage
-        for (size_t i = 0; i < capacity_; ++i)
+        for( size_type i = 0; i < m_capacity; ++i )
         {
-            new (reinterpret_cast<T*>(&newData[i])) T{ std::move(reinterpret_cast<T&>(data_[i])) };
-            reinterpret_cast<T&>(data_[i]).~T();
+            new( reinterpret_cast<value_type*>( &new_data[i] ) )
+                value_type{ std::move( reinterpret_cast<reference>( m_data[i] ) ) };
+            reinterpret_cast<reference>( m_data[i] ).~value_type();
         }
 
         // Free list is empty if we are at max capacity anyway
 
         // Use new storage
-        data_           = std::move(newData);
-        freeIndices_    = std::move(newFreeIndices);
-        capacity_       = newCapacity;
+        m_data = std::move( new_data );
+        m_free_indices = std::move( new_free_indices );
+        m_capacity = new_capacity;
     }
 
-    size_t InsertAtBack(T&& value)
+    size_type insert_at_back( value_type&& value )
     {
-        new (&data_[size_]) T(std::move(value));
-        return size_++;
+        new( &m_data[m_size] ) value_type( std::move( value ) );
+        return m_size++;
     }
 
-    size_t InsertAtFreeIndex(T&& value)
+    size_type insert_at_freed_slot( value_type&& value )
     {
-        size_t nextFreeIndex = freeIndices_[--freeSize_];
-        new (&data_[nextFreeIndex]) T(std::move(value));
-        ++size_;
+        const size_type next_free_index = m_free_indices[--m_free_size];
+        new( &m_data[next_free_index] ) value_type( std::move( value ) );
+        ++m_size;
 
-        return nextFreeIndex;
+        return next_free_index;
     }
 
-    std::unique_ptr<StorageType[]>  data_;
-    std::unique_ptr<size_t[]>       freeIndices_;
+    std::unique_ptr<storage_type[]> m_data;
+    std::unique_ptr<size_type[]> m_free_indices;
 
-    size_t  size_       = 0;
-    size_t  freeSize_   = 0;
-    size_t  capacity_   = 0;
+    size_type m_size = 0;
+    size_type m_free_size = 0;
+    size_type m_capacity = 0;
 };
 
 /******************************************/ REACT_END /******************************************/

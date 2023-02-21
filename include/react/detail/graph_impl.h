@@ -147,7 +147,7 @@ private:
 private:
     TransactionQueue m_transaction_queue{ *this };
 
-    SlotMap<node_data> m_node_data;
+    slot_map<node_data> m_node_data;
 
     topological_queue m_scheduled_nodes;
 

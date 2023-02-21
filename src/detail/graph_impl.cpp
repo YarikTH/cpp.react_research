@@ -25,12 +25,12 @@
 
 node_id react_graph::register_node(IReactNode* nodePtr)
 {
-    return node_id{m_node_data.Insert( node_data{ nodePtr })};
+    return node_id{m_node_data.insert( node_data{ nodePtr })};
 }
 
 void react_graph::unregister_node(node_id nodeId)
 {
-    m_node_data.Erase(nodeId);
+    m_node_data.erase(nodeId);
 }
 
 void react_graph::attach_node(node_id nodeId, node_id parentId)

@@ -21,7 +21,7 @@ using namespace react;
 
 TEST(EventTest, Construction)
 {
-    Group g;
+    group g;
 
     // Event source
     {
@@ -50,7 +50,7 @@ TEST(EventTest, Construction)
 
 TEST(EventTest, BasicOutput)
 {
-    Group g;
+    group g;
 
     auto evt = EventSource<int>::Create(g);
 
@@ -73,7 +73,7 @@ TEST(EventTest, BasicOutput)
 
 TEST(EventTest, Slots)
 {
-    Group g;
+    group g;
 
     auto evt1 = EventSource<int>::Create(g);
     auto evt2 = EventSource<int>::Create(g);
@@ -137,7 +137,7 @@ TEST(EventTest, Slots)
 
 TEST(EventTest, Transactions)
 {
-    Group g;
+    group g;
 
     auto evt = EventSource<int>::Create(g);
 
@@ -153,10 +153,7 @@ TEST(EventTest, Transactions)
 
     EXPECT_EQ(0, output);
 
-    g.DoTransaction([&]
-        {
-            evt << 1 << 1 << 1 << 1;
-        });
+    g.do_transaction( [&] { evt << 1 << 1 << 1 << 1; } );
 
     EXPECT_EQ(4, output);
     EXPECT_EQ(1, turns);
@@ -211,7 +208,7 @@ TEST(EventTest, Links)
 
 TEST(EventTest, EventSources)
 {
-    Group g;
+    group g;
 
     auto es1 = EventSource<int>::Create(g);
     auto es2 = EventSource<int>::Create(g);
@@ -267,7 +264,7 @@ TEST(EventTest, EventSources)
 
 TEST(EventTest, Merge1)
 {
-    Group g;
+    group g;
 
     auto a1 = EventSource<int>::Create(g);
     auto a2 = EventSource<int>::Create(g);
@@ -283,12 +280,11 @@ TEST(EventTest, Merge1)
                 results.push_back(e);
         }, merged);
 
-    g.DoTransaction([&]
-        {
-            a1.Emit(10);
-            a2.Emit(20);
-            a3.Emit(30);
-        });
+    g.do_transaction( [&] {
+        a1.Emit( 10 );
+        a2.Emit( 20 );
+        a3.Emit( 30 );
+    } );
 
     EXPECT_EQ(results.size(), 3);
 
@@ -299,7 +295,7 @@ TEST(EventTest, Merge1)
 
 TEST(EventTest, Merge2)
 {
-    Group g;
+    group g;
 
     auto a1 = EventSource<std::string>::Create(g);
     auto a2 = EventSource<std::string>::Create(g);
@@ -319,12 +315,11 @@ TEST(EventTest, Merge2)
     std::string s2("two");
     std::string s3("three");
 
-    g.DoTransaction([&]
-        {
-            a1.Emit(s1);
-            a2.Emit(s2);
-            a3.Emit(s3);
-        });
+    g.do_transaction( [&] {
+        a1.Emit( s1 );
+        a2.Emit( s2 );
+        a3.Emit( s3 );
+    } );
 
     EXPECT_EQ(results.size(), 3);
 
@@ -335,7 +330,7 @@ TEST(EventTest, Merge2)
 
 TEST(EventTest, Merge3)
 {
-    Group g;
+    group g;
 
     auto a1 = EventSource<int>::Create(g);
     auto a2 = EventSource<int>::Create(g);
@@ -374,7 +369,7 @@ TEST(EventTest, Merge3)
 
 TEST(EventTest, Filter)
 {
-    Group g;
+    group g;
 
     auto in = EventSource<std::string>::Create(g);
 
@@ -404,7 +399,7 @@ TEST(EventTest, Filter)
 
 TEST(EventTest, Transform)
 {
-    Group g;
+    group g;
 
     auto in1 = EventSource<std::string>::Create(g);
     auto in2 = EventSource<std::string>::Create(g);
@@ -437,7 +432,7 @@ TEST(EventTest, Transform)
 
 TEST(EventTest, Flow)
 {
-    Group g;
+    group g;
 
     std::vector<float> results;
 
@@ -464,10 +459,10 @@ TEST(EventTest, Flow)
                 results.push_back(e);
         }, processed);
 
-    g.DoTransaction([&] {
-        in1.Emit(10);
-        in1.Emit(20);
-    });
+    g.do_transaction( [&] {
+        in1.Emit( 10 );
+        in1.Emit( 20 );
+    } );
 
     in2 << 30;
 
@@ -484,7 +479,7 @@ TEST(EventTest, Flow)
 
 TEST(EventTest, Join)
 {
-    Group g;
+    group g;
 
     auto in1 = EventSource<int>::Create(g);
     auto in2 = EventSource<int>::Create(g);
@@ -523,7 +518,7 @@ TEST(EventTest, Join)
 
 TEST(EventTest, FilterWithState)
 {
-    Group g;
+    group g;
 
     auto in = EventSource<std::string>::Create(g);
 
@@ -558,7 +553,7 @@ TEST(EventTest, FilterWithState)
 
 TEST(EventTest, TransformWithState)
 {
-    Group g;
+    group g;
 
     std::vector<std::string> results;
 
@@ -585,12 +580,11 @@ TEST(EventTest, TransformWithState)
 
     in1 << std::string("Hello Worlt") << std::string("Hello World");
 
-    g.DoTransaction([&]
-        {
-            in2 << std::string("Hello Vorld");
-            first.Set(std::string("Alice"));
-            last.Set(std::string("Anderson"));
-        });
+    g.do_transaction( [&] {
+        in2 << std::string( "Hello Vorld" );
+        first.Set( std::string( "Alice" ) );
+        last.Set( std::string( "Anderson" ) );
+    } );
 
     EXPECT_EQ(results.size(), 3);
     EXPECT_TRUE(std::find(results.begin(), results.end(), "HELLO WORLT, Ace McSteele") != results.end());
@@ -600,7 +594,7 @@ TEST(EventTest, TransformWithState)
 
 TEST(EventTest, FlowWithState)
 {
-    Group g;
+    group g;
 
     std::vector<float> results;
 
@@ -629,10 +623,7 @@ TEST(EventTest, FlowWithState)
                 results.push_back(e);
         }, processed);
 
-    g.DoTransaction([&]
-        {
-            in1 << 10 << 20;
-        });
+    g.do_transaction( [&] { in1 << 10 << 20; } );
 
     in2 << 30;
 

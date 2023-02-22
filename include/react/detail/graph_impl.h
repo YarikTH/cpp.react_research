@@ -85,7 +85,7 @@ private:
 class react_graph
 {
 public:
-    node_id register_node(IReactNode* nodePtr);
+    node_id register_node(reactive_node_interface* nodePtr);
     void unregister_node(node_id nodeId);
 
     void attach_node(node_id nodeId, node_id parentId);
@@ -109,14 +109,14 @@ private:
         node_data(node_data&&) noexcept = default;
         node_data& operator=(node_data&&) noexcept = default;
 
-        explicit node_data(IReactNode* node_ptr ) : node_ptr( node_ptr )
+        explicit node_data(reactive_node_interface* node_ptr ) : node_ptr( node_ptr )
         { }
 
         int level = 0;
         int new_level = 0 ;
         bool queued = false;
 
-        IReactNode* node_ptr = nullptr;
+        reactive_node_interface* node_ptr = nullptr;
 
         std::vector<node_id> successors;
     };
@@ -188,23 +188,23 @@ void react_graph::enqueue_transaction(F&& func, SyncPoint::Dependency dep, Trans
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// GroupInternals
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class GroupInternals
+class group_internals
 {
 public:
-    GroupInternals() :
+    group_internals() :
         graphPtr_( std::make_shared<react_graph>() )
     {  }
 
-    GroupInternals(const GroupInternals&) = default;
-    GroupInternals& operator=(const GroupInternals&) = default;
+    group_internals(const group_internals&) = default;
+    group_internals& operator=(const group_internals&) = default;
 
-    GroupInternals(GroupInternals&&) = default;
-    GroupInternals& operator=(GroupInternals&&) = default;
+    group_internals( group_internals&&) = default;
+    group_internals& operator=( group_internals&&) = default;
 
-    auto GetGraphPtr() -> std::shared_ptr<react_graph>&
+    auto get_graph_ptr() -> std::shared_ptr<react_graph>&
         { return graphPtr_; }
 
-    auto GetGraphPtr() const -> const std::shared_ptr<react_graph>&
+    auto get_graph_ptr() const -> const std::shared_ptr<react_graph>&
         { return graphPtr_; }
 
 private:

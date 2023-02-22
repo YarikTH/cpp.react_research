@@ -25,23 +25,23 @@
 /// StateNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S>
-class StateNode : public NodeBase
+class StateNode : public node_base
 {
 public:
-    explicit StateNode(const Group& group) :
-        StateNode::NodeBase( group ),
+    explicit StateNode(const group& group) :
+        StateNode::node_base( group ),
         value_( )
     { }
 
     template <typename T>
-    StateNode(const Group& group, T&& value) :
-        StateNode::NodeBase( group ),
+    StateNode(const group& group, T&& value) :
+        StateNode::node_base( group ),
         value_( std::forward<T>(value) )
     { }
 
     template <typename ... Ts>
-    StateNode(InPlaceTag, const Group& group, Ts&& ... args) :
-        StateNode::NodeBase( group ),
+    StateNode(InPlaceTag, const group& group, Ts&& ... args) :
+        StateNode::node_base( group ),
         value_( std::forward<Ts>(args) ... )
     { }
 
@@ -62,20 +62,20 @@ template <typename S>
 class StateVarNode : public StateNode<S>
 {
 public:
-    explicit StateVarNode(const Group& group) :
+    explicit StateVarNode(const group& group) :
         StateVarNode::StateNode( group ),
         newValue_( )
     {
     }
 
     template <typename T>
-    StateVarNode(const Group& group, T&& value) :
+    StateVarNode(const group& group, T&& value) :
         StateVarNode::StateNode( group, std::forward<T>(value) ),
         newValue_( value )
     {
     }
 
-    virtual UpdateResult Update() noexcept override
+    virtual update_result update() noexcept override
     {
         if (isInputAdded_)
         {
@@ -84,22 +84,22 @@ public:
             if (HasChanged(this->Value(), newValue_))
             {
                 this->Value() = std::move(newValue_);
-                return UpdateResult::changed;
+                return update_result::changed;
             }
             else
             {
-                return UpdateResult::unchanged;
+                return update_result::unchanged;
             }
         }
         else if (isInputModified_)
         {            
             isInputModified_ = false;
-            return UpdateResult::changed;
+            return update_result::changed;
         }
 
         else
         {
-            return UpdateResult::unchanged;
+            return update_result::unchanged;
         }
     }
 
@@ -148,33 +148,34 @@ class StateFuncNode : public StateNode<S>
 {
 public:
     template <typename FIn>
-    StateFuncNode(const Group& group, FIn&& func, const State<TDeps>& ... deps) :
-        StateFuncNode::StateNode( group, func(GetInternals(deps).Value() ...) ),
+    StateFuncNode(const group& group, FIn&& func, const State<TDeps>& ... deps) :
+        StateFuncNode::StateNode( group, func(get_internals(deps).Value() ...) ),
         func_( std::forward<FIn>(func) ),
         depHolder_( deps ... )
     {
-        REACT_EXPAND_PACK(this->AttachToMe(GetInternals(deps).GetNodeId()));
+        REACT_EXPAND_PACK( this->attach_to_me( get_internals( deps ).get_node_id() ));
     }
 
     ~StateFuncNode()
     {
-        react::impl::apply([this] (const auto& ... deps)
-            { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(deps).GetNodePtr()->GetNodeId())); }, depHolder_);
+        std::apply([this] (const auto& ... deps)
+            { REACT_EXPAND_PACK(
+                    this->detach_from_me( get_internals( deps ).get_node_ptr()->get_node_id() )); }, depHolder_);
     }
 
-    virtual UpdateResult Update() noexcept override
+    virtual update_result update() noexcept override
     {
-        S newValue = react::impl::apply([this] (const auto& ... deps)
-            { return this->func_(GetInternals(deps).Value() ...); }, depHolder_);
+        S newValue = std::apply([this] (const auto& ... deps)
+            { return this->func_(get_internals(deps).Value() ...); }, depHolder_);
 
         if (HasChanged(this->Value(), newValue))
         {
             this->Value() = std::move(newValue);
-            return UpdateResult::changed;
+            return update_result::changed;
         }
         else
         {
-            return UpdateResult::unchanged;
+            return update_result::unchanged;
         }
     }
 
@@ -190,34 +191,34 @@ template <typename S>
 class StateSlotNode : public StateNode<S>
 {
 public:
-    StateSlotNode(const Group& group, const State<S>& dep) :
-        StateSlotNode::StateNode( group, GetInternals(dep).Value() ),
+    StateSlotNode(const group& group, const State<S>& dep) :
+        StateSlotNode::StateNode( group, get_internals(dep).Value() ),
         input_( dep )
     {
-        inputNodeId_ = this->GetGraphPtr()->register_node(&slotInput_);
-        
-        this->AttachToMe(inputNodeId_);
-        this->AttachToMe(GetInternals(dep).GetNodeId());
+        inputNodeId_ = this->get_graph_ptr()->register_node(&slotInput_);
+
+        this->attach_to_me( inputNodeId_ );
+        this->attach_to_me( get_internals( dep ).get_node_id() );
     }
 
     ~StateSlotNode()
     {
-        this->DetachFromMe(GetInternals(input_).GetNodeId());
-        this->DetachFromMe(inputNodeId_);
+        this->detach_from_me( get_internals( input_ ).get_node_id() );
+        this->detach_from_me( inputNodeId_ );
 
-        this->GetGraphPtr()->unregister_node(inputNodeId_);
+        this->get_graph_ptr()->unregister_node(inputNodeId_);
     }
 
-    virtual UpdateResult Update() noexcept override
+    virtual update_result update() noexcept override
     {
-        if (! (this->Value() == GetInternals(input_).Value()))
+        if (! (this->Value() == get_internals(input_).Value()))
         {
-            this->Value() = GetInternals(input_).Value();
-            return UpdateResult::changed;
+            this->Value() = get_internals(input_).Value();
+            return update_result::changed;
         }
         else
         {
-            return UpdateResult::unchanged;
+            return update_result::unchanged;
         }
     }
 
@@ -226,8 +227,8 @@ public:
         if (newInput == input_)
             return;
 
-        this->DetachFromMe(GetInternals(input_).GetNodeId());
-        this->AttachToMe(GetInternals(newInput).GetNodeId());
+        this->detach_from_me( get_internals( input_ ).get_node_id() );
+        this->attach_to_me( get_internals( newInput ).get_node_id() );
 
         input_ = newInput;
     }
@@ -236,10 +237,10 @@ public:
         { return inputNodeId_; }
 
 private:        
-    struct VirtualInputNode : public IReactNode
+    struct VirtualInputNode : public reactive_node_interface
     {
-        virtual UpdateResult Update() noexcept override
-            { return UpdateResult::changed; }
+        virtual update_result update() noexcept override
+            { return update_result::changed; }
     };
 
     State<S>            input_;
@@ -249,32 +250,32 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// StateInternals
+/// state_internals
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S>
-class StateInternals
+class state_internals
 {
 public:
-    StateInternals() = default;
+    state_internals() = default;
 
-    StateInternals(const StateInternals&) = default;
-    StateInternals& operator=(const StateInternals&) = default;
+    state_internals(const state_internals&) = default;
+    state_internals& operator=(const state_internals&) = default;
 
-    StateInternals(StateInternals&&) = default;
-    StateInternals& operator=(StateInternals&&) = default;
+    state_internals(state_internals&&) = default;
+    state_internals& operator=(state_internals&&) = default;
 
-    explicit StateInternals(std::shared_ptr<StateNode<S>>&& nodePtr) :
+    explicit state_internals(std::shared_ptr<StateNode<S>>&& nodePtr) :
         nodePtr_( std::move(nodePtr) )
     { }
 
-    auto GetNodePtr() -> std::shared_ptr<StateNode<S>>&
+    auto get_node_ptr() -> std::shared_ptr<StateNode<S>>&
         { return nodePtr_; }
 
-    auto GetNodePtr() const -> const std::shared_ptr<StateNode<S>>&
+    auto get_node_ptr() const -> const std::shared_ptr<StateNode<S>>&
         { return nodePtr_; }
 
-    node_id GetNodeId() const
-        { return nodePtr_->GetNodeId(); }
+    node_id get_node_id() const
+        { return nodePtr_->get_node_id(); }
 
     S& Value()
         { return nodePtr_->Value(); }
@@ -293,22 +294,22 @@ template <typename S>
 class StateRefNode : public StateNode<Ref<S>>
 {
 public:
-    StateRefNode(const Group& group, const State<S>& input) :
-        StateRefNode::StateNode( group, std::cref(GetInternals(input).Value()) ),
+    StateRefNode(const group& group, const State<S>& input) :
+        StateRefNode::StateNode( group, std::cref(get_internals(input).Value()) ),
         input_( input )
     {
-        this->AttachToMe(GetInternals(input).GetNodeId());
+            this->attach_to_me( get_internals( input ).get_node_id() );
     }
 
     ~StateRefNode()
     {
-        this->DetachFromMe(GetInternals(input_).GetNodeId());
+            this->detach_from_me( get_internals( input_ ).get_node_id() );
     }
 
-    virtual UpdateResult Update() noexcept override
+    virtual update_result update() noexcept override
     {
-        this->Value() = std::cref(GetInternals(input_).Value());
-        return UpdateResult::changed;
+        this->Value() = std::cref(get_internals(input_).Value());
+        return update_result::changed;
     }
 
 private:

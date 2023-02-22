@@ -68,7 +68,7 @@ namespace example2
     using namespace std;
     using namespace react;
 
-    Group g;
+    group g;
 
     class Company
     {

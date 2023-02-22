@@ -31,33 +31,33 @@ private:
 public:
     // Construct state observer with explicit group
     template <typename F, typename T1, typename ... Ts>
-    static Observer Create(const Group& group, F&& func, const State<T1>& subject1, const State<Ts>& ... subjects)
+    static Observer Create(const group& group, F&& func, const State<T1>& subject1, const State<Ts>& ... subjects)
         { return Observer(CreateStateObserverNode(group, std::forward<F>(func), subject1, subjects ...)); }
 
     // Construct state observer with implicit group
     template <typename F, typename T1, typename ... Ts>
     static Observer Create(F&& func, const State<T1>& subject1, const State<Ts>& ... subjects)
-        { return Observer(CreateStateObserverNode(subject1.GetGroup(), std::forward<F>(func), subject1, subjects ...)); }
+        { return Observer(CreateStateObserverNode(subject1.get_group(), std::forward<F>(func), subject1, subjects ...)); }
 
     // Construct event observer with explicit group
     template <typename F, typename T>
-    static Observer Create(const Group& group, F&& func, const Event<T>& subject)
+    static Observer Create(const group& group, F&& func, const Event<T>& subject)
         { return Observer(CreateEventObserverNode(group, std::forward<F>(func), subject)); }
 
     // Construct event observer with implicit group
     template <typename F, typename T>
     static Observer Create(F&& func, const Event<T>& subject)
-        { return Observer(CreateEventObserverNode(subject.GetGroup(), std::forward<F>(func), subject)); }
+        { return Observer(CreateEventObserverNode(subject.get_group(), std::forward<F>(func), subject)); }
 
     // Constructed synced event observer with explicit group
     template <typename F, typename T, typename ... Us>
-    static Observer Create(const Group& group, F&& func, const Event<T>& subject, const State<Us>& ... states)
+    static Observer Create(const group& group, F&& func, const Event<T>& subject, const State<Us>& ... states)
         { return Observer(CreateSyncedEventObserverNode(group, std::forward<F>(func), subject, states ...)); }
 
     // Constructed synced event observer with implicit group
     template <typename F, typename T, typename ... Us>
     static Observer Create(F&& func, const Event<T>& subject, const State<Us>& ... states)
-        { return Observer(CreateSyncedEventObserverNode(subject.GetGroup(), std::forward<F>(func), subject, states ...)); }
+        { return Observer(CreateSyncedEventObserverNode(subject.get_group(), std::forward<F>(func), subject, states ...)); }
 
     Observer(const Observer&) = default;
     Observer& operator=(const Observer&) = default;
@@ -72,7 +72,7 @@ protected: //Internal
 
 private:
     template <typename F, typename T1, typename ... Ts>
-    static auto CreateStateObserverNode(const Group& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps) -> decltype(auto)
+    static auto CreateStateObserverNode(const group& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps) -> decltype(auto)
     {
         using REACT_IMPL::StateObserverNode;
         return std::make_shared<StateObserverNode<typename std::decay<F>::type, T1, Ts ...>>(
@@ -80,7 +80,7 @@ private:
     }
 
     template <typename F, typename T>
-    static auto CreateEventObserverNode(const Group& group, F&& func, const Event<T>& dep) -> decltype(auto)
+    static auto CreateEventObserverNode(const group& group, F&& func, const Event<T>& dep) -> decltype(auto)
     {
         using REACT_IMPL::EventObserverNode;
         return std::make_shared<EventObserverNode<typename std::decay<F>::type, T>>(
@@ -88,7 +88,7 @@ private:
     }
 
     template <typename F, typename T, typename ... Us>
-    static auto CreateSyncedEventObserverNode(const Group& group, F&& func, const Event<T>& dep, const State<Us>& ... syncs) -> decltype(auto)
+    static auto CreateSyncedEventObserverNode(const group& group, F&& func, const Event<T>& dep, const State<Us>& ... syncs) -> decltype(auto)
     {
         using REACT_IMPL::SyncedEventObserverNode;
         return std::make_shared<SyncedEventObserverNode<typename std::decay<F>::type, T, Us ...>>(

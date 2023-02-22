@@ -17,7 +17,7 @@ using namespace react;
 
 TEST(TransactionTest, Merging)
 {
-    Group g;
+    group g;
 
     auto evt = EventSource<int>::Create(g);
 
@@ -32,32 +32,35 @@ TEST(TransactionTest, Merging)
         }, evt);
 
     // This transaction blocks the queue for one second.
-    g.EnqueueTransaction([&]
-        {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        });
+    g.enqueue_transaction( [&] { std::this_thread::sleep_for( std::chrono::seconds( 1 ) ); } );
 
     SyncPoint sp;
 
     // Enqueue 3 more transaction while the queue is blocked.
     // They should be merged together as a result.
-    g.EnqueueTransaction([&]
-        {
-            evt.Emit(1);
-            evt.Emit(2);
-        }, sp, TransactionFlags::allow_merging);
+    g.enqueue_transaction(
+        [&] {
+            evt.Emit( 1 );
+            evt.Emit( 2 );
+        },
+        sp,
+        TransactionFlags::allow_merging );
 
-    g.EnqueueTransaction([&]
-        {
-            evt.Emit(3);
-            evt.Emit(4);
-        }, sp, TransactionFlags::allow_merging);
+    g.enqueue_transaction(
+        [&] {
+            evt.Emit( 3 );
+            evt.Emit( 4 );
+        },
+        sp,
+        TransactionFlags::allow_merging );
 
-    g.EnqueueTransaction([&]
-        {
-            evt.Emit(5);
-            evt.Emit(6);
-        }, sp, TransactionFlags::allow_merging);
+    g.enqueue_transaction(
+        [&] {
+            evt.Emit( 5 );
+            evt.Emit( 6 );
+        },
+        sp,
+        TransactionFlags::allow_merging );
 
     bool done = sp.WaitFor(std::chrono::seconds(3));
     EXPECT_EQ(true, done);

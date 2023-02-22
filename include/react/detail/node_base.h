@@ -23,78 +23,61 @@
 class react_graph;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// CreateWrappedNode
+/// create_wrapped_node
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename RET, typename NODE, typename ... ARGS>
-static RET CreateWrappedNode(ARGS&& ... args)
+RET create_wrapped_node(ARGS&& ... args)
 {
-    auto node = std::make_shared<NODE>(std::forward<ARGS>(args) ...);
-    return RET(std::move(node));
+    return RET(std::make_shared<NODE>(std::forward<ARGS>(args)...));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// NodeBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class NodeBase : public IReactNode
+class node_base : public reactive_node_interface
 {
 public:
-    NodeBase(const Group& group) :
+    node_base(const group& group) :
         group_( group ),
-        nodeId_( GetGraphPtr()->register_node(this) )
+        nodeId_( get_graph_ptr()->register_node(this) )
     {
     }
 
-    ~NodeBase() override
+    ~node_base() override
     {
-        GetGraphPtr()->unregister_node(nodeId_);
+        get_graph_ptr()->unregister_node(nodeId_);
     }
 
-    NodeBase(const NodeBase&) = delete;
-    NodeBase& operator=(const NodeBase&) = delete;
+    node_base(const node_base&) = delete;
+    node_base& operator=(const node_base&) = delete;
 
-    NodeBase(NodeBase&&) = delete;
-    NodeBase& operator=(NodeBase&&) = delete;
+    node_base( node_base&&) = delete;
+    node_base& operator=( node_base&&) = delete;
 
-    /*void SetWeightHint(WeightHint weight)
-    {
-        switch (weight)
-        {
-        case WeightHint::heavy :
-            this->ForceUpdateThresholdExceeded(true);
-            break;
-        case WeightHint::light :
-            this->ForceUpdateThresholdExceeded(false);
-            break;
-        case WeightHint::automatic :
-            this->ResetUpdateThreshold();
-            break;
-        }
-    }*/
-
-    node_id GetNodeId() const
+    node_id get_node_id() const
         { return nodeId_; }
 
-    auto GetGroup() const -> const Group&
+    auto get_group() const -> const group&
         { return group_; }
 
-    auto GetGroup() -> Group&
+    auto get_group() -> group&
         { return group_; }
 
 protected:
-    auto GetGraphPtr() const -> const std::shared_ptr<react_graph>&
-        { return GetInternals(group_).GetGraphPtr(); }
+    auto get_graph_ptr() const -> const std::shared_ptr<react_graph>&
+        { return get_internals( group_ ).get_graph_ptr(); }
 
-    auto GetGraphPtr() -> std::shared_ptr<react_graph>&
-        { return GetInternals(group_).GetGraphPtr(); }
+    auto get_graph_ptr() -> std::shared_ptr<react_graph>&
+        { return get_internals( group_ ).get_graph_ptr(); }
 
-    void AttachToMe(node_id otherNodeId)
-        { GetGraphPtr()->attach_node(nodeId_, otherNodeId); }
+    void attach_to_me(node_id otherNodeId)
+        { get_graph_ptr()->attach_node(nodeId_, otherNodeId); }
 
-    void DetachFromMe(node_id otherNodeId)
-        { GetGraphPtr()->detach_node(nodeId_, otherNodeId); }
+    void detach_from_me(node_id otherNodeId)
+        { get_graph_ptr()->detach_node(nodeId_, otherNodeId); }
 
 private:
-    Group group_;
+    group group_;
     node_id nodeId_;
 };
 

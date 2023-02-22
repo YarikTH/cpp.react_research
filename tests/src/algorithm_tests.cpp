@@ -22,7 +22,7 @@ TEST(AlgorithmTest, Hold)
 {
     // Hold last value of event source in state.
 
-    Group g;
+    group g;
 
     auto evt1 = EventSource<int>::Create(g);
 
@@ -58,7 +58,7 @@ TEST(AlgorithmTest, Monitor1)
 {
     // Emit events when value of state changes.
 
-    Group g;
+    group g;
 
     auto st = StateVar<int>::Create(g, 1);
 
@@ -96,7 +96,7 @@ TEST(AlgorithmTest, Monitor2)
 {
     // Monitor state changes and filter the resulting events.
 
-    Group g;
+    group g;
 
     auto target = StateVar<int>::Create(g, 10);
 
@@ -132,7 +132,7 @@ TEST(AlgorithmTest, Monitor2)
 
 TEST(AlgorithmTest, Snapshot)
 {
-    Group g;
+    group g;
 
     auto sv = StateVar<int>::Create(g, 1);
     auto es = EventSource<>::Create(g);
@@ -164,7 +164,7 @@ TEST(AlgorithmTest, Snapshot)
 
 TEST(AlgorithmTest, Pulse)
 {
-    Group g;
+    group g;
 
     auto sv = StateVar<int>::Create(g, 1);
     auto es = EventSource<>::Create(g);
@@ -199,7 +199,7 @@ TEST(AlgorithmTest, Pulse)
 
 TEST(AlgorithmTest, Iterate1)
 {
-    Group g;
+    group g;
 
     auto numSrc = EventSource<int>::Create(g);
 
@@ -221,7 +221,7 @@ TEST(AlgorithmTest, Iterate1)
 
 TEST(AlgorithmTest, Iterate2)
 {
-    Group g;
+    group g;
 
     auto charSrc = EventSource<char>::Create(g);
 
@@ -242,7 +242,7 @@ TEST(AlgorithmTest, Iterate2)
 
 TEST(AlgorithmTest, Iterate3)
 {
-    Group g;
+    group g;
 
     auto numSrc = EventSource<int>::Create(g);
 
@@ -262,11 +262,10 @@ TEST(AlgorithmTest, Iterate3)
             output = v;
         }, numFold);
 
-    g.DoTransaction([&]
-        {
-            for (int i=1; i<=100; i++)
-                numSrc << i;
-        });
+    g.do_transaction( [&] {
+        for( int i = 1; i <= 100; i++ )
+            numSrc << i;
+    } );
 
     EXPECT_EQ(turns, 2);
     EXPECT_EQ(output, 5050);
@@ -292,7 +291,7 @@ struct Decrementer
 
 TEST(AlgorithmTest, Iterate4)
 {
-    Group g;
+    group g;
 
     auto trigger = EventSource<>::Create(g);
 
@@ -321,7 +320,7 @@ TEST(AlgorithmTest, Iterate4)
 
 TEST(AlgorithmTest, IterateByRef1)
 {
-    Group g;
+    group g;
 
     auto src = EventSource<int>::Create(g);
 
@@ -347,7 +346,7 @@ TEST(AlgorithmTest, IterateByRef1)
 
 TEST(AlgorithmTest, IterateByRef2)
 {
-    Group g;
+    group g;
 
     auto src = EventSource<>::Create(g);
 
@@ -386,7 +385,7 @@ T Diff(T a, T b) { return a - b; }
 
 TEST(AlgorithmTest, TransformWithState)
 {
-    Group g;
+    group g;
 
     auto in1 = StateVar<int>::Create(g);
     auto in2 = StateVar<int>::Create(g);
@@ -498,7 +497,7 @@ TEST(AlgorithmTest, TransformWithState)
 
 TEST(AlgorithmTest, IterateWithState)
 {
-    Group g;
+    group g;
 
     auto in1 = StateVar<int>::Create(g);
     auto in2 = StateVar<int>::Create(g);
@@ -600,7 +599,7 @@ TEST(AlgorithmTest, IterateWithState)
 
 TEST(AlgorithmTest, IterateByRefWithState)
 {
-    Group g;
+    group g;
 
     auto in1 = StateVar<int>::Create(g);
     auto in2 = StateVar<int>::Create(g);
@@ -711,7 +710,7 @@ TEST(AlgorithmTest, IterateByRefWithState)
     }
 }
 
-Group flattenGroup;
+group flattenGroup;
 
 class FlattenDummy
 {
@@ -735,7 +734,7 @@ struct FlattenDummy::Flat : public Flattened<FlattenDummy>
 
 TEST(AlgorithmTest, FlattenObject1)
 {
-    Group g;
+    group g;
 
     FlattenDummy o1;
     FlattenDummy o2;

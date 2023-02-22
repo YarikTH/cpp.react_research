@@ -33,11 +33,11 @@ class EventStreamNode;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// StateObserverNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class ObserverNode : public NodeBase
+class ObserverNode : public node_base
 {
 public:
-    explicit ObserverNode(const Group& group) :
-        ObserverNode::NodeBase( group )
+    explicit ObserverNode(const group& group) :
+        ObserverNode::node_base( group )
     { }
 };
 
@@ -49,28 +49,28 @@ class StateObserverNode : public ObserverNode
 {
 public:
     template <typename FIn>
-    StateObserverNode(const Group& group, FIn&& func, const State<TDeps>& ... deps) :
+    StateObserverNode(const group& group, FIn&& func, const State<TDeps>& ... deps) :
         StateObserverNode::ObserverNode( group ),
         func_( std::forward<FIn>(func) ),
         depHolder_( deps ... )
     {
-        REACT_EXPAND_PACK(this->AttachToMe(GetInternals(deps).GetNodeId()));
+        REACT_EXPAND_PACK( this->attach_to_me( get_internals( deps ).get_node_id() ));
 
-        react::impl::apply([this] (const auto& ... deps)
-            { this->func_(GetInternals(deps).Value() ...); }, depHolder_);
+        std::apply([this] (const auto& ... deps)
+            { this->func_(get_internals(deps).Value() ...); }, depHolder_);
     }
 
     ~StateObserverNode()
     {
-        react::impl::apply([this] (const auto& ... deps)
-            { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(deps).GetNodeId())); }, depHolder_);
+        std::apply([this] (const auto& ... deps)
+            { REACT_EXPAND_PACK( this->detach_from_me( get_internals( deps ).get_node_id() )); }, depHolder_);
     }
 
-    virtual UpdateResult Update() noexcept override
+    virtual update_result update() noexcept override
     {
-        react::impl::apply([this] (const auto& ... deps)
-            { this->func_(GetInternals(deps).Value() ...); }, depHolder_);
-        return UpdateResult::unchanged;
+        std::apply([this] (const auto& ... deps)
+            { this->func_(get_internals(deps).Value() ...); }, depHolder_);
+        return update_result::unchanged;
     }
 
 private:
@@ -87,23 +87,23 @@ class EventObserverNode : public ObserverNode
 {
 public:
     template <typename FIn>
-    EventObserverNode(const Group& group, FIn&& func, const Event<E>& subject) :
+    EventObserverNode(const group& group, FIn&& func, const Event<E>& subject) :
         EventObserverNode::ObserverNode( group ),
         func_( std::forward<FIn>(func) ),
         subject_( subject )
     {
-        this->AttachToMe(GetInternals(subject).GetNodeId());
+        this->attach_to_me( get_internals( subject ).get_node_id() );
     }
 
     ~EventObserverNode()
     {
-        this->DetachFromMe(GetInternals(subject_).GetNodeId());
+        this->detach_from_me( get_internals( subject_ ).get_node_id() );
     }
 
-    virtual UpdateResult Update() noexcept override
+    virtual update_result update() noexcept override
     {
-        func_(GetInternals(subject_).Events());
-        return UpdateResult::unchanged;
+        func_(get_internals(subject_).Events());
+        return update_result::unchanged;
     }
 
 private:
@@ -120,33 +120,33 @@ class SyncedEventObserverNode : public ObserverNode
 {
 public:
     template <typename FIn>
-    SyncedEventObserverNode(const Group& group, FIn&& func, const Event<E>& subject, const State<TSyncs>& ... syncs) :
+    SyncedEventObserverNode(const group& group, FIn&& func, const Event<E>& subject, const State<TSyncs>& ... syncs) :
         SyncedEventObserverNode::ObserverNode( group ),
         func_( std::forward<FIn>(func) ),
         subject_( subject ),
         syncHolder_( syncs ... )
     {
-        this->AttachToMe(GetInternals(subject).GetNodeId());
-        REACT_EXPAND_PACK(this->AttachToMe(GetInternals(syncs).GetNodeId()));
+        this->attach_to_me( get_internals( subject ).get_node_id() );
+        REACT_EXPAND_PACK( this->attach_to_me( get_internals( syncs ).get_node_id() ));
     }
 
     ~SyncedEventObserverNode()
     {
-        impl::apply([this] (const auto& ... syncs)
-            { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(syncs).GetNodeId())); }, syncHolder_);
-        this->DetachFromMe(GetInternals(subject_).GetNodeId());
+        std::apply([this] (const auto& ... syncs)
+            { REACT_EXPAND_PACK( this->detach_from_me( get_internals( syncs ).get_node_id() )); }, syncHolder_);
+        this->detach_from_me( get_internals( subject_ ).get_node_id() );
     }
 
-    virtual UpdateResult Update() noexcept override
+    virtual update_result update() noexcept override
     {
         // Updates might be triggered even if only sync nodes changed. Ignore those.
-        if (GetInternals(this->subject_).Events().empty())
-            return UpdateResult::unchanged;
+        if (get_internals(this->subject_).Events().empty())
+            return update_result::unchanged;
 
-        impl::apply([this] (const auto& ... syncs)
-            { func_(GetInternals(this->subject_).Events(), GetInternals(syncs).Value() ...); }, syncHolder_);
+        std::apply([this] (const auto& ... syncs)
+            { func_(get_internals(this->subject_).Events(), get_internals(syncs).Value() ...); }, syncHolder_);
 
-        return UpdateResult::unchanged;
+        return update_result::unchanged;
     }
 
 private:
@@ -173,14 +173,14 @@ public:
         nodePtr_( std::move(nodePtr) )
     { }
 
-    auto GetNodePtr() -> std::shared_ptr<ObserverNode>&
+    auto get_node_ptr() -> std::shared_ptr<ObserverNode>&
         { return nodePtr_; }
 
-    auto GetNodePtr() const -> const std::shared_ptr<ObserverNode>&
+    auto get_node_ptr() const -> const std::shared_ptr<ObserverNode>&
         { return nodePtr_; }
 
-    node_id GetNodeId() const
-        { return nodePtr_->GetNodeId(); }
+    node_id get_node_id() const
+        { return nodePtr_->get_node_id(); }
 
 protected:
     ObserverInternals() = default;

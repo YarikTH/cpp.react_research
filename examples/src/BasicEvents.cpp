@@ -22,7 +22,7 @@ namespace example1
     // Defines a group.
     // Each group represents a separate dependency graph.
     // Reactives from different groups can not be mixed.
-    Group group;
+    group group;
 
     // An event source that emits values of type string
     namespace v1
@@ -83,7 +83,7 @@ namespace example2
     using namespace std;
     using namespace react;
 
-    Group group;
+    group group;
 
     // An event stream that merges both sources
     EventSource<> leftClick = EventSource<>::Create(group);
@@ -118,7 +118,7 @@ namespace example3
     using namespace std;
     using namespace react;
 
-    Group group;
+    group group;
 
     EventSource<int> numbers = EventSource<int>::Create(group);
 
@@ -148,7 +148,7 @@ namespace example4
     using namespace std;
     using namespace react;
 
-    Group group;
+    group group;
 
     // Data types
     enum class Tag { normal, critical };
@@ -194,7 +194,7 @@ namespace example5
     using namespace std;
     using namespace react;
 
-    Group group;
+    group group;
 
     EventSource<int> src = EventSource<int>::Create(group);
 
@@ -209,11 +209,10 @@ namespace example5
             }, src);
         // output: 1, 2, 3, 4
 
-        group.DoTransaction([]
-            {
-                src << 1 << 2 << 3;
-                src << 4;
-            });
+        group.do_transaction( [] {
+            src << 1 << 2 << 3;
+            src << 4;
+        } );
 
         cout << endl;
     }

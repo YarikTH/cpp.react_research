@@ -22,7 +22,7 @@ namespace example1
     using namespace std;
     using namespace react;
 
-    Group g;
+    group g;
 
     struct Sensor
     {
@@ -46,10 +46,7 @@ namespace example1
 
         sensor.samples << 20 << 21 << 21 << 22; // output: 20, 21, 22
 
-        g.DoTransaction([&]
-            {
-                sensor.samples << 30 << 31 << 31 << 32;
-            }); // output: 32
+        g.do_transaction( [&] { sensor.samples << 30 << 31 << 31 << 32; } ); // output: 32
 
         cout << endl;
     }
@@ -63,7 +60,7 @@ namespace example2
     using namespace std;
     using namespace react;
 
-    Group g;
+    group g;
 
     struct Employee
     {
@@ -97,7 +94,7 @@ namespace example3
     using namespace std;
     using namespace react;
 
-    Group g;
+    group g;
 
     struct Counter
     {
@@ -136,7 +133,7 @@ namespace example4
     using namespace std;
     using namespace react;
 
-    Group g;
+    group g;
 
     struct Sensor
     {
@@ -189,7 +186,7 @@ namespace example5
     using namespace std;
     using namespace react;
 
-    Group g;
+    group g;
 
     enum ECmd { increment, decrement, reset };
 
@@ -277,7 +274,7 @@ namespace example6
     using namespace std;
     using namespace react;
 
-    Group g;
+    group g;
 
     class Sensor
     {
@@ -338,7 +335,7 @@ namespace example6
 
 using namespace react;
 
-Group g;
+group g;
 
 struct MyClass
 {
@@ -422,16 +419,15 @@ void test1()
     // Objects: Data1 Data2 Data3
 
     w2.Set("Widget2 (x)");
-    
-    g.DoTransaction([&]
-        {
-            w3.Set("Widget3 (x)");
 
-            d1.Set("Data1 (x)");
-            d2.Set("Data2 (x)");
+    g.do_transaction( [&] {
+        w3.Set( "Widget3 (x)" );
 
-            objects.Set(allWidgets);
-        });
+        d1.Set( "Data1 (x)" );
+        d2.Set( "Data2 (x)" );
+
+        objects.Set( allWidgets );
+    } );
     // Objects: Widget1 (x) Widget2 (x) Widget3 (x)
 
     objects.Modify([&] (auto& w)

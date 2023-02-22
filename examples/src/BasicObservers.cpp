@@ -20,7 +20,7 @@ namespace example1
     using namespace std;
     using namespace react;
 
-    Group group;
+    group group;
 
     StateVar<int> x = StateVar<int>::Create(group, 1);
 

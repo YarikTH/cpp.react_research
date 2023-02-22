@@ -25,39 +25,39 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Group
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class Group : protected REACT_IMPL::GroupInternals
+class group : protected REACT_IMPL::group_internals
 {
 public:
-    Group() = default;
+    group() = default;
 
-    Group(const Group&) = default;
-    Group& operator=(const Group&) = default;
+    group(const group&) = default;
+    group& operator=(const group&) = default;
 
-    Group(Group&&) = default;
-    Group& operator=(Group&&) = default;
-
-    template <typename F>
-    void DoTransaction(F&& func)
-        { GetGraphPtr()->do_transaction(std::forward<F>(func)); }
+    group(group&&) = default;
+    group& operator=(group&&) = default;
 
     template <typename F>
-    void EnqueueTransaction(F&& func, TransactionFlags flags = TransactionFlags::none)
-        { GetGraphPtr()->enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ }, flags); }
+    void do_transaction(F&& func)
+        { get_graph_ptr()->do_transaction(std::forward<F>(func)); }
 
     template <typename F>
-    void EnqueueTransaction(F&& func, const SyncPoint& syncPoint, TransactionFlags flags = TransactionFlags::none)
-        { GetGraphPtr()->enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ syncPoint }, flags); }
+    void enqueue_transaction(F&& func, TransactionFlags flags = TransactionFlags::none )
+        { get_graph_ptr()->enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ }, flags); }
 
-    friend bool operator==(const Group& a, const Group& b)
-        { return a.GetGraphPtr() == b.GetGraphPtr(); }
+    template <typename F>
+    void enqueue_transaction(F&& func, const SyncPoint& syncPoint, TransactionFlags flags = TransactionFlags::none )
+        { get_graph_ptr()->enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ syncPoint }, flags); }
 
-    friend bool operator!=(const Group& a, const Group& b)
+    friend bool operator==(const group& a, const group& b)
+        { return a.get_graph_ptr() == b.get_graph_ptr(); }
+
+    friend bool operator!=(const group& a, const group& b)
         { return !(a == b); }
 
-    friend auto GetInternals(Group& g) -> REACT_IMPL::GroupInternals&
+    friend auto get_internals( group& g) -> REACT_IMPL::group_internals&
         { return g; }
 
-    friend auto GetInternals(const Group& g) -> const REACT_IMPL::GroupInternals&
+    friend auto get_internals(const group& g) -> const REACT_IMPL::group_internals&
         { return g; }
 };
 

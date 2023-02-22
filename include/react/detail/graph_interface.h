@@ -51,7 +51,7 @@ private:
     value_type m_id = -1;
 };
 
-enum class UpdateResult
+enum class update_result
 {
     unchanged,
     changed,
@@ -59,16 +59,15 @@ enum class UpdateResult
 };
 
 class react_graph;
-struct IReactNode;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/// IReactNode
+/// reactive_node_interface
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-struct IReactNode
+struct reactive_node_interface
 {
-    virtual ~IReactNode() = default;
+    virtual ~reactive_node_interface() = default;
 
-    virtual UpdateResult Update() noexcept = 0;
+    virtual update_result update() noexcept = 0;
     
     virtual void finalize() noexcept
         { }

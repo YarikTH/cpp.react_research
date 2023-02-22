@@ -20,7 +20,7 @@ namespace example1
     using namespace react;
     using namespace std;
 
-    Group group;
+    group group;
 
     class Sensor
     {
@@ -42,15 +42,9 @@ namespace example1
 
         SyncPoint sp;
 
-        group.EnqueueTransaction([&]
-            {
-                mySensor.samples << 30 << 31 << 31 << 32;
-            }, sp);
+        group.enqueue_transaction( [&] { mySensor.samples << 30 << 31 << 31 << 32; }, sp );
 
-        group.EnqueueTransaction([&]
-            {
-                mySensor.samples << 40 << 41 << 51 << 62;
-            }, sp);
+        group.enqueue_transaction( [&] { mySensor.samples << 40 << 41 << 51 << 62; }, sp );
 
         // Waits until both transactions are completed.
         // This does not mean that both transactions are interleaved.
@@ -68,7 +62,7 @@ namespace example2
     using namespace react;
     using namespace std;
 
-    Group group;
+    group group;
 
     class Sensor
     {
@@ -101,10 +95,7 @@ namespace example2
 
             for (int i=0; i < K; i++)
             {
-                group.EnqueueTransaction([&]
-                    {
-                        mySensor.samples << 3 << 4 << 2 << 1;
-                    }, sp);
+                group.enqueue_transaction( [&] { mySensor.samples << 3 << 4 << 2 << 1; }, sp );
             }
 
             sp.Wait();
@@ -143,10 +134,9 @@ namespace example2
 
             for (int i=0; i < K; i++)
             {
-                group.EnqueueTransaction([&]
-                    {
-                        mySensor.samples << 3 << 4 << 2 << 1;
-                    }, sp, TransactionFlags::allow_merging);
+                group.enqueue_transaction( [&] { mySensor.samples << 3 << 4 << 2 << 1; },
+                    sp,
+                    TransactionFlags::allow_merging );
             }
 
             sp.Wait();

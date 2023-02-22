@@ -16,7 +16,7 @@ using namespace react;
 
 TEST(StateTest, Construction)
 {
-    Group g;
+    group g;
 
     // State variable
     {
@@ -47,7 +47,7 @@ TEST(StateTest, Construction)
 
 TEST(StateTest, BasicOutput)
 {
-    Group g;
+    group g;
 
     auto st = StateVar<int>::Create(g);
 
@@ -69,7 +69,7 @@ TEST(StateTest, BasicOutput)
 
 TEST(StateTest, Slots)
 {
-    Group g;
+    group g;
 
     auto st1 = StateVar<int>::Create(g);
     auto st2 = StateVar<int>::Create(g);
@@ -107,7 +107,7 @@ TEST(StateTest, Slots)
 
 TEST(StateTest, Transactions)
 {
-    Group g;
+    group g;
 
     auto st = StateVar<int>::Create(g, 1);
 
@@ -122,13 +122,12 @@ TEST(StateTest, Transactions)
 
     EXPECT_EQ(1, output);
 
-    g.DoTransaction([&]
-        {
-            st.Set(1);
-            st.Set(2);
-            st.Set(3);
-            st.Set(4);
-        });
+    g.do_transaction( [&] {
+        st.Set( 1 );
+        st.Set( 2 );
+        st.Set( 3 );
+        st.Set( 4 );
+    } );
 
     EXPECT_EQ(5, output);
     EXPECT_EQ(2, turns);
@@ -208,7 +207,7 @@ static T Sum3(T a, T b, T c)
 
 TEST(StateTest, StateCombination1)
 {
-    Group g;
+    group g;
 
     auto a = StateVar<int>::Create(g, 0);
     auto b = StateVar<int>::Create(g, 0);
@@ -255,7 +254,7 @@ TEST(StateTest, StateCombination1)
 
 TEST(StateTest, StateCombination2)
 {
-    Group g;
+    group g;
 
     std::vector<int> results;
 
@@ -325,7 +324,7 @@ TEST(StateTest, StateCombination2)
 
 TEST(StateTest, Modify1)
 {
-    Group g;
+    group g;
 
     std::vector<int> results;
 
@@ -355,7 +354,7 @@ TEST(StateTest, Modify1)
 
 TEST(StateTest, Modify2)
 {
-    Group g;
+    group g;
 
     std::vector<int> results;
 
@@ -368,13 +367,12 @@ TEST(StateTest, Modify2)
             ++turns;
             results = v;
         }, var);
-    
-    g.DoTransaction([&]
-        {
-            var.Modify([] (std::vector<int>& v) { v.push_back(30); });
-            var.Modify([] (std::vector<int>& v) { v.push_back(50); });
-            var.Modify([] (std::vector<int>& v) { v.push_back(70); });
-        });
+
+    g.do_transaction( [&] {
+        var.Modify( []( std::vector<int>& v ) { v.push_back( 30 ); } );
+        var.Modify( []( std::vector<int>& v ) { v.push_back( 50 ); } );
+        var.Modify( []( std::vector<int>& v ) { v.push_back( 70 ); } );
+    } );
 
     EXPECT_EQ(results[0], 30);
     EXPECT_EQ(results[1], 50);
@@ -385,7 +383,7 @@ TEST(StateTest, Modify2)
 
 TEST(StateTest, Modify3)
 {
-    Group g;
+    group g;
 
     std::vector<int> results;
 
@@ -398,12 +396,11 @@ TEST(StateTest, Modify3)
             ++turns;
             results = v;
         }, var);
-    
-    g.DoTransaction([&]
-        {
-            var.Set(std::vector<int>{ 30, 50 });
-            var.Modify([] (std::vector<int>& v) { v.push_back(70); });
-        });
+
+    g.do_transaction( [&] {
+        var.Set( std::vector<int>{ 30, 50 } );
+        var.Modify( []( std::vector<int>& v ) { v.push_back( 70 ); } );
+    } );
 
     EXPECT_EQ(results[0], 30);
     EXPECT_EQ(results[1], 50);

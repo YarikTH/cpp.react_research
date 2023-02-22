@@ -23,7 +23,7 @@
 
 /***************************************/ REACT_IMPL_BEGIN /**************************************/
 
-node_id react_graph::register_node(IReactNode* nodePtr)
+node_id react_graph::register_node(reactive_node_interface* nodePtr)
 {
     return node_id{m_node_data.insert( node_data{ nodePtr })};
 }
@@ -59,7 +59,7 @@ void react_graph::add_sync_point_dependency(SyncPoint::Dependency dep)
 
 void react_graph::propagate()
 {
-    std::vector<IReactNode*> changed_nodes;
+    std::vector<reactive_node_interface*> changed_nodes;
 
     // Fill update queue with successors of changed inputs.
     for (node_id nodeId : m_changed_inputs )
@@ -67,9 +67,9 @@ void react_graph::propagate()
         auto& node = m_node_data[nodeId];
         auto* nodePtr = node.node_ptr;
 
-        UpdateResult res = nodePtr->Update();
+        update_result res = nodePtr->update();
 
-        if (res == UpdateResult::changed)
+        if (res == update_result::changed)
         {
             changed_nodes.push_back(nodePtr);
             schedule_successors( node );
@@ -95,10 +95,10 @@ void react_graph::propagate()
                 continue;
             }
 
-            UpdateResult res = nodePtr->Update();
+            update_result res = nodePtr->update();
 
             // Topology changed?
-            if (res == UpdateResult::shifted)
+            if (res == update_result::shifted)
             {
                 // Re-schedule this node.
                 recalculate_successor_levels( node );
@@ -106,7 +106,7 @@ void react_graph::propagate()
                 continue;
             }
             
-            if (res == UpdateResult::changed)
+            if (res == update_result::changed)
             {
                 changed_nodes.push_back(nodePtr);
                 schedule_successors( node );
@@ -117,7 +117,7 @@ void react_graph::propagate()
     }
 
     // Cleanup buffers in changed nodes.
-    for (IReactNode* nodePtr : changed_nodes )
+    for (reactive_node_interface* nodePtr : changed_nodes )
         nodePtr->finalize();
     changed_nodes.clear();
 

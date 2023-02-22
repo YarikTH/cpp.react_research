@@ -91,7 +91,7 @@ using EventValueSink = std::back_insert_iterator<std::vector<E>>;
 class Observer;
 
 template <typename T>
-bool HasChanged(const T& a, const T& b)
+bool has_changed(const T& a, const T& b)
     { return !(a == b); }
 
 template <typename T>

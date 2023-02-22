@@ -36,26 +36,26 @@
 /// Forward declarations
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S>
-class StateNode;
+class state_node;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// EventNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E>
-class EventNode : public node_base
+class event_node : public node_base
 {
 public:
-    explicit EventNode(const group& group) :
-        EventNode::node_base( group )
+    explicit event_node(const group& group)
+        : event_node::node_base( group )
     { }
 
-    EventValueList<E>& Events()
+    EventValueList<E>& events()
         { return events_; }
 
-    const EventValueList<E>& Events() const
+    const EventValueList<E>& events() const
         { return events_; }
 
-    virtual void finalize() noexcept override
+    void finalize() noexcept override
         { events_.clear(); }
 
 private:
@@ -66,17 +66,17 @@ private:
 /// EventSourceNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E>
-class EventSourceNode : public EventNode<E>
+class event_source_node : public event_node<E>
 {
 public:
-    EventSourceNode(const group& group) :
-        EventSourceNode::EventNode( group )
+    explicit event_source_node(const group& group)
+        : event_source_node::event_node( group )
     {
     }
 
-    virtual update_result update() noexcept override
+    update_result update() noexcept override
     {
-        if (! this->Events().empty())
+        if (!this->events().empty())
             return update_result::changed;
         else
             return update_result::unchanged;
@@ -84,18 +84,18 @@ public:
 
     template <typename U>
     void EmitValue(U&& value)
-        { this->Events().push_back(std::forward<U>(value)); }
+        { this->events().push_back(std::forward<U>(value)); }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// EventMergeNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E, typename ... TInputs>
-class EventMergeNode : public EventNode<E>
+class EventMergeNode : public event_node<E>
 {
 public:
     EventMergeNode(const group& group, const Event<TInputs>& ... deps) :
-        EventMergeNode::EventNode( group ),
+        EventMergeNode::event_node( group ),
         inputs_( deps ... )
     {
         REACT_EXPAND_PACK( this->attach_to_me( get_internals( deps ).get_node_id() ));
@@ -112,7 +112,7 @@ public:
         std::apply([this] (auto& ... inputs)
             { REACT_EXPAND_PACK(this->MergeFromInput(inputs)); }, inputs_);
 
-        if (! this->Events().empty())
+        if (!this->events().empty())
             return update_result::changed;
         else
             return update_result::unchanged;
@@ -123,7 +123,8 @@ private:
     void MergeFromInput(Event<U>& dep)
     {
         auto& depInternals = get_internals(dep);
-        this->Events().insert(this->Events().end(), depInternals.Events().begin(), depInternals.Events().end());
+        this->events().insert(
+            this->events().end(), depInternals.events().begin(), depInternals.events().end());
     }
 
     std::tuple<Event<TInputs> ...> inputs_;
@@ -133,11 +134,11 @@ private:
 /// EventSlotNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E>
-class EventSlotNode : public EventNode<E>
+class EventSlotNode : public event_node<E>
 {
 public:
     EventSlotNode(const group& group) :
-        EventSlotNode::EventNode( group )
+        EventSlotNode::event_node( group )
     {
         inputNodeId_ = this->get_graph_ptr()->register_node(&slotInput_);
 
@@ -156,11 +157,11 @@ public:
     {
         for (auto& e : inputs_)
         {
-            const auto& events = get_internals(e).Events();
-            this->Events().insert(this->Events().end(), events.begin(), events.end());
+            const auto& events = get_internals( e ).events();
+            this->events().insert( this->events().end(), events.begin(), events.end());
         }
 
-        if (! this->Events().empty())
+        if (!this->events().empty())
             return update_result::changed;
         else
             return update_result::unchanged;
@@ -214,12 +215,12 @@ private:
 /// EventProcessingNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename TOut, typename TIn, typename F>
-class EventProcessingNode : public EventNode<TOut>
+class EventProcessingNode : public event_node<TOut>
 {
 public:
     template <typename FIn>
     EventProcessingNode(const group& group, FIn&& func, const Event<TIn>& dep) :
-        EventProcessingNode::EventNode( group ),
+        EventProcessingNode::event_node( group ),
         func_( std::forward<FIn>(func) ),
         dep_( dep )
     {
@@ -233,9 +234,9 @@ public:
 
     virtual update_result update() noexcept override
     {
-        func_(get_internals(dep_).Events(), std::back_inserter(this->Events()));
+        func_( get_internals( dep_ ).events(), std::back_inserter( this->events()));
 
-        if (! this->Events().empty())
+        if (!this->events().empty())
             return update_result::changed;
         else
             return update_result::unchanged;
@@ -251,12 +252,12 @@ private:
 /// SyncedEventProcessingNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename TOut, typename TIn, typename F, typename ... TSyncs>
-class SyncedEventProcessingNode : public EventNode<TOut>
+class SyncedEventProcessingNode : public event_node<TOut>
 {
 public:
     template <typename FIn>
     SyncedEventProcessingNode(const group& group, FIn&& func, const Event<TIn>& dep, const State<TSyncs>& ... syncs) :
-        SyncedEventProcessingNode::EventNode( group ),
+        SyncedEventProcessingNode::event_node( group ),
         func_( std::forward<FIn>(func) ),
         dep_( dep ),
         syncHolder_( syncs ... )
@@ -275,16 +276,17 @@ public:
     virtual update_result update() noexcept override
     {
         // Updates might be triggered even if only sync nodes changed. Ignore those.
-        if (get_internals(dep_).Events().empty())
+        if ( get_internals( dep_ ).events().empty())
             return update_result::unchanged;
 
         std::apply([this] (const auto& ... syncs)
             {
-                func_(get_internals(dep_).Events(), std::back_inserter(this->Events()), get_internals(syncs).Value() ...);
+                func_( get_internals( dep_ ).events(), std::back_inserter( this->events()),
+                    get_internals( syncs ).value() ...);
             },
             syncHolder_);
 
-        if (! this->Events().empty())
+        if (!this->events().empty())
             return update_result::changed;
         else
             return update_result::unchanged;
@@ -302,11 +304,11 @@ private:
 /// EventJoinNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename ... Ts>
-class EventJoinNode : public EventNode<std::tuple<Ts ...>>
+class EventJoinNode : public event_node<std::tuple<Ts ...>>
 {
 public:
     EventJoinNode(const group& group, const Event<Ts>& ... deps) :
-        EventJoinNode::EventNode( group ),
+        EventJoinNode::event_node( group ),
         slots_( deps ... )
     {
         REACT_EXPAND_PACK( this->attach_to_me( get_internals( deps ).get_node_id() ));
@@ -343,13 +345,13 @@ public:
             // Pop values from buffers and emit tuple.
             std::apply([this] (Slot<Ts>& ... slots)
                 {
-                    this->Events().emplace_back(slots.buffer.front() ...);
+                    this->events().emplace_back(slots.buffer.front() ...);
                     REACT_EXPAND_PACK(slots.buffer.pop_front());
                 },
                 slots_);
         }
 
-        if (! this->Events().empty())
+        if (!this->events().empty())
             return update_result::changed;
         else
             return update_result::unchanged;
@@ -370,7 +372,9 @@ private:
     template <typename U>
     static void FetchBuffer(Slot<U>& slot)
     {
-        slot.buffer.insert(slot.buffer.end(), get_internals(slot.source).Events().begin(), get_internals(slot.source).Events().end());
+        slot.buffer.insert(slot.buffer.end(),
+            get_internals( slot.source ).events().begin(),
+            get_internals( slot.source ).events().end());
     }
 
     template <typename T>
@@ -387,38 +391,38 @@ private:
 /// EventInternals
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E>
-class EventInternals
+class event_internals
 {
 public:
-    EventInternals() = default;
+    event_internals() = default;
 
-    EventInternals(const EventInternals&) = default;
-    EventInternals& operator=(const EventInternals&) = default;
+    event_internals(const event_internals&) = default;
+    event_internals& operator=(const event_internals&) = default;
 
-    EventInternals(EventInternals&&) = default;
-    EventInternals& operator=(EventInternals&&) = default;
+    event_internals( event_internals&&) = default;
+    event_internals& operator=( event_internals&&) = default;
 
-    explicit EventInternals(std::shared_ptr<EventNode<E>>&& nodePtr) :
+    explicit event_internals(std::shared_ptr<event_node<E>>&& nodePtr) :
         nodePtr_( std::move(nodePtr) )
     { }
 
-    auto get_node_ptr() -> std::shared_ptr<EventNode<E>>&
+    auto get_node_ptr() -> std::shared_ptr<event_node<E>>&
         { return nodePtr_; }
 
-    auto get_node_ptr() const -> const std::shared_ptr<EventNode<E>>&
+    auto get_node_ptr() const -> const std::shared_ptr<event_node<E>>&
         { return nodePtr_; }
 
     node_id get_node_id() const
         { return nodePtr_->get_node_id(); }
 
-    EventValueList<E>& Events()
-        { return nodePtr_->Events(); }
+    EventValueList<E>& events()
+        { return nodePtr_->events(); }
 
-    const EventValueList<E>& Events() const
-        { return nodePtr_->Events(); }
+    const EventValueList<E>& events() const
+        { return nodePtr_->events(); }
 
 private:
-    std::shared_ptr<EventNode<E>> nodePtr_;
+    std::shared_ptr<event_node<E>> nodePtr_;
 };
 
 /****************************************/ REACT_IMPL_END /***************************************/

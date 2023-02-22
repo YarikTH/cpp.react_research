@@ -28,7 +28,7 @@
 /// Event
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E>
-class Event : protected REACT_IMPL::EventInternals<E>
+class Event : protected REACT_IMPL::event_internals<E>
 {
 public:
     // Construct with explicit group
@@ -71,15 +71,15 @@ public:
     friend bool operator!=(const Event<E>& a, const Event<E>& b)
         { return !(a == b); }
 
-    friend auto get_internals(Event<E>& e) -> REACT_IMPL::EventInternals<E>&
+    friend auto get_internals(Event<E>& e) -> REACT_IMPL::event_internals<E>&
         { return e; }
 
-    friend auto get_internals(const Event<E>& e) -> const REACT_IMPL::EventInternals<E>&
+    friend auto get_internals(const Event<E>& e) -> const REACT_IMPL::event_internals<E>&
         { return e; }
 
 protected:
-    Event(std::shared_ptr<REACT_IMPL::EventNode<E>>&& nodePtr) :
-        Event::EventInternals( std::move(nodePtr) )
+    Event(std::shared_ptr<REACT_IMPL::event_node<E>>&& nodePtr) :
+        Event::event_internals( std::move(nodePtr) )
     { }
 
     template <typename F, typename T>
@@ -140,24 +140,24 @@ public:
         { EmitValue(std::move(value)); return *this; }
 
 protected:
-    EventSource(std::shared_ptr<REACT_IMPL::EventNode<E>>&& nodePtr) :
+    EventSource(std::shared_ptr<REACT_IMPL::event_node<E>>&& nodePtr) :
         EventSource::Event( std::move(nodePtr) )
     { }
 
 private:
     static auto CreateSourceNode(const group& group) -> decltype(auto)
     {
-        using REACT_IMPL::EventSourceNode;
-        return std::make_shared<EventSourceNode<E>>(group);
+        using REACT_IMPL::event_source_node;
+        return std::make_shared<event_source_node<E>>(group);
     }
 
     template <typename T>
     void EmitValue(T&& value)
     {
         using REACT_IMPL::node_id;
-        using REACT_IMPL::EventSourceNode;
+        using REACT_IMPL::event_source_node;
 
-        auto* castedPtr = static_cast<EventSourceNode<E>*>(this->get_node_ptr().get());
+        auto* castedPtr = static_cast<event_source_node<E>*>(this->get_node_ptr().get());
 
         node_id nodeId = castedPtr->get_node_id();
         auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
@@ -196,7 +196,7 @@ public:
         { RemoveAllSlotInputs(); }
 
 protected:
-    EventSlot(std::shared_ptr<REACT_IMPL::EventNode<E>>&& nodePtr) :
+    EventSlot(std::shared_ptr<REACT_IMPL::event_node<E>>&& nodePtr) :
         EventSlot::Event( std::move(nodePtr) )
     { }
 

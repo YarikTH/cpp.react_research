@@ -244,7 +244,7 @@ public:
         if (initMode_)
             memberIds_.push_back( get_internals( signal ).get_node_id());
         
-        return get_internals(signal).Value();
+        return get_internals( signal ).value();
     }
 
 private:

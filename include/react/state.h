@@ -70,7 +70,7 @@ public:
         { return s; }
 
 protected:
-    State(std::shared_ptr<REACT_IMPL::StateNode<S>>&& nodePtr) :
+    State(std::shared_ptr<REACT_IMPL::state_node<S>>&& nodePtr) :
         State::state_internals( std::move(nodePtr) )
     { }
 
@@ -78,9 +78,9 @@ private:
     template <typename F, typename T1, typename ... Ts>
     static auto CreateFuncNode(const group& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps) -> decltype(auto)
     {
-        using REACT_IMPL::StateFuncNode;
+        using REACT_IMPL::state_func_node;
 
-        return std::make_shared<StateFuncNode<S, typename std::decay<F>::type, T1, Ts ...>>(
+        return std::make_shared<state_func_node<S, typename std::decay<F>::type, T1, Ts ...>>(
             group, std::forward<F>(func), dep1, deps...);
     }
 
@@ -129,39 +129,39 @@ public:
         { return !(a == b); }
 
     S* operator->()
-        { return &this->Value(); }
+        { return &this->value(); }
 
 protected:
-    StateVar(std::shared_ptr<REACT_IMPL::StateNode<S>>&& nodePtr) :
+    StateVar(std::shared_ptr<REACT_IMPL::state_node<S>>&& nodePtr) :
         StateVar::State( std::move(nodePtr) )
     { }
 
 private:
     static auto CreateVarNode(const group& group) -> decltype(auto)
     {
-        using REACT_IMPL::StateVarNode;
-        return std::make_shared<StateVarNode<S>>(group);
+        using REACT_IMPL::state_var_node;
+        return std::make_shared<state_var_node<S>>(group);
     }
 
     template <typename T>
     static auto CreateVarNode(const group& group, T&& value) -> decltype(auto)
     {
-        using REACT_IMPL::StateVarNode;
-        return std::make_shared<StateVarNode<S>>(group, std::forward<T>(value));
+        using REACT_IMPL::state_var_node;
+        return std::make_shared<state_var_node<S>>(group, std::forward<T>(value));
     }
 
     template <typename T>
     void SetValue(T&& newValue)
     {
         using REACT_IMPL::node_id;
-        using VarNodeType = REACT_IMPL::StateVarNode<S>;
+        using VarNodeType = REACT_IMPL::state_var_node<S>;
 
         VarNodeType* castedPtr = static_cast<VarNodeType*>(this->get_node_ptr().get());
 
         node_id nodeId = castedPtr->get_node_id();
         auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
 
-        castedPtr->SetValue(std::forward<T>(newValue));
+        castedPtr->set_value( std::forward<T>( newValue ) );
         graphPtr->push_input(nodeId);
     }
 
@@ -169,14 +169,14 @@ private:
     void ModifyValue(const F& func)
     {
         using REACT_IMPL::node_id;
-        using VarNodeType = REACT_IMPL::StateVarNode<S>;
+        using VarNodeType = REACT_IMPL::state_var_node<S>;
 
         VarNodeType* castedPtr = static_cast<VarNodeType*>(this->get_node_ptr().get());
         
         node_id nodeId = castedPtr->get_node_id();
         auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
 
-        castedPtr->ModifyValue(func);
+        castedPtr->modify_value( func );
         graphPtr->push_input(nodeId);
     }
 };
@@ -208,7 +208,7 @@ public:
         { SetSlotInput(newInput); }
 
 protected:
-    StateSlot(std::shared_ptr<REACT_IMPL::StateNode<S>>&& nodePtr) :
+    StateSlot(std::shared_ptr<REACT_IMPL::state_node<S>>&& nodePtr) :
         StateSlot::State( std::move(nodePtr) )
     { }
 

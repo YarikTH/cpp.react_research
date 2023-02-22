@@ -24,12 +24,12 @@
 /// IterateNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename F, typename E>
-class IterateNode : public StateNode<S>
+class IterateNode : public state_node<S>
 {
 public:
     template <typename T, typename FIn>
     IterateNode(const group& group, T&& init, FIn&& func, const Event<E>& evnt) :
-        IterateNode::StateNode( group, std::forward<T>(init) ),
+        IterateNode::state_node( group, std::forward<T>(init) ),
         func_( std::forward<FIn>(func) ),
         evnt_( evnt )
     {
@@ -43,11 +43,11 @@ public:
 
     virtual update_result update() noexcept override
     {
-        S newValue = func_(get_internals(evnt_).Events(), this->Value());
+        S newValue = func_( get_internals( evnt_ ).events(), this->value());
 
-        if (! (newValue == this->Value()))
+        if (! (newValue == this->value()))
         {
-            this->Value() = std::move(newValue);
+            this->value() = std::move(newValue);
             return update_result::changed;
         }
         else
@@ -65,12 +65,12 @@ private:
 /// IterateByRefNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename F, typename E>
-class IterateByRefNode : public StateNode<S>
+class IterateByRefNode : public state_node<S>
 {
 public:
     template <typename T, typename FIn>
     IterateByRefNode(const group& group, T&& init, FIn&& func, const Event<E>& evnt) :
-        IterateByRefNode::StateNode( group, std::forward<T>(init) ),
+        IterateByRefNode::state_node( group, std::forward<T>(init) ),
         func_( std::forward<FIn>(func) ),
         evnt_( evnt )
     {
@@ -84,7 +84,7 @@ public:
 
     virtual update_result update() noexcept override
     {
-        func_(get_internals(evnt_).Events(), this->Value());
+        func_( get_internals( evnt_ ).events(), this->value());
 
         // Always assume a change
         return update_result::changed;
@@ -99,12 +99,12 @@ protected:
 /// SyncedIterateNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename F, typename E, typename ... TSyncs>
-class SyncedIterateNode : public StateNode<S>
+class SyncedIterateNode : public state_node<S>
 {
 public:
     template <typename T, typename FIn>
     SyncedIterateNode(const group& group, T&& init, FIn&& func, const Event<E>& evnt, const State<TSyncs>& ... syncs) :
-        SyncedIterateNode::StateNode( group, std::forward<T>(init) ),
+        SyncedIterateNode::state_node( group, std::forward<T>(init) ),
         func_( std::forward<FIn>(func) ),
         evnt_( evnt ),
         syncHolder_( syncs ... )
@@ -123,17 +123,19 @@ public:
     virtual update_result update() noexcept override
     {
         // Updates might be triggered even if only sync nodes changed. Ignore those.
-        if (get_internals(evnt_).Events().empty())
+        if ( get_internals( evnt_ ).events().empty())
             return update_result::unchanged;
 
         S newValue = std::apply([this] (const auto& ... syncs)
             {
-                return func_(get_internals(evnt_).Events(), this->Value(), get_internals(syncs).Value() ...);
+                return func_( get_internals( evnt_ ).events(),
+                    this->value(),
+                    get_internals( syncs ).value() ...);
             }, syncHolder_);
 
-        if (! (newValue == this->Value()))
+        if (! (newValue == this->value()))
         {
-            this->Value() = std::move(newValue);
+            this->value() = std::move(newValue);
             return update_result::changed;
         }
         else
@@ -153,12 +155,12 @@ private:
 /// SyncedIterateByRefNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename F, typename E, typename ... TSyncs>
-class SyncedIterateByRefNode : public StateNode<S>
+class SyncedIterateByRefNode : public state_node<S>
 {
 public:
     template <typename T, typename FIn>
     SyncedIterateByRefNode(const group& group, T&& init, FIn&& func, const Event<E>& evnt, const State<TSyncs>& ... syncs) :
-        SyncedIterateByRefNode::StateNode( group, std::forward<T>(init) ),
+        SyncedIterateByRefNode::state_node( group, std::forward<T>(init) ),
         func_( std::forward<FIn>(func) ),
         evnt_( evnt ),
         syncHolder_( syncs ... )
@@ -176,13 +178,15 @@ public:
     virtual update_result update() noexcept override
     {
         // Updates might be triggered even if only sync nodes changed. Ignore those.
-        if (get_internals(evnt_).Events().empty())
+        if ( get_internals( evnt_ ).events().empty())
             return update_result::unchanged;
 
         std::apply(
             [this] (const auto& ... args)
             {
-                func_(get_internals(evnt_).Events(), this->Value(), get_internals(args).Value() ...);
+                func_( get_internals( evnt_ ).events(),
+                    this->value(),
+                    get_internals( args ).value() ...);
             },
             syncHolder_);
 
@@ -200,12 +204,12 @@ private:
 /// HoldNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S>
-class HoldNode : public StateNode<S>
+class HoldNode : public state_node<S>
 {
 public:
     template <typename T>
     HoldNode(const group& group, T&& init, const Event<S>& evnt) :
-        HoldNode::StateNode( group, std::forward<T>(init) ),
+        HoldNode::state_node( group, std::forward<T>(init) ),
         evnt_( evnt )
     {
         this->attach_to_me( get_internals( evnt ).get_node_id() );
@@ -220,14 +224,14 @@ public:
     {
         bool changed = false;
 
-        if (! get_internals(evnt_).Events().empty())
+        if (!get_internals( evnt_ ).events().empty())
         {
-            const S& newValue = get_internals(evnt_).Events().back();
+            const S& newValue = get_internals( evnt_ ).events().back();
 
-            if (! (newValue == this->Value()))
+            if (! (newValue == this->value()))
             {
                 changed = true;
-                this->Value() = newValue;
+                this->value() = newValue;
             }
         }
 
@@ -245,11 +249,11 @@ private:
 /// SnapshotNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename E>
-class SnapshotNode : public StateNode<S>
+class SnapshotNode : public state_node<S>
 {
 public:
     SnapshotNode(const group& group, const State<S>& target, const Event<E>& trigger) :
-        SnapshotNode::StateNode( group, get_internals(target).Value() ),
+        SnapshotNode::state_node( group, get_internals( target ).value() ),
         target_( target ),
         trigger_( trigger )
     {
@@ -267,14 +271,14 @@ public:
     {
         bool changed = false;
         
-        if (! get_internals(trigger_).Events().empty())
+        if (!get_internals( trigger_ ).events().empty())
         {
-            const S& newValue = get_internals(target_).Value();
+            const S& newValue = get_internals( target_ ).value();
 
-            if (! (newValue == this->Value()))
+            if (! (newValue == this->value()))
             {
                 changed = true;
-                this->Value() = newValue;
+                this->value() = newValue;
             }
         }
 
@@ -293,11 +297,11 @@ private:
 /// MonitorNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S>
-class MonitorNode : public EventNode<S>
+class MonitorNode : public event_node<S>
 {
 public:
     MonitorNode(const group& group, const State<S>& input) :
-        MonitorNode::EventNode( group ),
+        MonitorNode::event_node( group ),
         input_( input )
     {
         this->attach_to_me( get_internals( input_ ).get_node_id() );
@@ -310,7 +314,7 @@ public:
 
     virtual update_result update() noexcept override
     {
-        this->Events().push_back(get_internals(input_).Value());
+        this->events().push_back( get_internals( input_ ).value());
         return update_result::changed;
     }
 
@@ -322,11 +326,11 @@ private:
 /// PulseNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename E>
-class PulseNode : public EventNode<S>
+class PulseNode : public event_node<S>
 {
 public:
     PulseNode(const group& group, const State<S>& input, const Event<E>& trigger) :
-        PulseNode::EventNode( group ),
+        PulseNode::event_node( group ),
         input_( input ),
         trigger_( trigger )
     {
@@ -342,10 +346,10 @@ public:
 
     virtual update_result update() noexcept override
     {
-        for (size_t i = 0; i < get_internals(trigger_).Events().size(); ++i)
-            this->Events().push_back(get_internals(input_).Value());
+        for (size_t i = 0; i < get_internals( trigger_ ).events().size(); ++i)
+            this->events().push_back( get_internals( input_ ).value());
 
-        if (! this->Events().empty())
+        if (!this->events().empty())
             return update_result::changed;
         else
             return update_result::unchanged;
@@ -360,13 +364,13 @@ private:
 /// FlattenStateNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, template <typename> class TState>
-class FlattenStateNode : public StateNode<S>
+class FlattenStateNode : public state_node<S>
 {
 public:
     FlattenStateNode(const group& group, const State<TState<S>>& outer) :
-        FlattenStateNode::StateNode( group, get_internals(get_internals(outer).Value()).Value() ),
+        FlattenStateNode::state_node( group, get_internals( get_internals( outer ).value() ).value() ),
         outer_( outer ),
-        inner_( get_internals(outer).Value() )
+        inner_( get_internals( outer ).value() )
     {
         this->attach_to_me( get_internals( outer_ ).get_node_id() );
         this->attach_to_me( get_internals( inner_ ).get_node_id() );
@@ -380,7 +384,7 @@ public:
 
     virtual update_result update() noexcept override
     {
-        const State<S>& newInner = get_internals(outer_).Value();
+        const State<S>& newInner = get_internals( outer_ ).value();
 
         // Check if there's a new inner node.
         if (! (newInner == inner_))
@@ -391,11 +395,11 @@ public:
             return update_result::shifted;
         }
 
-        const S& newValue = get_internals(inner_).Value();
+        const S& newValue = get_internals( inner_ ).value();
 
-        if (HasChanged(newValue, this->Value()))
+        if ( has_changed( newValue, this->value() ))
         {
-            this->Value() = newValue;
+            this->value() = newValue;
             return update_result::changed;
         }
 
@@ -411,16 +415,16 @@ private:
 /// FlattenStateListNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <template <typename ...> class TList, template <typename> class TState, typename V, typename ... TParams>
-class FlattenStateListNode : public StateNode<TList<V>>
+class FlattenStateListNode : public state_node<TList<V>>
 {
 public:
     using InputListType = TList<TState<V>, TParams ...>;
     using FlatListType = TList<V>;
 
     FlattenStateListNode(const group& group, const State<InputListType>& outer) :
-        FlattenStateListNode::StateNode( group, MakeFlatList(get_internals(outer).Value()) ),
+        FlattenStateListNode::state_node( group, MakeFlatList( get_internals( outer ).value()) ),
         outer_( outer ),
-        inner_( get_internals(outer).Value() )
+        inner_( get_internals( outer ).value() )
     {
         this->attach_to_me( get_internals( outer_ ).get_node_id() );
 
@@ -438,7 +442,7 @@ public:
 
     virtual update_result update() noexcept override
     {
-        const InputListType& newInner = get_internals(outer_).Value();
+        const InputListType& newInner = get_internals( outer_ ).value();
 
         // Check if there's a new inner node.
         if (! (std::equal(begin(newInner), end(newInner), begin(inner_), end(inner_))))
@@ -453,12 +457,12 @@ public:
         }
 
         FlatListType newValue = MakeFlatList(inner_);
-        const FlatListType& curValue = this->Value();
+        const FlatListType& curValue = this->value();
 
         if (! (std::equal(begin(newValue), end(newValue), begin(curValue), end(curValue), [] (const auto& a, const auto& b)
-            { return !HasChanged(a, b); })))
+            { return !has_changed( a, b ); })))
         {
-            this->Value() = std::move(newValue);
+            this->value() = std::move(newValue);
             return update_result::changed;
         }
 
@@ -470,7 +474,7 @@ private:
     {
         FlatListType res;
         for (const State<V>& state : list)
-            ListInsert(res, get_internals(state).Value());
+            ListInsert(res, get_internals( state ).value());
         return res;
     }
 
@@ -482,16 +486,16 @@ private:
 /// FlattenStateListNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <template <typename ...> class TMap, template <typename> class TState, typename K, typename V, typename ... TParams>
-class FlattenStateMapNode : public StateNode<TMap<K, V>>
+class FlattenStateMapNode : public state_node<TMap<K, V>>
 {
 public:
     using InputMapType = TMap<K, TState<V>, TParams ...>;
     using FlatMapType = TMap<K, V>;
 
     FlattenStateMapNode(const group& group, const State<InputMapType>& outer) :
-        FlattenStateMapNode::StateNode( group, MakeFlatMap(get_internals(outer).Value()) ),
+        FlattenStateMapNode::state_node( group, MakeFlatMap( get_internals( outer ).value()) ),
         outer_( outer ),
-        inner_( get_internals(outer).Value() )
+        inner_( get_internals( outer ).value() )
     {
         this->attach_to_me( get_internals( outer_ ).get_node_id() );
 
@@ -509,7 +513,7 @@ public:
 
     virtual update_result update() noexcept override
     {
-        const InputMapType& newInner = get_internals(outer_).Value();
+        const InputMapType& newInner = get_internals( outer_ ).value();
 
         // Check if there's a new inner node.
         if (! (std::equal(begin(newInner), end(newInner), begin(inner_), end(inner_))))
@@ -524,12 +528,12 @@ public:
         }
 
         FlatMapType newValue = MakeFlatMap(inner_);
-        const FlatMapType& curValue = this->Value();
+        const FlatMapType& curValue = this->value();
 
         if (! (std::equal(begin(newValue), end(newValue), begin(curValue), end(curValue), [] (const auto& a, const auto& b)
-            { return !HasChanged(a.first, b.first) && !HasChanged(a.second, b.second); })))
+            { return !has_changed( a.first, b.first ) && !has_changed( a.second, b.second ); })))
         {
-            this->Value() = std::move(newValue);
+            this->value() = std::move(newValue);
             return update_result::changed;
         }
 
@@ -541,7 +545,7 @@ private:
     {
         FlatMapType res;
         for (const auto& entry : map)
-            MapInsert(res, typename FlatMapType::value_type{ entry.first, get_internals(entry.second).Value() });
+            MapInsert(res, typename FlatMapType::value_type{ entry.first, get_internals( entry.second ).value() });
         return res;
     }
 
@@ -555,24 +559,23 @@ struct FlattenedInitTag { };
 /// FlattenObjectNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T, typename TFlat>
-class FlattenObjectNode : public StateNode<TFlat>
+class FlattenObjectNode : public state_node<TFlat>
 {
 public:
-    FlattenObjectNode(const group& group, const State<T>& obj) :
-        StateNode<TFlat>( in_place, group, get_internals(obj).Value(), FlattenedInitTag{ } ),
+    FlattenObjectNode(const group& group, const State<T>& obj) : state_node<TFlat>( in_place, group, get_internals( obj ).value(), FlattenedInitTag{ } ),
         obj_( obj )
     {
         this->attach_to_me( get_internals( obj ).get_node_id() );
 
-        for (node_id nodeId : this->Value().memberIds_)
+        for (node_id nodeId : this->value().memberIds_)
             this->attach_to_me( nodeId );
 
-        this->Value().initMode_ = false;
+        this->value().initMode_ = false;
     }
 
     ~FlattenObjectNode()
     {
-        for (node_id nodeId :  this->Value().memberIds_)
+        for (node_id nodeId : this->value().memberIds_)
             this->detach_from_me( nodeId );
 
         this->detach_from_me( get_internals( obj_ ).get_node_id() );
@@ -580,19 +583,19 @@ public:
 
     virtual update_result update() noexcept override
     {
-        const T& newValue = get_internals(obj_).Value();
+        const T& newValue = get_internals( obj_ ).value();
 
-        if (HasChanged(newValue, static_cast<const T&>(this->Value())))
+        if ( has_changed( newValue, static_cast<const T&>( this->value() ) ))
         {
-            for (node_id nodeId : this->Value().memberIds_)
+            for (node_id nodeId : this->value().memberIds_)
                 this->detach_from_me( nodeId );
 
             // Steal array from old value for new value so we don't have to re-allocate.
             // The old value will freed after the assignment.
-            this->Value().memberIds_.clear();
-            this->Value() = TFlat { newValue, FlattenedInitTag{ }, std::move(this->Value().memberIds_) };
+            this->value().memberIds_.clear();
+            this->value() = TFlat { newValue, FlattenedInitTag{ }, std::move( this->value().memberIds_) };
 
-            for (node_id nodeId : this->Value().memberIds_)
+            for (node_id nodeId : this->value().memberIds_)
                 this->attach_to_me( nodeId );
 
             return update_result::shifted;

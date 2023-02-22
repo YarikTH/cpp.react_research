@@ -23,10 +23,10 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// ObserverBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class Observer : protected REACT_IMPL::ObserverInternals
+class Observer : protected REACT_IMPL::observer_internals
 {
 private:
-    using NodeType = REACT_IMPL::ObserverNode;
+    using NodeType = REACT_IMPL::observer_node;
 
 public:
     // Construct state observer with explicit group
@@ -74,24 +74,24 @@ private:
     template <typename F, typename T1, typename ... Ts>
     static auto CreateStateObserverNode(const group& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps) -> decltype(auto)
     {
-        using REACT_IMPL::StateObserverNode;
-        return std::make_shared<StateObserverNode<typename std::decay<F>::type, T1, Ts ...>>(
+        using REACT_IMPL::state_observer_node;
+        return std::make_shared<state_observer_node<typename std::decay<F>::type, T1, Ts ...>>(
             group, std::forward<F>(func), dep1, deps...);
     }
 
     template <typename F, typename T>
     static auto CreateEventObserverNode(const group& group, F&& func, const Event<T>& dep) -> decltype(auto)
     {
-        using REACT_IMPL::EventObserverNode;
-        return std::make_shared<EventObserverNode<typename std::decay<F>::type, T>>(
+        using REACT_IMPL::event_observer_node;
+        return std::make_shared<event_observer_node<typename std::decay<F>::type, T>>(
             group, std::forward<F>(func), dep);
     }
 
     template <typename F, typename T, typename ... Us>
     static auto CreateSyncedEventObserverNode(const group& group, F&& func, const Event<T>& dep, const State<Us>& ... syncs) -> decltype(auto)
     {
-        using REACT_IMPL::SyncedEventObserverNode;
-        return std::make_shared<SyncedEventObserverNode<typename std::decay<F>::type, T, Us ...>>(
+        using REACT_IMPL::synced_event_observer_node;
+        return std::make_shared<synced_event_observer_node<typename std::decay<F>::type, T, Us ...>>(
             group, std::forward<F>(func), dep, syncs...);
     }
 

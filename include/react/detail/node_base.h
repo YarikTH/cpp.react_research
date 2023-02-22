@@ -39,9 +39,16 @@ class NodeBase : public IReactNode
 {
 public:
     NodeBase(const Group& group) :
-        group_( group )
-    { }
-    
+        group_( group ),
+        nodeId_( GetGraphPtr()->register_node(this) )
+    {
+    }
+
+    ~NodeBase() override
+    {
+        GetGraphPtr()->unregister_node(nodeId_);
+    }
+
     NodeBase(const NodeBase&) = delete;
     NodeBase& operator=(const NodeBase&) = delete;
 
@@ -80,12 +87,6 @@ protected:
     auto GetGraphPtr() -> std::shared_ptr<react_graph>&
         { return GetInternals(group_).GetGraphPtr(); }
 
-    void RegisterMe()
-        { nodeId_ = GetGraphPtr()->register_node(this); }
-    
-    void UnregisterMe()
-        { GetGraphPtr()->unregister_node(nodeId_); }
-
     void AttachToMe(node_id otherNodeId)
         { GetGraphPtr()->attach_node(nodeId_, otherNodeId); }
 
@@ -93,9 +94,8 @@ protected:
         { GetGraphPtr()->detach_node(nodeId_, otherNodeId); }
 
 private:
-    node_id nodeId_;
-
     Group group_;
+    node_id nodeId_;
 };
 
 /****************************************/ REACT_IMPL_END /***************************************/

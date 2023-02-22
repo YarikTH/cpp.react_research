@@ -66,7 +66,6 @@ public:
         StateVarNode::StateNode( group ),
         newValue_( )
     {
-        this->RegisterMe();
     }
 
     template <typename T>
@@ -74,12 +73,6 @@ public:
         StateVarNode::StateNode( group, std::forward<T>(value) ),
         newValue_( value )
     {
-        this->RegisterMe();
-    }
-
-    ~StateVarNode()
-    {
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -160,7 +153,6 @@ public:
         func_( std::forward<FIn>(func) ),
         depHolder_( deps ... )
     {
-        this->RegisterMe();
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(deps).GetNodeId()));
     }
 
@@ -168,7 +160,6 @@ public:
     {
         react::impl::apply([this] (const auto& ... deps)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(deps).GetNodePtr()->GetNodeId())); }, depHolder_);
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -205,7 +196,6 @@ public:
     {
         inputNodeId_ = this->GetGraphPtr()->register_node(&slotInput_);
         
-        this->RegisterMe();
         this->AttachToMe(inputNodeId_);
         this->AttachToMe(GetInternals(dep).GetNodeId());
     }
@@ -214,7 +204,6 @@ public:
     {
         this->DetachFromMe(GetInternals(input_).GetNodeId());
         this->DetachFromMe(inputNodeId_);
-        this->UnregisterMe();
 
         this->GetGraphPtr()->unregister_node(inputNodeId_);
     }
@@ -308,14 +297,12 @@ public:
         StateRefNode::StateNode( group, std::cref(GetInternals(input).Value()) ),
         input_( input )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(input).GetNodeId());
     }
 
     ~StateRefNode()
     {
         this->DetachFromMe(GetInternals(input_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override

@@ -54,7 +54,6 @@ public:
         func_( std::forward<FIn>(func) ),
         depHolder_( deps ... )
     {
-        this->RegisterMe();
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(deps).GetNodeId()));
 
         react::impl::apply([this] (const auto& ... deps)
@@ -65,7 +64,6 @@ public:
     {
         react::impl::apply([this] (const auto& ... deps)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(deps).GetNodeId())); }, depHolder_);
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -94,14 +92,12 @@ public:
         func_( std::forward<FIn>(func) ),
         subject_( subject )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(subject).GetNodeId());
     }
 
     ~EventObserverNode()
     {
         this->DetachFromMe(GetInternals(subject_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -130,7 +126,6 @@ public:
         subject_( subject ),
         syncHolder_( syncs ... )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(subject).GetNodeId());
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(syncs).GetNodeId()));
     }
@@ -140,7 +135,6 @@ public:
         impl::apply([this] (const auto& ... syncs)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(syncs).GetNodeId())); }, syncHolder_);
         this->DetachFromMe(GetInternals(subject_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override

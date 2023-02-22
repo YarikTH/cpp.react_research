@@ -72,12 +72,6 @@ public:
     EventSourceNode(const Group& group) :
         EventSourceNode::EventNode( group )
     {
-        this->RegisterMe();
-    }
-
-    ~EventSourceNode()
-    {
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -104,7 +98,6 @@ public:
         EventMergeNode::EventNode( group ),
         inputs_( deps ... )
     {
-        this->RegisterMe();
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(deps).GetNodeId()));
     }
 
@@ -112,7 +105,6 @@ public:
     {
         react::impl::apply([this] (const auto& ... inputs)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(inputs).GetNodeId())); }, inputs_);
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -148,7 +140,6 @@ public:
         EventSlotNode::EventNode( group )
     {
         inputNodeId_ = this->GetGraphPtr()->register_node(&slotInput_);
-        this->RegisterMe();
 
         this->AttachToMe(inputNodeId_);
     }
@@ -158,7 +149,6 @@ public:
         RemoveAllSlotInputs();
         this->DetachFromMe(inputNodeId_);
 
-        this->UnregisterMe();
         this->GetGraphPtr()->unregister_node(inputNodeId_);
     }
 
@@ -233,14 +223,12 @@ public:
         func_( std::forward<FIn>(func) ),
         dep_( dep )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(dep).GetNodeId());
     }
 
     ~EventProcessingNode()
     {
         this->DetachFromMe(GetInternals(dep_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -273,7 +261,6 @@ public:
         dep_( dep ),
         syncHolder_( syncs ... )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(dep).GetNodeId());
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(syncs).GetNodeId()));
     }
@@ -283,7 +270,6 @@ public:
         react::impl::apply([this] (const auto& ... syncs)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(syncs).GetNodeId())); }, syncHolder_);
         this->DetachFromMe(GetInternals(dep_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -323,7 +309,6 @@ public:
         EventJoinNode::EventNode( group ),
         slots_( deps ... )
     {
-        this->RegisterMe();
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(deps).GetNodeId()));
     }
 
@@ -331,7 +316,6 @@ public:
     {
         react::impl::apply([this] (const auto& ... slots)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(slots.source).GetNodeId())); }, slots_);
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override

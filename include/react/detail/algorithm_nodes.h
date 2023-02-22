@@ -33,14 +33,12 @@ public:
         func_( std::forward<FIn>(func) ),
         evnt_( evnt )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(evnt).GetNodeId());
     }
 
     ~IterateNode()
     {
         this->DetachFromMe(GetInternals(evnt_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -76,14 +74,12 @@ public:
         func_( std::forward<FIn>(func) ),
         evnt_( evnt )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(evnt_).GetNodeId());
     }
 
     ~IterateByRefNode()
     {
         this->DetachFromMe(GetInternals(evnt_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -113,7 +109,6 @@ public:
         evnt_( evnt ),
         syncHolder_( syncs ... )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(evnt).GetNodeId());
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(syncs).GetNodeId()));
     }
@@ -123,7 +118,6 @@ public:
         react::impl::apply([this] (const auto& ... syncs)
             { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(syncs).GetNodeId())); }, syncHolder_);
         this->DetachFromMe(GetInternals(evnt_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -169,7 +163,6 @@ public:
         evnt_( evnt ),
         syncHolder_( syncs ... )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(evnt).GetNodeId());
         REACT_EXPAND_PACK(this->AttachToMe(GetInternals(syncs).GetNodeId()));
     }
@@ -178,7 +171,6 @@ public:
     {
         react::impl::apply([this] (const auto& ... syncs) { REACT_EXPAND_PACK(this->DetachFromMe(GetInternals(syncs).GetNodeId())); }, syncHolder_);
         this->DetachFromMe(GetInternals(evnt_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -216,14 +208,12 @@ public:
         HoldNode::StateNode( group, std::forward<T>(init) ),
         evnt_( evnt )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(evnt).GetNodeId());
     }
 
     ~HoldNode()
     {
         this->DetachFromMe(GetInternals(evnt_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -263,7 +253,6 @@ public:
         target_( target ),
         trigger_( trigger )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(target).GetNodeId());
         this->AttachToMe(GetInternals(trigger).GetNodeId());
     }
@@ -272,7 +261,6 @@ public:
     {
         this->DetachFromMe(GetInternals(trigger_).GetNodeId());
         this->DetachFromMe(GetInternals(target_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -312,14 +300,12 @@ public:
         MonitorNode::EventNode( group ),
         input_( input )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(input_).GetNodeId());
     }
 
     ~MonitorNode()
     {
         this->DetachFromMe(GetInternals(input_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -344,7 +330,6 @@ public:
         input_( input ),
         trigger_( trigger )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(input).GetNodeId());
         this->AttachToMe(GetInternals(trigger).GetNodeId());
     }
@@ -353,7 +338,6 @@ public:
     {
         this->DetachFromMe(GetInternals(trigger_).GetNodeId());
         this->DetachFromMe(GetInternals(input_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -384,7 +368,6 @@ public:
         outer_( outer ),
         inner_( GetInternals(outer).Value() )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(outer_).GetNodeId());
         this->AttachToMe(GetInternals(inner_).GetNodeId());
     }
@@ -393,7 +376,6 @@ public:
     {
         this->DetachFromMe(GetInternals(inner_).GetNodeId());
         this->DetachFromMe(GetInternals(outer_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -440,7 +422,6 @@ public:
         outer_( outer ),
         inner_( GetInternals(outer).Value() )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(outer_).GetNodeId());
 
         for (const State<V>& state : inner_)
@@ -453,7 +434,6 @@ public:
             this->DetachFromMe(GetInternals(state).GetNodeId());
 
         this->DetachFromMe(GetInternals(outer_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -513,7 +493,6 @@ public:
         outer_( outer ),
         inner_( GetInternals(outer).Value() )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(outer_).GetNodeId());
 
         for (const auto& entry : inner_)
@@ -526,7 +505,6 @@ public:
             this->DetachFromMe(GetInternals(entry.second).GetNodeId());
 
         this->DetachFromMe(GetInternals(outer_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override
@@ -584,7 +562,6 @@ public:
         StateNode<TFlat>( in_place, group, GetInternals(obj).Value(), FlattenedInitTag{ } ),
         obj_( obj )
     {
-        this->RegisterMe();
         this->AttachToMe(GetInternals(obj).GetNodeId());
 
         for (node_id nodeId : this->Value().memberIds_)
@@ -599,7 +576,6 @@ public:
             this->DetachFromMe(nodeId);
 
         this->DetachFromMe(GetInternals(obj_).GetNodeId());
-        this->UnregisterMe();
     }
 
     virtual UpdateResult Update() noexcept override

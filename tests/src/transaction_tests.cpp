@@ -17,7 +17,7 @@ using namespace react;
 
 TEST(TransactionTest, Merging)
 {
-    group g;
+    context g;
 
     auto evt = EventSource<int>::Create(g);
 

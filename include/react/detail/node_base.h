@@ -37,15 +37,15 @@ RET create_wrapped_node(ARGS&& ... args)
 class node_base : public reactive_node_interface
 {
 public:
-    node_base(const group& group) :
+    node_base(const context& group) :
         group_( group ),
-        nodeId_( get_graph_ptr()->register_node(this) )
+        nodeId_( get_graph().register_node(this) )
     {
     }
 
     ~node_base() override
     {
-        get_graph_ptr()->unregister_node(nodeId_);
+        get_graph().unregister_node(nodeId_);
     }
 
     node_base(const node_base&) = delete;
@@ -57,27 +57,27 @@ public:
     node_id get_node_id() const
         { return nodeId_; }
 
-    auto get_group() const -> const group&
+    auto get_group() const -> const context&
         { return group_; }
 
-    auto get_group() -> group&
+    auto get_group() -> context&
         { return group_; }
 
 protected:
-    auto get_graph_ptr() const -> const std::shared_ptr<react_graph>&
-        { return get_internals( group_ ).get_graph_ptr(); }
+    auto get_graph() const -> const react_graph&
+        { return get_internals( group_ ).get_graph(); }
 
-    auto get_graph_ptr() -> std::shared_ptr<react_graph>&
-        { return get_internals( group_ ).get_graph_ptr(); }
+    auto get_graph() -> react_graph&
+        { return get_internals( group_ ).get_graph(); }
 
     void attach_to_me(node_id otherNodeId)
-        { get_graph_ptr()->attach_node(nodeId_, otherNodeId); }
+        { get_graph().attach_node(nodeId_, otherNodeId); }
 
     void detach_from_me(node_id otherNodeId)
-        { get_graph_ptr()->detach_node(nodeId_, otherNodeId); }
+        { get_graph().detach_node(nodeId_, otherNodeId); }
 
 private:
-    group group_;
+    context group_;
     node_id nodeId_;
 };
 

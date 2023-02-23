@@ -22,7 +22,7 @@ TEST(AlgorithmTest, Hold)
 {
     // Hold last value of event source in state.
 
-    group g;
+    context g;
 
     auto evt1 = EventSource<int>::Create(g);
 
@@ -58,7 +58,7 @@ TEST(AlgorithmTest, Monitor1)
 {
     // Emit events when value of state changes.
 
-    group g;
+    context g;
 
     auto st = StateVar<int>::Create(g, 1);
 
@@ -96,7 +96,7 @@ TEST(AlgorithmTest, Monitor2)
 {
     // Monitor state changes and filter the resulting events.
 
-    group g;
+    context g;
 
     auto target = StateVar<int>::Create(g, 10);
 
@@ -132,7 +132,7 @@ TEST(AlgorithmTest, Monitor2)
 
 TEST(AlgorithmTest, Snapshot)
 {
-    group g;
+    context g;
 
     auto sv = StateVar<int>::Create(g, 1);
     auto es = EventSource<>::Create(g);
@@ -164,7 +164,7 @@ TEST(AlgorithmTest, Snapshot)
 
 TEST(AlgorithmTest, Pulse)
 {
-    group g;
+    context g;
 
     auto sv = StateVar<int>::Create(g, 1);
     auto es = EventSource<>::Create(g);
@@ -199,7 +199,7 @@ TEST(AlgorithmTest, Pulse)
 
 TEST(AlgorithmTest, Iterate1)
 {
-    group g;
+    context g;
 
     auto numSrc = EventSource<int>::Create(g);
 
@@ -221,7 +221,7 @@ TEST(AlgorithmTest, Iterate1)
 
 TEST(AlgorithmTest, Iterate2)
 {
-    group g;
+    context g;
 
     auto charSrc = EventSource<char>::Create(g);
 
@@ -242,7 +242,7 @@ TEST(AlgorithmTest, Iterate2)
 
 TEST(AlgorithmTest, Iterate3)
 {
-    group g;
+    context g;
 
     auto numSrc = EventSource<int>::Create(g);
 
@@ -291,7 +291,7 @@ struct Decrementer
 
 TEST(AlgorithmTest, Iterate4)
 {
-    group g;
+    context g;
 
     auto trigger = EventSource<>::Create(g);
 
@@ -320,7 +320,7 @@ TEST(AlgorithmTest, Iterate4)
 
 TEST(AlgorithmTest, IterateByRef1)
 {
-    group g;
+    context g;
 
     auto src = EventSource<int>::Create(g);
 
@@ -346,7 +346,7 @@ TEST(AlgorithmTest, IterateByRef1)
 
 TEST(AlgorithmTest, IterateByRef2)
 {
-    group g;
+    context g;
 
     auto src = EventSource<>::Create(g);
 
@@ -385,7 +385,7 @@ T Diff(T a, T b) { return a - b; }
 
 TEST(AlgorithmTest, TransformWithState)
 {
-    group g;
+    context g;
 
     auto in1 = StateVar<int>::Create(g);
     auto in2 = StateVar<int>::Create(g);
@@ -497,7 +497,7 @@ TEST(AlgorithmTest, TransformWithState)
 
 TEST(AlgorithmTest, IterateWithState)
 {
-    group g;
+    context g;
 
     auto in1 = StateVar<int>::Create(g);
     auto in2 = StateVar<int>::Create(g);
@@ -599,7 +599,7 @@ TEST(AlgorithmTest, IterateWithState)
 
 TEST(AlgorithmTest, IterateByRefWithState)
 {
-    group g;
+    context g;
 
     auto in1 = StateVar<int>::Create(g);
     auto in2 = StateVar<int>::Create(g);
@@ -710,7 +710,7 @@ TEST(AlgorithmTest, IterateByRefWithState)
     }
 }
 
-group flattenGroup;
+context flattenGroup;
 
 class FlattenDummy
 {
@@ -734,7 +734,7 @@ struct FlattenDummy::Flat : public Flattened<FlattenDummy>
 
 TEST(AlgorithmTest, FlattenObject1)
 {
-    group g;
+    context g;
 
     FlattenDummy o1;
     FlattenDummy o2;

@@ -27,7 +27,7 @@
 /// Holds the most recent event in a state
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T, typename E>
-auto Hold(const group& group, T&& initialValue, const Event<E>& evnt) -> State<E>
+auto Hold(const context& group, T&& initialValue, const Event<E>& evnt) -> State<E>
 {
     using REACT_IMPL::HoldNode;
     using REACT_IMPL::create_wrapped_node;
@@ -44,7 +44,7 @@ auto Hold(T&& initialValue, const Event<E>& evnt) -> State<E>
 /// Emits value changes of target state.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S>
-auto Monitor(const group& group, const State<S>& state) -> Event<S>
+auto Monitor(const context& group, const State<S>& state) -> Event<S>
 {
     using REACT_IMPL::MonitorNode;
     using REACT_IMPL::create_wrapped_node;
@@ -60,7 +60,7 @@ auto Monitor(const State<S>& state) -> Event<S>
 /// Iteratively combines state value with values from event stream (aka Fold)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename T, typename F, typename E>
-auto Iterate(const group& group, T&& initialValue, F&& func, const Event<E>& evnt) -> State<S>
+auto Iterate(const context& group, T&& initialValue, F&& func, const Event<E>& evnt) -> State<S>
 {
     using REACT_IMPL::IterateNode;
     using REACT_IMPL::create_wrapped_node;
@@ -72,7 +72,7 @@ auto Iterate(const group& group, T&& initialValue, F&& func, const Event<E>& evn
 }
 
 template <typename S, typename T, typename F, typename E>
-auto IterateByRef(const group& group, T&& initialValue, F&& func, const Event<E>& evnt) -> State<S>
+auto IterateByRef(const context& group, T&& initialValue, F&& func, const Event<E>& evnt) -> State<S>
 {
     using REACT_IMPL::IterateByRefNode;
     using REACT_IMPL::create_wrapped_node;
@@ -95,7 +95,7 @@ auto IterateByRef(T&& initialValue, F&& func, const Event<E>& evnt) -> State<S>
 /// Iterate - Synced
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename T, typename F, typename E, typename ... Us>
-auto Iterate(const group& group, T&& initialValue, F&& func, const Event<E>& evnt, const State<Us>& ... states) -> State<S>
+auto Iterate(const context& group, T&& initialValue, F&& func, const Event<E>& evnt, const State<Us>& ... states) -> State<S>
 {
     using REACT_IMPL::SyncedIterateNode;
     using REACT_IMPL::create_wrapped_node;
@@ -107,7 +107,7 @@ auto Iterate(const group& group, T&& initialValue, F&& func, const Event<E>& evn
 }
 
 template <typename S, typename T, typename F, typename E, typename ... Us>
-auto IterateByRef(const group& group, T&& initialValue, F&& func, const Event<E>& evnt, const State<Us>& ... states) -> State<S>
+auto IterateByRef(const context& group, T&& initialValue, F&& func, const Event<E>& evnt, const State<Us>& ... states) -> State<S>
 {
     using REACT_IMPL::SyncedIterateByRefNode;
     using REACT_IMPL::create_wrapped_node;
@@ -130,7 +130,7 @@ auto IterateByRef(T&& initialValue, F&& func, const Event<E>& evnt, const State<
 /// Snapshot - Sets state value to value of other state when event is received
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename E>
-auto Snapshot(const group& group, const State<S>& state, const Event<E>& evnt) -> State<S>
+auto Snapshot(const context& group, const State<S>& state, const Event<E>& evnt) -> State<S>
 {
     using REACT_IMPL::SnapshotNode;
     using REACT_IMPL::create_wrapped_node;
@@ -146,7 +146,7 @@ auto Snapshot(const State<S>& state, const Event<E>& evnt) -> State<S>
 /// Pulse - Emits value of target state when event is received
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, typename E>
-auto Pulse(const group& group, const State<S>& state, const Event<E>& evnt) -> Event<S>
+auto Pulse(const context& group, const State<S>& state, const Event<E>& evnt) -> Event<S>
 {
     using REACT_IMPL::PulseNode;
     using REACT_IMPL::create_wrapped_node;
@@ -163,7 +163,7 @@ auto Pulse(const State<S>& state, const Event<E>& evnt) -> Event<S>
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename S, template <typename> class TState,
     typename = std::enable_if_t<std::is_base_of_v<State<S>, TState<S>>>>
-auto Flatten(const group& group, const State<TState<S>>& state) -> State<S>
+auto Flatten(const context& group, const State<TState<S>>& state) -> State<S>
 {
     using REACT_IMPL::FlattenStateNode;
     using REACT_IMPL::create_wrapped_node;
@@ -181,7 +181,7 @@ auto Flatten(const State<TState<S>>& state) -> State<S>
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <template <typename ...> class TList, template <typename> class TState, typename V, typename ... TParams,
     typename = std::enable_if_t<std::is_base_of_v<State<V>, TState<V>>>>
-auto FlattenList(const group& group, const State<TList<TState<V>, TParams ...>>& list) -> State<TList<V>>
+auto FlattenList(const context& group, const State<TList<TState<V>, TParams ...>>& list) -> State<TList<V>>
 {
     using REACT_IMPL::FlattenStateListNode;
     using REACT_IMPL::create_wrapped_node;
@@ -200,7 +200,7 @@ auto FlattenList(const State<TList<TState<V>, TParams ...>>& list) -> State<TLis
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <template <typename ...> class TMap, template <typename> class TState, typename K, typename V, typename ... TParams,
     typename = std::enable_if_t<std::is_base_of_v<State<V>, TState<V>>>>
-auto FlattenMap(const group& group, const State<TMap<K, TState<V>, TParams ...>>& map) -> State<TMap<K, V>>
+auto FlattenMap(const context& group, const State<TMap<K, TState<V>, TParams ...>>& map) -> State<TMap<K, V>>
 {
     using REACT_IMPL::FlattenStateMapNode;
     using REACT_IMPL::create_wrapped_node;
@@ -259,7 +259,7 @@ private:
 /// FlattenObject
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T, typename TFlat = typename T::Flat>
-auto FlattenObject(const group& group, const State<T>& obj) -> State<TFlat>
+auto FlattenObject(const context& group, const State<T>& obj) -> State<TFlat>
 {
     using REACT_IMPL::FlattenObjectNode;
     using REACT_IMPL::create_wrapped_node;
@@ -272,7 +272,7 @@ auto FlattenObject(const State<T>& obj) -> State<TFlat>
     { return FlattenObject( obj.get_group(), obj); }
 
 template <typename T, typename TFlat = typename T::Flat>
-auto FlattenObject(const group& group, const State<Ref<T>>& obj) -> State<TFlat>
+auto FlattenObject(const context& group, const State<Ref<T>>& obj) -> State<TFlat>
 {
     using REACT_IMPL::FlattenObjectNode;
     using REACT_IMPL::create_wrapped_node;

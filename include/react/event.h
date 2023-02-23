@@ -9,18 +9,16 @@
 
 #pragma once
 
-#include "react/detail/defs.h"
-
 #include <cassert>
 #include <memory>
 #include <type_traits>
 #include <utility>
 
 #include "react/api.h"
-#include "react/group.h"
-
-#include "react/detail/state_nodes.h"
+#include "react/context.h"
+#include "react/detail/defs.h"
 #include "react/detail/event_nodes.h"
+#include "react/detail/state_nodes.h"
 
 /*****************************************/ REACT_BEGIN /*****************************************/
 
@@ -33,7 +31,7 @@ class Event : protected REACT_IMPL::event_internals<E>
 public:
     // Construct with explicit group
     template <typename F, typename T>
-    static Event Create(const group& group, F&& func, const Event<T>& dep)
+    static Event Create(const context& group, F&& func, const Event<T>& dep)
         { return Event(CreateProcessingNode(group, std::forward<F>(func), dep)); }
 
     // Construct with implicit group
@@ -43,7 +41,7 @@ public:
 
     // Construct with explicit group
     template <typename F, typename T, typename ... Us>
-    static Event Create(const group& group, F&& func, const Event<T>& dep, const State<Us>& ... states)
+    static Event Create(const context& group, F&& func, const Event<T>& dep, const State<Us>& ... states)
         { return Event(CreateSyncedProcessingNode(group, std::forward<F>(func), dep, states ...)); }
 
     // Construct with implicit group
@@ -59,10 +57,10 @@ public:
     Event(Event&&) = default;
     Event& operator=(Event&&) = default;
 
-    auto get_group() const -> const group&
+    auto get_group() const -> const context&
         { return this->get_node_ptr()->get_group(); }
 
-    auto get_group() -> group&
+    auto get_group() -> context&
         { return this->get_node_ptr()->get_group(); }
 
     friend bool operator==(const Event<E>& a, const Event<E>& b)
@@ -83,7 +81,7 @@ protected:
     { }
 
     template <typename F, typename T>
-    static auto CreateProcessingNode(const group& group, F&& func, const Event<T>& dep) -> decltype(auto)
+    static auto CreateProcessingNode(const context& group, F&& func, const Event<T>& dep) -> decltype(auto)
     {
         using REACT_IMPL::EventProcessingNode;
 
@@ -92,7 +90,7 @@ protected:
     }
 
     template <typename F, typename T, typename ... Us>
-    static auto CreateSyncedProcessingNode(const group& group, F&& func, const Event<T>& dep, const State<Us>& ... syncs) -> decltype(auto)
+    static auto CreateSyncedProcessingNode(const context& group, F&& func, const Event<T>& dep, const State<Us>& ... syncs) -> decltype(auto)
     {
         using REACT_IMPL::SyncedEventProcessingNode;
 
@@ -112,7 +110,7 @@ class EventSource : public Event<E>
 {
 public:
     // Construct event source
-    static EventSource Create(const group& group)
+    static EventSource Create(const context& group)
         { return EventSource(CreateSourceNode(group)); }
 
     EventSource() = default;
@@ -145,7 +143,7 @@ protected:
     { }
 
 private:
-    static auto CreateSourceNode(const group& group) -> decltype(auto)
+    static auto CreateSourceNode(const context& group) -> decltype(auto)
     {
         using REACT_IMPL::event_source_node;
         return std::make_shared<event_source_node<E>>(group);
@@ -160,10 +158,10 @@ private:
         auto* castedPtr = static_cast<event_source_node<E>*>(this->get_node_ptr().get());
 
         node_id nodeId = castedPtr->get_node_id();
-        auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
+        auto& graph = get_internals( this->get_group() ).get_graph();
 
         castedPtr->EmitValue(std::forward<T>(value));
-        graphPtr->push_input(nodeId);
+        graph.push_input(nodeId);
     }
 };
 
@@ -175,7 +173,7 @@ class EventSlot : public Event<E>
 {
 public:
     // Construct emtpy slot
-    static EventSlot Create(const group& group)
+    static EventSlot Create(const context& group)
         { return EventSlot(CreateSlotNode(group)); }
 
     EventSlot() = default;
@@ -201,7 +199,7 @@ protected:
     { }
 
 private:
-    static auto CreateSlotNode(const group& group) -> decltype(auto)
+    static auto CreateSlotNode(const context& group) -> decltype(auto)
     {
         using REACT_IMPL::EventSlotNode;
         return std::make_shared<EventSlotNode<E>>(group);
@@ -215,10 +213,10 @@ private:
         SlotNodeType* castedPtr = static_cast<SlotNodeType*>(this->get_node_ptr().get());
 
         node_id nodeId = castedPtr->GetInputNodeId();
-        auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
+        auto& graph = get_internals( this->get_group() ).get_graph();
 
         castedPtr->AddSlotInput(input);
-        graphPtr->push_input(nodeId);
+        graph.push_input(nodeId);
     }
 
     void RemoveSlotInput(const Event<E>& input)
@@ -229,10 +227,10 @@ private:
         SlotNodeType* castedPtr = static_cast<SlotNodeType*>(this->get_node_ptr().get());
 
         node_id nodeId = castedPtr->GetInputNodeId();
-        auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
+        auto& graph = get_internals( this->get_group() ).get_graph();
 
         castedPtr->RemoveSlotInput(input);
-        graphPtr->push_input(nodeId);
+        graph.push_input(nodeId);
     }
 
     void RemoveAllSlotInputs()
@@ -243,7 +241,7 @@ private:
         SlotNodeType* castedPtr = static_cast<SlotNodeType*>(this->get_node_ptr().get());
 
         node_id nodeId = castedPtr->GetInputNodeId();
-        auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
+        auto& graphPtr = get_internals( this->get_group() ).get_graph();
 
         castedPtr->RemoveAllSlotInputs();
         graphPtr->push_input(nodeId);
@@ -254,7 +252,7 @@ private:
 /// Merge
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E, typename ... Us>
-static auto Merge(const group& group, const Event<E>& dep1, const Event<Us>& ... deps) -> Event<E>
+static auto Merge(const context& group, const Event<E>& dep1, const Event<Us>& ... deps) -> Event<E>
 {
     using REACT_IMPL::EventMergeNode;
     using REACT_IMPL::create_wrapped_node;
@@ -270,7 +268,7 @@ static auto Merge(const Event<U1>& dep1, const Event<Us>& ... deps) -> decltype(
 /// Filter
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename F, typename E>
-static auto Filter(const group& group, F&& pred, const Event<E>& dep) -> Event<E>
+static auto Filter(const context& group, F&& pred, const Event<E>& dep) -> Event<E>
 {
     auto filterFunc = [capturedPred = std::forward<F>(pred)] (const EventValueList<E>& events, EventValueSink<E> out)
         { std::copy_if(events.begin(), events.end(), out, capturedPred); };
@@ -283,7 +281,7 @@ static auto Filter(F&& pred, const Event<E>& dep) -> Event<E>
     { return Filter(dep.get_group(), std::forward<F>(pred), dep); }
 
 template <typename F, typename E, typename ... Ts>
-static auto Filter(const group& group, F&& pred, const Event<E>& dep, const State<Ts>& ... states) -> Event<E>
+static auto Filter(const context& group, F&& pred, const Event<E>& dep, const State<Ts>& ... states) -> Event<E>
 {
     auto filterFunc = [capturedPred = std::forward<F>(pred)] (const EventValueList<E>& evts, EventValueSink<E> out, const Ts& ... values)
         {
@@ -303,7 +301,7 @@ static auto Filter(F&& pred, const Event<E>& dep, const State<Ts>& ... states) -
 /// Transform
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename E, typename F, typename T>
-static auto Transform(const group& group, F&& op, const Event<T>& dep) -> Event<E>
+static auto Transform(const context& group, F&& op, const Event<T>& dep) -> Event<E>
 {
     auto transformFunc = [capturedOp = std::forward<F>(op)] (const EventValueList<T>& evts, EventValueSink<E> out)
         { std::transform(evts.begin(), evts.end(), out, capturedOp); };
@@ -316,7 +314,7 @@ static auto Transform(F&& op, const Event<T>& dep) -> Event<E>
     { return Transform<E>(dep.get_group(), std::forward<F>(op), dep); }
 
 template <typename E, typename F, typename T, typename ... Us>
-static auto Transform(const group& group, F&& op, const Event<T>& dep, const State<Us>& ... states) -> Event<E>
+static auto Transform(const context& group, F&& op, const Event<T>& dep, const State<Us>& ... states) -> Event<E>
 {
     auto transformFunc = [capturedOp = std::forward<F>(op)] (const EventValueList<T>& evts, EventValueSink<E> out, const Us& ... values)
         {
@@ -335,7 +333,7 @@ static auto Transform(F&& op, const Event<T>& dep, const State<Us>& ... states) 
 /// Join
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename U1, typename ... Us>
-static auto Join(const group& group, const Event<U1>& dep1, const Event<Us>& ... deps) -> Event<std::tuple<U1, Us ...>>
+static auto Join(const context& group, const Event<U1>& dep1, const Event<Us>& ... deps) -> Event<std::tuple<U1, Us ...>>
 {
     using REACT_IMPL::EventJoinNode;
     using REACT_IMPL::create_wrapped_node;

@@ -16,7 +16,7 @@ using namespace react;
 
 TEST(StateTest, Construction)
 {
-    group g;
+    context g;
 
     // State variable
     {
@@ -47,7 +47,7 @@ TEST(StateTest, Construction)
 
 TEST(StateTest, BasicOutput)
 {
-    group g;
+    context g;
 
     auto st = StateVar<int>::Create(g);
 
@@ -69,7 +69,7 @@ TEST(StateTest, BasicOutput)
 
 TEST(StateTest, Slots)
 {
-    group g;
+    context g;
 
     auto st1 = StateVar<int>::Create(g);
     auto st2 = StateVar<int>::Create(g);
@@ -107,7 +107,7 @@ TEST(StateTest, Slots)
 
 TEST(StateTest, Transactions)
 {
-    group g;
+    context g;
 
     auto st = StateVar<int>::Create(g, 1);
 
@@ -207,7 +207,7 @@ static T Sum3(T a, T b, T c)
 
 TEST(StateTest, StateCombination1)
 {
-    group g;
+    context g;
 
     auto a = StateVar<int>::Create(g, 0);
     auto b = StateVar<int>::Create(g, 0);
@@ -254,7 +254,7 @@ TEST(StateTest, StateCombination1)
 
 TEST(StateTest, StateCombination2)
 {
-    group g;
+    context g;
 
     std::vector<int> results;
 
@@ -324,7 +324,7 @@ TEST(StateTest, StateCombination2)
 
 TEST(StateTest, Modify1)
 {
-    group g;
+    context g;
 
     std::vector<int> results;
 
@@ -354,7 +354,7 @@ TEST(StateTest, Modify1)
 
 TEST(StateTest, Modify2)
 {
-    group g;
+    context g;
 
     std::vector<int> results;
 
@@ -383,7 +383,7 @@ TEST(StateTest, Modify2)
 
 TEST(StateTest, Modify3)
 {
-    group g;
+    context g;
 
     std::vector<int> results;
 

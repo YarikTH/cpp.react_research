@@ -36,7 +36,7 @@ class EventStreamNode;
 class observer_node : public node_base
 {
 public:
-    explicit observer_node(const group& group)
+    explicit observer_node(const context& group)
         : observer_node::node_base( group )
     { }
 };
@@ -49,7 +49,7 @@ class state_observer_node : public observer_node
 {
 public:
     template <typename FIn>
-    state_observer_node(const group& group, FIn&& func, const State<TDeps>& ... deps)
+    state_observer_node(const context& group, FIn&& func, const State<TDeps>& ... deps)
         : state_observer_node::observer_node( group ),
         func_( std::forward<FIn>(func) ),
         depHolder_( deps ... )
@@ -87,7 +87,7 @@ class event_observer_node : public observer_node
 {
 public:
     template <typename FIn>
-    event_observer_node(const group& group, FIn&& func, const Event<E>& subject)
+    event_observer_node(const context& group, FIn&& func, const Event<E>& subject)
         : event_observer_node::observer_node( group ),
         func_( std::forward<FIn>(func) ),
         subject_( subject )
@@ -120,7 +120,7 @@ class synced_event_observer_node : public observer_node
 {
 public:
     template <typename FIn>
-    synced_event_observer_node(const group& group, FIn&& func, const Event<E>& subject, const State<TSyncs>& ... syncs)
+    synced_event_observer_node(const context& group, FIn&& func, const Event<E>& subject, const State<TSyncs>& ... syncs)
         : synced_event_observer_node::observer_node( group ),
         func_( std::forward<FIn>(func) ),
         subject_( subject ),

@@ -28,19 +28,19 @@ template <typename S>
 class state_node : public node_base
 {
 public:
-    explicit state_node(const group& group)
+    explicit state_node(const context& group)
         : state_node::node_base( group ),
         value_( )
     { }
 
     template <typename T>
-    state_node(const group& group, T&& value)
+    state_node(const context& group, T&& value)
         : state_node::node_base( group ),
         value_( std::forward<T>(value) )
     { }
 
     template <typename ... Ts>
-    state_node(InPlaceTag, const group& group, Ts&& ... args)
+    state_node(InPlaceTag, const context& group, Ts&& ... args)
         : state_node::node_base( group ),
         value_( std::forward<Ts>(args) ... )
     { }
@@ -62,14 +62,14 @@ template <typename S>
 class state_var_node : public state_node<S>
 {
 public:
-    explicit state_var_node(const group& group)
+    explicit state_var_node(const context& group)
         : state_var_node::state_node( group ),
         newValue_( )
     {
     }
 
     template <typename T>
-    state_var_node(const group& group, T&& value)
+    state_var_node(const context& group, T&& value)
         : state_var_node::state_node( group, std::forward<T>(value) ),
         newValue_( value )
     {
@@ -148,7 +148,7 @@ class state_func_node : public state_node<S>
 {
 public:
     template <typename FIn>
-    state_func_node(const group& group, FIn&& func, const State<TDeps>& ... deps)
+    state_func_node(const context& group, FIn&& func, const State<TDeps>& ... deps)
         : state_func_node::state_node( group, func( get_internals( deps ).value() ...) ),
         func_( std::forward<FIn>(func) ),
         depHolder_( deps ... )
@@ -191,11 +191,11 @@ template <typename S>
 class StateSlotNode : public state_node<S>
 {
 public:
-    StateSlotNode(const group& group, const State<S>& dep) :
+    StateSlotNode(const context& group, const State<S>& dep) :
         StateSlotNode::state_node( group, get_internals( dep ).value() ),
         input_( dep )
     {
-        inputNodeId_ = this->get_graph_ptr()->register_node(&slotInput_);
+        inputNodeId_ = this->get_graph().register_node(&slotInput_);
 
         this->attach_to_me( inputNodeId_ );
         this->attach_to_me( get_internals( dep ).get_node_id() );
@@ -206,7 +206,7 @@ public:
         this->detach_from_me( get_internals( input_ ).get_node_id() );
         this->detach_from_me( inputNodeId_ );
 
-        this->get_graph_ptr()->unregister_node(inputNodeId_);
+        this->get_graph().unregister_node(inputNodeId_);
     }
 
     update_result update() noexcept override
@@ -294,7 +294,7 @@ template <typename S>
 class StateRefNode : public state_node<Ref<S>>
 {
 public:
-    StateRefNode(const group& group, const State<S>& input) :
+    StateRefNode(const context& group, const State<S>& input) :
         StateRefNode::state_node( group, std::cref( get_internals( input ).value()) ),
         input_( input )
     {

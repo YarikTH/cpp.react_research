@@ -32,7 +32,7 @@ namespace example1
     // Defines a group.
     // Each group represents a separate dependency graph.
     // Reactives from different groups can not be mixed.
-        group group;
+        context group;
     
     // The two words
     StateVar<string> firstWord = StateVar<string>::Create(group, string("Change"));
@@ -62,7 +62,7 @@ namespace example2
     using namespace std;
     using namespace react;
 
-    group group;
+    context group;
 
     StateVar<int> x = StateVar<int>::Create(group, 1);
 
@@ -95,7 +95,7 @@ namespace example3
     int sumFunc(int a, int b)
         { return a + b; }
 
-        group group;
+        context group;
 
     StateVar<int> a = StateVar<int>::Create(group, 1);
     StateVar<int> b = StateVar<int>::Create(group, 1);
@@ -131,7 +131,7 @@ namespace example4
     using namespace std;
     using namespace react;
 
-    group group;
+    context group;
 
     StateVar<vector<string>> data = StateVar<vector<string>>::Create(group);
 
@@ -167,7 +167,7 @@ namespace example5
     using namespace std;
     using namespace react;
 
-    group group;
+    context group;
 
     // Helpers
     using ExprPairType = pair<string, int>;

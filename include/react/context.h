@@ -25,39 +25,42 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Group
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class group : protected REACT_IMPL::group_internals
+class context : protected REACT_IMPL::context_internals
 {
 public:
-    group() = default;
+    context() = default;
 
-    group(const group&) = default;
-    group& operator=(const group&) = default;
+    context(const context&) = default;
+    context& operator=(const context&) = default;
 
-    group(group&&) = default;
-    group& operator=(group&&) = default;
+    context( context&&) = default;
+    context& operator=( context&&) = default;
 
     template <typename F>
     void do_transaction(F&& func)
-        { get_graph_ptr()->do_transaction(std::forward<F>(func)); }
+        {
+            get_graph().do_transaction(std::forward<F>(func)); }
 
     template <typename F>
     void enqueue_transaction(F&& func, TransactionFlags flags = TransactionFlags::none )
-        { get_graph_ptr()->enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ }, flags); }
+        {
+            get_graph().enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ }, flags); }
 
     template <typename F>
     void enqueue_transaction(F&& func, const SyncPoint& syncPoint, TransactionFlags flags = TransactionFlags::none )
-        { get_graph_ptr()->enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ syncPoint }, flags); }
+        {
+            get_graph().enqueue_transaction(std::forward<F>(func), SyncPoint::Dependency{ syncPoint }, flags); }
 
-    friend bool operator==(const group& a, const group& b)
-        { return a.get_graph_ptr() == b.get_graph_ptr(); }
+    friend bool operator==(const context& a, const context& b)
+        { return &a.get_graph() == &b.get_graph(); }
 
-    friend bool operator!=(const group& a, const group& b)
+    friend bool operator!=(const context& a, const context& b)
         { return !(a == b); }
 
-    friend auto get_internals( group& g) -> REACT_IMPL::group_internals&
+    friend auto get_internals( context& g) -> REACT_IMPL::context_internals&
         { return g; }
 
-    friend auto get_internals(const group& g) -> const REACT_IMPL::group_internals&
+    friend auto get_internals(const context& g) -> const REACT_IMPL::context_internals&
         { return g; }
 };
 

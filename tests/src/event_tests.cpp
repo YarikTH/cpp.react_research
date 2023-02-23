@@ -21,7 +21,7 @@ using namespace react;
 
 TEST(EventTest, Construction)
 {
-    group g;
+    context g;
 
     // Event source
     {
@@ -50,7 +50,7 @@ TEST(EventTest, Construction)
 
 TEST(EventTest, BasicOutput)
 {
-    group g;
+    context g;
 
     auto evt = EventSource<int>::Create(g);
 
@@ -73,7 +73,7 @@ TEST(EventTest, BasicOutput)
 
 TEST(EventTest, Slots)
 {
-    group g;
+    context g;
 
     auto evt1 = EventSource<int>::Create(g);
     auto evt2 = EventSource<int>::Create(g);
@@ -137,7 +137,7 @@ TEST(EventTest, Slots)
 
 TEST(EventTest, Transactions)
 {
-    group g;
+    context g;
 
     auto evt = EventSource<int>::Create(g);
 
@@ -208,7 +208,7 @@ TEST(EventTest, Links)
 
 TEST(EventTest, EventSources)
 {
-    group g;
+    context g;
 
     auto es1 = EventSource<int>::Create(g);
     auto es2 = EventSource<int>::Create(g);
@@ -264,7 +264,7 @@ TEST(EventTest, EventSources)
 
 TEST(EventTest, Merge1)
 {
-    group g;
+    context g;
 
     auto a1 = EventSource<int>::Create(g);
     auto a2 = EventSource<int>::Create(g);
@@ -295,7 +295,7 @@ TEST(EventTest, Merge1)
 
 TEST(EventTest, Merge2)
 {
-    group g;
+    context g;
 
     auto a1 = EventSource<std::string>::Create(g);
     auto a2 = EventSource<std::string>::Create(g);
@@ -330,7 +330,7 @@ TEST(EventTest, Merge2)
 
 TEST(EventTest, Merge3)
 {
-    group g;
+    context g;
 
     auto a1 = EventSource<int>::Create(g);
     auto a2 = EventSource<int>::Create(g);
@@ -369,7 +369,7 @@ TEST(EventTest, Merge3)
 
 TEST(EventTest, Filter)
 {
-    group g;
+    context g;
 
     auto in = EventSource<std::string>::Create(g);
 
@@ -399,7 +399,7 @@ TEST(EventTest, Filter)
 
 TEST(EventTest, Transform)
 {
-    group g;
+    context g;
 
     auto in1 = EventSource<std::string>::Create(g);
     auto in2 = EventSource<std::string>::Create(g);
@@ -432,7 +432,7 @@ TEST(EventTest, Transform)
 
 TEST(EventTest, Flow)
 {
-    group g;
+    context g;
 
     std::vector<float> results;
 
@@ -479,7 +479,7 @@ TEST(EventTest, Flow)
 
 TEST(EventTest, Join)
 {
-    group g;
+    context g;
 
     auto in1 = EventSource<int>::Create(g);
     auto in2 = EventSource<int>::Create(g);
@@ -518,7 +518,7 @@ TEST(EventTest, Join)
 
 TEST(EventTest, FilterWithState)
 {
-    group g;
+    context g;
 
     auto in = EventSource<std::string>::Create(g);
 
@@ -553,7 +553,7 @@ TEST(EventTest, FilterWithState)
 
 TEST(EventTest, TransformWithState)
 {
-    group g;
+    context g;
 
     std::vector<std::string> results;
 
@@ -594,7 +594,7 @@ TEST(EventTest, TransformWithState)
 
 TEST(EventTest, FlowWithState)
 {
-    group g;
+    context g;
 
     std::vector<float> results;
 

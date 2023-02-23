@@ -28,7 +28,7 @@ class IterateNode : public state_node<S>
 {
 public:
     template <typename T, typename FIn>
-    IterateNode(const group& group, T&& init, FIn&& func, const Event<E>& evnt) :
+    IterateNode(const context& group, T&& init, FIn&& func, const Event<E>& evnt) :
         IterateNode::state_node( group, std::forward<T>(init) ),
         func_( std::forward<FIn>(func) ),
         evnt_( evnt )
@@ -69,7 +69,7 @@ class IterateByRefNode : public state_node<S>
 {
 public:
     template <typename T, typename FIn>
-    IterateByRefNode(const group& group, T&& init, FIn&& func, const Event<E>& evnt) :
+    IterateByRefNode(const context& group, T&& init, FIn&& func, const Event<E>& evnt) :
         IterateByRefNode::state_node( group, std::forward<T>(init) ),
         func_( std::forward<FIn>(func) ),
         evnt_( evnt )
@@ -103,7 +103,7 @@ class SyncedIterateNode : public state_node<S>
 {
 public:
     template <typename T, typename FIn>
-    SyncedIterateNode(const group& group, T&& init, FIn&& func, const Event<E>& evnt, const State<TSyncs>& ... syncs) :
+    SyncedIterateNode(const context& group, T&& init, FIn&& func, const Event<E>& evnt, const State<TSyncs>& ... syncs) :
         SyncedIterateNode::state_node( group, std::forward<T>(init) ),
         func_( std::forward<FIn>(func) ),
         evnt_( evnt ),
@@ -159,7 +159,7 @@ class SyncedIterateByRefNode : public state_node<S>
 {
 public:
     template <typename T, typename FIn>
-    SyncedIterateByRefNode(const group& group, T&& init, FIn&& func, const Event<E>& evnt, const State<TSyncs>& ... syncs) :
+    SyncedIterateByRefNode(const context& group, T&& init, FIn&& func, const Event<E>& evnt, const State<TSyncs>& ... syncs) :
         SyncedIterateByRefNode::state_node( group, std::forward<T>(init) ),
         func_( std::forward<FIn>(func) ),
         evnt_( evnt ),
@@ -208,7 +208,7 @@ class HoldNode : public state_node<S>
 {
 public:
     template <typename T>
-    HoldNode(const group& group, T&& init, const Event<S>& evnt) :
+    HoldNode(const context& group, T&& init, const Event<S>& evnt) :
         HoldNode::state_node( group, std::forward<T>(init) ),
         evnt_( evnt )
     {
@@ -252,7 +252,7 @@ template <typename S, typename E>
 class SnapshotNode : public state_node<S>
 {
 public:
-    SnapshotNode(const group& group, const State<S>& target, const Event<E>& trigger) :
+    SnapshotNode(const context& group, const State<S>& target, const Event<E>& trigger) :
         SnapshotNode::state_node( group, get_internals( target ).value() ),
         target_( target ),
         trigger_( trigger )
@@ -300,7 +300,7 @@ template <typename S>
 class MonitorNode : public event_node<S>
 {
 public:
-    MonitorNode(const group& group, const State<S>& input) :
+    MonitorNode(const context& group, const State<S>& input) :
         MonitorNode::event_node( group ),
         input_( input )
     {
@@ -329,7 +329,7 @@ template <typename S, typename E>
 class PulseNode : public event_node<S>
 {
 public:
-    PulseNode(const group& group, const State<S>& input, const Event<E>& trigger) :
+    PulseNode(const context& group, const State<S>& input, const Event<E>& trigger) :
         PulseNode::event_node( group ),
         input_( input ),
         trigger_( trigger )
@@ -367,7 +367,7 @@ template <typename S, template <typename> class TState>
 class FlattenStateNode : public state_node<S>
 {
 public:
-    FlattenStateNode(const group& group, const State<TState<S>>& outer) :
+    FlattenStateNode(const context& group, const State<TState<S>>& outer) :
         FlattenStateNode::state_node( group, get_internals( get_internals( outer ).value() ).value() ),
         outer_( outer ),
         inner_( get_internals( outer ).value() )
@@ -421,7 +421,7 @@ public:
     using InputListType = TList<TState<V>, TParams ...>;
     using FlatListType = TList<V>;
 
-    FlattenStateListNode(const group& group, const State<InputListType>& outer) :
+    FlattenStateListNode(const context& group, const State<InputListType>& outer) :
         FlattenStateListNode::state_node( group, MakeFlatList( get_internals( outer ).value()) ),
         outer_( outer ),
         inner_( get_internals( outer ).value() )
@@ -492,7 +492,7 @@ public:
     using InputMapType = TMap<K, TState<V>, TParams ...>;
     using FlatMapType = TMap<K, V>;
 
-    FlattenStateMapNode(const group& group, const State<InputMapType>& outer) :
+    FlattenStateMapNode(const context& group, const State<InputMapType>& outer) :
         FlattenStateMapNode::state_node( group, MakeFlatMap( get_internals( outer ).value()) ),
         outer_( outer ),
         inner_( get_internals( outer ).value() )
@@ -562,7 +562,7 @@ template <typename T, typename TFlat>
 class FlattenObjectNode : public state_node<TFlat>
 {
 public:
-    FlattenObjectNode(const group& group, const State<T>& obj) : state_node<TFlat>( in_place, group, get_internals( obj ).value(), FlattenedInitTag{ } ),
+    FlattenObjectNode(const context& group, const State<T>& obj) : state_node<TFlat>( in_place, group, get_internals( obj ).value(), FlattenedInitTag{ } ),
         obj_( obj )
     {
         this->attach_to_me( get_internals( obj ).get_node_id() );

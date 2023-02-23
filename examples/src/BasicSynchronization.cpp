@@ -20,7 +20,7 @@ namespace example1
     using namespace react;
     using namespace std;
 
-    group group;
+    context group;
 
     class Sensor
     {
@@ -62,7 +62,7 @@ namespace example2
     using namespace react;
     using namespace std;
 
-    group group;
+    context group;
 
     class Sensor
     {

@@ -9,13 +9,12 @@
 
 #pragma once
 
-#include "react/detail/defs.h"
-#include "react/api.h"
-#include "react/group.h"
-
 #include <memory>
 #include <utility>
 
+#include "react/api.h"
+#include "react/context.h"
+#include "react/detail/defs.h"
 #include "react/detail/observer_nodes.h"
 
 /*****************************************/ REACT_BEGIN /*****************************************/
@@ -31,7 +30,7 @@ private:
 public:
     // Construct state observer with explicit group
     template <typename F, typename T1, typename ... Ts>
-    static Observer Create(const group& group, F&& func, const State<T1>& subject1, const State<Ts>& ... subjects)
+    static Observer Create(const context& group, F&& func, const State<T1>& subject1, const State<Ts>& ... subjects)
         { return Observer(CreateStateObserverNode(group, std::forward<F>(func), subject1, subjects ...)); }
 
     // Construct state observer with implicit group
@@ -41,7 +40,7 @@ public:
 
     // Construct event observer with explicit group
     template <typename F, typename T>
-    static Observer Create(const group& group, F&& func, const Event<T>& subject)
+    static Observer Create(const context& group, F&& func, const Event<T>& subject)
         { return Observer(CreateEventObserverNode(group, std::forward<F>(func), subject)); }
 
     // Construct event observer with implicit group
@@ -51,7 +50,7 @@ public:
 
     // Constructed synced event observer with explicit group
     template <typename F, typename T, typename ... Us>
-    static Observer Create(const group& group, F&& func, const Event<T>& subject, const State<Us>& ... states)
+    static Observer Create(const context& group, F&& func, const Event<T>& subject, const State<Us>& ... states)
         { return Observer(CreateSyncedEventObserverNode(group, std::forward<F>(func), subject, states ...)); }
 
     // Constructed synced event observer with implicit group
@@ -72,7 +71,7 @@ protected: //Internal
 
 private:
     template <typename F, typename T1, typename ... Ts>
-    static auto CreateStateObserverNode(const group& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps) -> decltype(auto)
+    static auto CreateStateObserverNode(const context& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps) -> decltype(auto)
     {
         using REACT_IMPL::state_observer_node;
         return std::make_shared<state_observer_node<typename std::decay<F>::type, T1, Ts ...>>(
@@ -80,7 +79,7 @@ private:
     }
 
     template <typename F, typename T>
-    static auto CreateEventObserverNode(const group& group, F&& func, const Event<T>& dep) -> decltype(auto)
+    static auto CreateEventObserverNode(const context& group, F&& func, const Event<T>& dep) -> decltype(auto)
     {
         using REACT_IMPL::event_observer_node;
         return std::make_shared<event_observer_node<typename std::decay<F>::type, T>>(
@@ -88,7 +87,7 @@ private:
     }
 
     template <typename F, typename T, typename ... Us>
-    static auto CreateSyncedEventObserverNode(const group& group, F&& func, const Event<T>& dep, const State<Us>& ... syncs) -> decltype(auto)
+    static auto CreateSyncedEventObserverNode(const context& group, F&& func, const Event<T>& dep, const State<Us>& ... syncs) -> decltype(auto)
     {
         using REACT_IMPL::synced_event_observer_node;
         return std::make_shared<synced_event_observer_node<typename std::decay<F>::type, T, Us ...>>(

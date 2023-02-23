@@ -22,7 +22,7 @@ namespace example1
     using namespace std;
     using namespace react;
 
-    group g;
+    context g;
 
     struct Sensor
     {
@@ -60,7 +60,7 @@ namespace example2
     using namespace std;
     using namespace react;
 
-    group g;
+    context g;
 
     struct Employee
     {
@@ -94,7 +94,7 @@ namespace example3
     using namespace std;
     using namespace react;
 
-    group g;
+    context g;
 
     struct Counter
     {
@@ -133,7 +133,7 @@ namespace example4
     using namespace std;
     using namespace react;
 
-    group g;
+    context g;
 
     struct Sensor
     {
@@ -186,7 +186,7 @@ namespace example5
     using namespace std;
     using namespace react;
 
-    group g;
+    context g;
 
     enum ECmd { increment, decrement, reset };
 
@@ -274,7 +274,7 @@ namespace example6
     using namespace std;
     using namespace react;
 
-    group g;
+    context g;
 
     class Sensor
     {
@@ -335,7 +335,7 @@ namespace example6
 
 using namespace react;
 
-group g;
+context g;
 
 struct MyClass
 {

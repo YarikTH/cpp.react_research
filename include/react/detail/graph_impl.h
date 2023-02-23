@@ -188,27 +188,26 @@ void react_graph::enqueue_transaction(F&& func, SyncPoint::Dependency dep, Trans
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// GroupInternals
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class group_internals
+class context_internals
 {
 public:
-    group_internals() :
-        graphPtr_( std::make_shared<react_graph>() )
+    context_internals() : m_graph_ptr( std::make_shared<react_graph>() )
     {  }
 
-    group_internals(const group_internals&) = default;
-    group_internals& operator=(const group_internals&) = default;
+    context_internals(const context_internals&) = default;
+    context_internals& operator=(const context_internals&) = default;
 
-    group_internals( group_internals&&) = default;
-    group_internals& operator=( group_internals&&) = default;
+    context_internals( context_internals&&) = default;
+    context_internals& operator=( context_internals&&) = default;
 
-    auto get_graph_ptr() -> std::shared_ptr<react_graph>&
-        { return graphPtr_; }
+    auto get_graph() -> react_graph&
+        { return *m_graph_ptr; }
 
-    auto get_graph_ptr() const -> const std::shared_ptr<react_graph>&
-        { return graphPtr_; }
+    auto get_graph() const -> const react_graph&
+        { return *m_graph_ptr; }
 
 private:
-    std::shared_ptr<react_graph> graphPtr_;
+    std::shared_ptr<react_graph> m_graph_ptr;
 };
 
 /****************************************/ REACT_IMPL_END /***************************************/

@@ -45,7 +45,7 @@ template <typename E>
 class event_node : public node_base
 {
 public:
-    explicit event_node(const group& group)
+    explicit event_node(const context& group)
         : event_node::node_base( group )
     { }
 
@@ -69,7 +69,7 @@ template <typename E>
 class event_source_node : public event_node<E>
 {
 public:
-    explicit event_source_node(const group& group)
+    explicit event_source_node(const context& group)
         : event_source_node::event_node( group )
     {
     }
@@ -94,7 +94,7 @@ template <typename E, typename ... TInputs>
 class EventMergeNode : public event_node<E>
 {
 public:
-    EventMergeNode(const group& group, const Event<TInputs>& ... deps) :
+    EventMergeNode(const context& group, const Event<TInputs>& ... deps) :
         EventMergeNode::event_node( group ),
         inputs_( deps ... )
     {
@@ -137,10 +137,10 @@ template <typename E>
 class EventSlotNode : public event_node<E>
 {
 public:
-    EventSlotNode(const group& group) :
+    EventSlotNode(const context& group) :
         EventSlotNode::event_node( group )
     {
-        inputNodeId_ = this->get_graph_ptr()->register_node(&slotInput_);
+        inputNodeId_ = this->get_graph().register_node(&slotInput_);
 
         this->attach_to_me( inputNodeId_ );
     }
@@ -150,7 +150,7 @@ public:
         RemoveAllSlotInputs();
         this->detach_from_me( inputNodeId_ );
 
-        this->get_graph_ptr()->unregister_node(inputNodeId_);
+        this->get_graph().unregister_node(inputNodeId_);
     }
 
     virtual update_result update() noexcept override
@@ -219,7 +219,7 @@ class EventProcessingNode : public event_node<TOut>
 {
 public:
     template <typename FIn>
-    EventProcessingNode(const group& group, FIn&& func, const Event<TIn>& dep) :
+    EventProcessingNode(const context& group, FIn&& func, const Event<TIn>& dep) :
         EventProcessingNode::event_node( group ),
         func_( std::forward<FIn>(func) ),
         dep_( dep )
@@ -256,7 +256,7 @@ class SyncedEventProcessingNode : public event_node<TOut>
 {
 public:
     template <typename FIn>
-    SyncedEventProcessingNode(const group& group, FIn&& func, const Event<TIn>& dep, const State<TSyncs>& ... syncs) :
+    SyncedEventProcessingNode(const context& group, FIn&& func, const Event<TIn>& dep, const State<TSyncs>& ... syncs) :
         SyncedEventProcessingNode::event_node( group ),
         func_( std::forward<FIn>(func) ),
         dep_( dep ),
@@ -307,7 +307,7 @@ template <typename ... Ts>
 class EventJoinNode : public event_node<std::tuple<Ts ...>>
 {
 public:
-    EventJoinNode(const group& group, const Event<Ts>& ... deps) :
+    EventJoinNode(const context& group, const Event<Ts>& ... deps) :
         EventJoinNode::event_node( group ),
         slots_( deps ... )
     {

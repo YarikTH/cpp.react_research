@@ -9,15 +9,15 @@
 
 #pragma once
 
-#include "react/detail/defs.h"
-#include "react/api.h"
-#include "react/group.h"
-#include "react/detail/state_nodes.h"
-
 #include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+#include "react/api.h"
+#include "react/context.h"
+#include "react/detail/defs.h"
+#include "react/detail/state_nodes.h"
 
 /*****************************************/ REACT_BEGIN /*****************************************/
 
@@ -30,7 +30,7 @@ class State : protected REACT_IMPL::state_internals<S>
 public:
     // Construct with explicit group
     template <typename F, typename T1, typename ... Ts>
-    static State Create(const group& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps)
+    static State Create(const context& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps)
         { return State(CreateFuncNode(group, std::forward<F>(func), dep1, deps ...)); }
 
     // Construct with implicit group
@@ -40,7 +40,7 @@ public:
 
     // Construct with constant value
     template <typename T>
-    static State Create(const group& group, T&& init)
+    static State Create(const context& group, T&& init)
         { return State(CreateFuncNode(group, [value = std::move(init)] { return value; })); }
 
     State() = default;
@@ -51,10 +51,10 @@ public:
     State(State&&) = default;
     State& operator=(State&&) = default;
 
-    auto get_group() const -> const group&
+    auto get_group() const -> const context&
         { return this->get_node_ptr()->get_group(); }
 
-    auto get_group() -> group&
+    auto get_group() -> context&
         { return this->get_node_ptr()->get_group(); }
 
     friend bool operator==(const State<S>& a, const State<S>& b)
@@ -76,7 +76,7 @@ protected:
 
 private:
     template <typename F, typename T1, typename ... Ts>
-    static auto CreateFuncNode(const group& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps) -> decltype(auto)
+    static auto CreateFuncNode(const context& group, F&& func, const State<T1>& dep1, const State<Ts>& ... deps) -> decltype(auto)
     {
         using REACT_IMPL::state_func_node;
 
@@ -96,12 +96,12 @@ class StateVar : public State<S>
 {
 public:
     // Construct with group + default
-    static StateVar Create(const group& group)
+    static StateVar Create(const context& group)
         { return StateVar(CreateVarNode(group)); }
 
     // Construct with group + value
     template <typename T>
-    static StateVar Create(const group& group, T&& value)
+    static StateVar Create(const context& group, T&& value)
         { return StateVar(CreateVarNode(group, std::forward<T>(value))); }
 
     StateVar() = default;
@@ -137,14 +137,14 @@ protected:
     { }
 
 private:
-    static auto CreateVarNode(const group& group) -> decltype(auto)
+    static auto CreateVarNode(const context& group) -> decltype(auto)
     {
         using REACT_IMPL::state_var_node;
         return std::make_shared<state_var_node<S>>(group);
     }
 
     template <typename T>
-    static auto CreateVarNode(const group& group, T&& value) -> decltype(auto)
+    static auto CreateVarNode(const context& group, T&& value) -> decltype(auto)
     {
         using REACT_IMPL::state_var_node;
         return std::make_shared<state_var_node<S>>(group, std::forward<T>(value));
@@ -159,10 +159,10 @@ private:
         VarNodeType* castedPtr = static_cast<VarNodeType*>(this->get_node_ptr().get());
 
         node_id nodeId = castedPtr->get_node_id();
-        auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
+        auto& graph = get_internals( this->get_group() ).get_graph();
 
         castedPtr->set_value( std::forward<T>( newValue ) );
-        graphPtr->push_input(nodeId);
+        graph.push_input(nodeId);
     }
 
     template <typename F>
@@ -174,10 +174,10 @@ private:
         VarNodeType* castedPtr = static_cast<VarNodeType*>(this->get_node_ptr().get());
         
         node_id nodeId = castedPtr->get_node_id();
-        auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
+        auto& graph = get_internals( this->get_group() ).get_graph();
 
         castedPtr->modify_value( func );
-        graphPtr->push_input(nodeId);
+        graph.push_input(nodeId);
     }
 };
 
@@ -189,7 +189,7 @@ class StateSlot : public State<S>
 {
 public:
     // Construct with explicit group
-    static StateSlot Create(const group& group, const State<S>& input)
+    static StateSlot Create(const context& group, const State<S>& input)
         { return StateSlot(CreateSlotNode(group, input)); }
 
     // Construct with implicit group
@@ -213,7 +213,7 @@ protected:
     { }
 
 private:
-    static auto CreateSlotNode(const group& group, const State<S>& input) -> decltype(auto)
+    static auto CreateSlotNode(const context& group, const State<S>& input) -> decltype(auto)
     {
         using REACT_IMPL::StateSlotNode;
 
@@ -228,10 +228,10 @@ private:
         auto* castedPtr = static_cast<StateSlotNode<S>*>(this->get_node_ptr().get());
 
         node_id nodeId = castedPtr->GetInputNodeId();
-        auto& graphPtr = get_internals( this->get_group() ).get_graph_ptr();
+        auto& graph = get_internals( this->get_group() ).get_graph();
 
         castedPtr->SetInput(newInput);
-        graphPtr->push_input(nodeId);
+        graph.push_input(nodeId);
     }
 };
 
